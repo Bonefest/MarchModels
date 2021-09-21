@@ -1,0 +1,91 @@
+Editor has two main types of model units:
+  1. Primitive - Atomic unit
+  2. Shape - Collection of shapes formed in a group
+
+Each primitive is a shape.
+
+We have a viewport, where everything is rendered (based on current mode).
+
+Sidebar have buttons for switching current viewport to:
+  1. Scene
+  2. Scene Octree representation
+  3. Primitive creation (displays only that primitive)
+  4. Shape creation (allows to place many __shapes__ and form a complex shape, e.g from cube from planes)
+
+Sidebar have buttons for controlling camera FOV:
+  1. Set camera's position
+  2. Set camera's rotation
+  3. Reset camera's position to the default position
+
+In scene viewport, We have a sidebar, where we can:
+  1. Choose desired shapes and place them on the scene
+  2. Choose deformation mode (same as during shape creation)
+  3. Set shape's position
+  4. Set shape's rotation
+  5. Set shape's scale (uniform only)
+  6. Select shape from a list of shapes on the scene
+
+In primitive creation we need to:
+  1. Specify SDF (it can use additional parameters, e.g current time, random value etc)
+  2. Specify material (e.g roughness, metallic, BSDF)
+  3. Specify custom parameters (e.g if we are creating SDF for Pyramid - create parameter "Height"),
+     these parameters will be filled by a user during adding a primitve to the scene.
+
+In shape creation, sidebar have buttons for:
+  1. Choosing combination mode (Union, subtraction, intersection, smooth union, smooth subtraction, smooth intersection)
+  2. Choosing deformation mode (None, Displacement, Twist, Bending, Custom Displacement) - requires additional parameters
+  3. Setting position of a new shape
+  4. Setting rotation of a new shape
+
+We have three view modes:
+  1. Spectator mode - Objects are displayed in the simplest way.
+  2. Builder mode - Moving around scene is disabled.
+  3. Beauty mode - Objects are displayed with all applied effects.
+
+We should be able to create our own displacement functions:
+  1. Define function itself
+  2. Define custom parameters (those will be specified during shape creation)
+
+TODO: Describe Octree
+TODO: Describe process of rendering
+
+How primitives are stored on computer:
+  1. SDF is stored
+  2. List of parameters is stored ("name" + "type")
+  3. Name of displacement function + parameters are stored ("name" + value)
+  4. Name of primitve is stored
+
+How shapes are stored on computer:
+  1. List of shapes is stored ("name", "position", "rotation")
+  2. Deformation function name + parameters are stored
+  3. Combination function name is stored
+  4. Name of shape is stored
+
+How distance to the shape is evaluated:
+  def deform_none(shape):
+    return shape.sdf(p, shape.transform * shape.scale, shape.sdf_params) / shape.scale
+
+  def deform_displacement(p, shape, params):
+    float displacement = sin(20 * p.x) * sin(20 * p.y) * sin(20 * p.z)
+    return shape.sdf(p, shape.transform * shape.scale, shape.sdf_params) / shape.scale + displacement
+
+  def calculateSDF(p, shape):
+    first_shape = shape.list.front()
+
+    distance = first_shape.deform(p, first_shape, first_shape.deform_params)
+
+    for sub_shape in shape.list:
+      sub_shape.comb_function(calculateSDF(sub_shape), distance)
+      distance = combination_function(SDF(shape.sdf, **shape.parameters), distance)
+
+    return distance
+
+Process of rendering:
+  1. Rays are sent through centers of pixels
+  2. Each ray is run through Octree
+  3. Octree returns an array of shapes that a ray may intersect
+     (Conservative collision detection based on AABB)
+  4. Distance to each shape is calculated
+  5. Closest distance is chosen, origin of a ray is moved
+  6. Closest distance is smaller than a MIN_STEP ? Move to step 7 : Move to step 4
+  7. Closest shape is shaded (in beauty mode its material code is evaluated, lighting is done)

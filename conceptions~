@@ -1,0 +1,10 @@
+We have a viewport, where our scene is displayed.
+We have a sidebar, where we can choose desired primitives and place them on the scene.
+We can combine primitives to create more complex structures.
+
+We have two three modes:
+  1. Spectator mode - Objects are displayed in the simplest way.
+  2. Builder mode - Moving around scene is disabled.
+  3. Beauty mode - Objects are displayed with all applied effects.
+We can also enable spectator mode and view our scene from different points of view.
+
