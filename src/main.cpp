@@ -63,7 +63,7 @@ int main(void)
     return -1;
   }
 
-  if(initApplication(640, 480, "Ray march editor") != TRUE)
+  if(initApplication(1280, 720, "Ray march editor") != TRUE)
   {
     LOG_ERROR("Cannot initialize an application!");
     return -2;
