@@ -1,3 +1,7 @@
+#include "memory_manager.h"
+#include "application.h"
+#include "logging.h"
+
 #include <glad/glad.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -53,6 +57,22 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
  
 int main(void)
 {
+  if(editorInitMemoryManager() != TRUE)
+  {
+    LOG_ERROR("Cannot initialize a memory manager!");
+    return -1;
+  }
+
+  if(initApplication(640, 480, "Ray march editor") != TRUE)
+  {
+    LOG_ERROR("Cannot initialize an application!");
+    return -2;
+  }
+
+  runApplication();
+  
+  shutdownApplication();
+  
     GLFWwindow* window;
     GLuint vertex_buffer, vertex_shader, fragment_shader, program;
     GLint mvp_location, vpos_location, vcol_location;
