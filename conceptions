@@ -47,7 +47,6 @@ We should be able to create our own displacement functions:
   2. Define custom parameters (those will be specified during shape creation)
 
 TODO: Describe Octree
-TODO: Describe process of rendering
 
 How primitives are stored on computer:
   1. SDF is stored
