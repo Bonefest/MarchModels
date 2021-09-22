@@ -7,6 +7,20 @@
 #include <application.h>
 #include <game_framework.h>
 
+struct NewModelParams
+{
+  float r = 1.0f;
+  float c = 1.0f;
+  float d = 1.0f;
+  float theta = 1.57;
+};
+
+struct SceneModelParams
+{
+  // Vec3 position
+  // Quat rotation
+};
+
 struct GameInternalData
 {
   const char* sideBarWindowName;
@@ -14,10 +28,16 @@ struct GameInternalData
 
   ImGuiID sideBarID;
   ImGuiID viewportID;
-  
+
+  NewModelParams newModelParams;
 };
 
 static GameInternalData gameData;
+
+static void regenerateModelMesh()
+{
+  LOG_INFO("New model mesh has been generated successfully!");
+}
 
 bool8 gameExtractSetupConfig(Application* app,
                              uint32* outScreenWidth,
@@ -96,14 +116,33 @@ static void gameGenerateLayout(Application* app)
 static void generateSidebarWindow(Application* app)
 {
   ImGui::Begin(gameData.sideBarWindowName, nullptr);
-  ImVec2 size = ImGui::GetWindowSize();
-  ImGui::Text("Size x = %f, y = %f", size.x, size.y);
+
+  ImGui::Text("Scene object parameters");
+  ImGui::SliderFloat("r constant", &gameData.newModelParams.r, 0.1f, 5.0f, "%.2f");
+  ImGui::SliderFloat("c constant", &gameData.newModelParams.c, 0.1f, 5.0f, "%.2f");
+  ImGui::SliderFloat("d constant", &gameData.newModelParams.d, 0.1f, 5.0f, "%.2f");
+  ImGui::SliderFloat("theta angle", &gameData.newModelParams.theta, 0.0f, 360.0f, "%.2f");
+
+  ImGui::Dummy(ImVec2(0.0f, 32.0f));
+  
+  ImGui::Text("New object parameters");
+  ImGui::SliderFloat("r constant", &gameData.newModelParams.r, 0.1f, 5.0f, "%.2f");
+  ImGui::SliderFloat("c constant", &gameData.newModelParams.c, 0.1f, 5.0f, "%.2f");
+  ImGui::SliderFloat("d constant", &gameData.newModelParams.d, 0.1f, 5.0f, "%.2f");
+  ImGui::SliderFloat("theta angle", &gameData.newModelParams.theta, 0.0f, 360.0f, "%.2f");
+  if(ImGui::Button("Regenerate", ImVec2(0.0f, 0.0f)))
+  {
+    regenerateModelMesh();
+  }
+  
   ImGui::End();
 }
 
 static void generateViewportWindow(Application* app)
 {
   ImGui::Begin(gameData.viewportWindowName, nullptr);
+  ImVec2 size = ImGui::GetWindowSize();
+  
   ImGui::End();  
 }
 
@@ -119,6 +158,14 @@ void gameProcessInput(Application* app, const EventData& eventData, void* sender
   if(eventData.type == EVENT_TYPE_CURSOR_MOVED)
   {
     LOG_WARNING("Mouse moved: %f %f", eventData.f32[0], eventData.f32[1]);
+  }
+  else if(eventData.type == EVENT_TYPE_KEY_PRESSED)
+  {
+    if(eventData.i32[0] == GLFW_KEY_ESCAPE)
+    {
+      glfwSetWindowShouldClose(applicationGetWindow(), TRUE);
+      return;
+    }
   }
 }
 
