@@ -4,11 +4,46 @@
 
 enum EventType
 {
+  /** Content:
+   * i32[0] = key
+   * i32[1] = scancode
+   * i32[2] = action
+   * i32[3] = mods
+   */
   EVENT_TYPE_KEY_PRESSED,
+
+  /** Content:
+   * i32[0] = key
+   * i32[1] = scancode
+   * i32[2] = action
+   * i32[3] = mods
+   */
   EVENT_TYPE_KEY_RELEASED,
+
+  /** Content:
+   * i32[0] = button
+   * i32[1] = action
+   * i32[2] = mods
+   */  
   EVENT_TYPE_BUTTON_PRESSED,
+
+  /** Content:
+   * i32[0] = button
+   * i32[1] = action
+   * i32[2] = mods
+   */    
   EVENT_TYPE_BUTTON_RELEASED,
+
+  /** Content:
+   * f32[0] = xpos
+   * f32[1] = ypos
+   */
   EVENT_TYPE_CURSOR_MOVED,
+
+  /** Content:
+   * i32[0] = width
+   * i32[1] = height
+   */
   EVENT_TYPE_WINDOW_RESIZED,
   EVENT_TYPE_COUNT,
 
@@ -43,7 +78,14 @@ void shutdownEventSystem();
 EDITOR_API bool8 registerListener(EventType eventType, void* listener, fpListenerCallback callback);
 EDITOR_API bool8 unregisterListener(EventType eventType, void* listener);
 
+/** Notifies all registered listeners immediately. It's not a recommended way of communication */
 EDITOR_API void triggerEvent(EventType eventType, EventData eventData, void* sender = nullptr);
+
+/** 
+ * Pushes events on the queue. Events then can be processed through pollEvent().
+ * 
+ * @note Current implementation executes pollEvent() automatically.
+ */
 EDITOR_API void pushEvent(EventType eventType, EventData eventData, void* sender = nullptr);
 EDITOR_API bool8 pollEvent(EventData* outEventData, void** outSender = nullptr);
 

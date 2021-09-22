@@ -29,24 +29,64 @@ static void gerrorCallback(int error, const char* description)
 
 static void gkeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-  /** trigger an event system */
+  if(action == GLFW_REPEAT)
+  {
+    /** Repeat actions are not required */
+    return;
+  }
+  
+  EventData eventData = {};
+  eventData.type = (action == GLFW_PRESS) ? EVENT_TYPE_KEY_PRESSED : EVENT_TYPE_KEY_RELEASED;
+  eventData.i32[0] = key;
+  eventData.i32[1] = scancode;
+  eventData.i32[2] = action;
+  eventData.i32[3] = mods;
+
+  triggerEvent(eventData.type, eventData);
+  pushEvent(eventData.type, eventData);    
 }
 
 static void gcursorPosCallback(GLFWwindow* window, float64 xpos, float64 ypos)
 {
-  /** trigger an event system */
+  EventData eventData = {};
+  eventData.type = EVENT_TYPE_CURSOR_MOVED;
+  eventData.f32[0] = (float32)xpos;
+  eventData.f32[1] = (float32)ypos;
+
+  triggerEvent(eventData.type, eventData);
+  pushEvent(eventData.type, eventData);
 }
 
 static void gmouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
-  /** trigger an event system */
+  if(action == GLFW_REPEAT)
+  {
+    /** Repeat actions are not required */
+    return;
+  }
+  
+  EventData eventData = {};
+  eventData.type = (action == GLFW_PRESS) ? EVENT_TYPE_BUTTON_PRESSED : EVENT_TYPE_BUTTON_RELEASED;
+  eventData.i32[0] = button;
+  eventData.i32[1] = action;
+  eventData.i32[2] = mods;
+
+  triggerEvent(eventData.type, eventData);
+  pushEvent(eventData.type, eventData);  
 }
 
 static void gwindowResizedCallback(GLFWwindow* window, int width, int height)
 {
   application.width = (uint32)width;
   application.height = (uint32)height;
-  /** trigger an event system */
+
+  EventData eventData = {};
+  eventData.type = EVENT_TYPE_WINDOW_RESIZED;
+  eventData.i32[0] = width;
+  eventData.i32[1] = height;
+
+  triggerEvent(eventData.type, eventData);
+  pushEvent(eventData.type, eventData);  
 }
 
 static bool8 initGLFW()
@@ -94,6 +134,7 @@ static bool8 initImGUI()
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   application.imguiIO = &ImGui::GetIO();
+  application.imguiIO->ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   (void)(*application.imguiIO);
 
   ImGui_ImplGlfw_InitForOpenGL(application.window, true);
