@@ -9,9 +9,7 @@
 
 struct Application;
 
-bool8 initApplication(uint32 width, uint32 height, const char* applicationName);
-void shutdownApplication();
-void runApplication();
+bool8 startApplication();
 
 EDITOR_API uint32 applicationGetScreenWidth();
 EDITOR_API uint32 applicationGetScreenHeight();
