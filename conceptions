@@ -88,3 +88,5 @@ Process of rendering:
   5. Closest distance is chosen, origin of a ray is moved
   6. Closest distance is smaller than a MIN_STEP ? Move to step 7 : Move to step 4
   7. Closest shape is shaded (in beauty mode its material code is evaluated, lighting is done)
+
+Shapes are forming some sort of hierarchy in some way similiar to a scene graph pattern

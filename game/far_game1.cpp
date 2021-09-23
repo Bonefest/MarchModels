@@ -16,7 +16,7 @@ using namespace linalg::aliases;
 
 struct NewModelParams
 {
-  float r = 1.0f;
+  float r = 0.5f;
   float c = 1.0f;
   float d = 1.0f;
   float theta = 90.0;
@@ -32,10 +32,34 @@ struct SceneModel
 {
   float3 rotationAxis = float3(1.0, 0.0, 0.0);
   float rotationAngle = 0.0f;
-
+  float4x4 transform = scaling_matrix(float3(0.5));
+  
   uint32 meshVAO;
   uint32 meshVBO;  
   std::vector<VertexData> meshVertices;
+};
+
+struct SceneViewport
+{
+  uint32 colorTarget;
+  uint32 depthTarget;
+  uint32 framebufferHandle;
+  ImVec2 size;
+  bool8 focused;
+};
+
+struct Camera
+{
+  float3 position = float3(0.0f, 0.0f, -10.0f);
+  float3 rotationAxis = float3(0.0f, 1.0f, 0.0f);
+  float angle = 180.0f;
+  
+  float nearPlane = 0.01f;
+  float farPlane = 100.0f;
+  float fovY = 45.0f;
+  
+  float4x4 transform;
+  float4x4 projection;
 };
 
 struct GameInternalData
@@ -44,15 +68,15 @@ struct GameInternalData
   const char* viewportWindowName;
 
   ImGuiID sideBarID;
-  ImGuiID viewportID;
-
+  ImGuiID sceneViewportID;
+  uint32 shaderProgramHandle;
+  
   NewModelParams newModelParams;
   SceneModel sceneModel;
-
-  uint32 shaderProgramHandle;
-  uint32 viewportTextureHandle;
-  uint32 viewportFramebufferHandle;
-  ImVec2 viewportSize;
+  SceneViewport sceneViewport;
+  Camera mainCamera;
+  
+  bool wireframeMode = false;
   
 };
 
@@ -124,7 +148,7 @@ static float3 calculateSurfacePoint(float alpha, float t)
   float r = gameData.newModelParams.r;
   float c = gameData.newModelParams.c;
   float d = gameData.newModelParams.d;
-  float O = gameData.newModelParams.theta;
+  float O = toRad(gameData.newModelParams.theta);
   float alpha0 = 0.0f;
   
   float x = r * cos(alpha) - (r * (alpha0 - alpha) + t * cos(O) - c * sin(d * t)*sin(O)) * sin(alpha);
@@ -163,7 +187,6 @@ static std::vector<VertexData> generateMeshVertices(const NewModelParams& newMod
 
   return newMesh;
 }
-
 
 // ----------------------------------------------------------------------------
 // Initialization/Shutdown functions
@@ -205,14 +228,25 @@ static bool8 generateMeshGLData()
 
 static bool8 generateFramebufferGLData()
 {
-  glGenFramebuffers(1, &gameData.viewportFramebufferHandle);
-  glGenTextures(1, &gameData.viewportTextureHandle);
+  glGenFramebuffers(1, &gameData.sceneViewport.framebufferHandle);
+  glGenTextures(1, &gameData.sceneViewport.colorTarget);
+  glGenTextures(1, &gameData.sceneViewport.depthTarget);  
 
-  glBindFramebuffer(GL_FRAMEBUFFER, gameData.viewportFramebufferHandle);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gameData.viewportTextureHandle, 0);
+  glBindFramebuffer(GL_FRAMEBUFFER, gameData.sceneViewport.framebufferHandle);
+  
+  glFramebufferTexture2D(GL_FRAMEBUFFER,
+                         GL_COLOR_ATTACHMENT0,
+                         GL_TEXTURE_2D,
+                         gameData.sceneViewport.colorTarget, 0);
+
+  glFramebufferTexture2D(GL_FRAMEBUFFER,
+                         GL_DEPTH_STENCIL_ATTACHMENT,
+                         GL_TEXTURE_2D,
+                         gameData.sceneViewport.depthTarget, 0);
+  
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-  glBindTexture(GL_TEXTURE_2D, gameData.viewportTextureHandle);
+  glBindTexture(GL_TEXTURE_2D, gameData.sceneViewport.colorTarget);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glBindTexture(GL_TEXTURE_2D, 0);
@@ -250,17 +284,44 @@ void gameShutdown(Application* app)
 // Main logic
 // ----------------------------------------------------------------------------
 
-static void updateViewportFramebuffer(ImVec2 size)
+static void updateCameraProjMatrix(ImVec2 size, Camera& camera)
 {
-  glBindTexture(GL_TEXTURE_2D, gameData.viewportTextureHandle);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, size.x, size.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-  glBindTexture(GL_TEXTURE_2D, 0);
-  gameData.viewportSize = size;
+  float aspect = size.x / size.y;
+  camera.projection = perspective_matrix(toRad(camera.fovY),
+                                         aspect,
+                                         camera.nearPlane,
+                                         camera.farPlane);
+}
 
-  glBindFramebuffer(GL_FRAMEBUFFER, gameData.viewportFramebufferHandle);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gameData.viewportTextureHandle, 0);
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+static void updateSceneViewportData(ImVec2 size)
+{
+  gameData.sceneViewport.size = size;  
+
+  // Attachments update
+  glBindTexture(GL_TEXTURE_2D, gameData.sceneViewport.colorTarget);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+               size.x, size.y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+  glBindTexture(GL_TEXTURE_2D, 0);
   
+  glBindTexture(GL_TEXTURE_2D, gameData.sceneViewport.depthTarget);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8,
+               size.x, size.y, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  // Framebuffer update
+  glBindFramebuffer(GL_FRAMEBUFFER, gameData.sceneViewport.framebufferHandle);
+  glFramebufferTexture2D(GL_FRAMEBUFFER,
+                         GL_COLOR_ATTACHMENT0,
+                         GL_TEXTURE_2D,
+                         gameData.sceneViewport.colorTarget, 0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER,
+                         GL_DEPTH_STENCIL_ATTACHMENT,
+                         GL_TEXTURE_2D,
+                         gameData.sceneViewport.depthTarget, 0);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  // Matrix update
+  updateCameraProjMatrix(size, gameData.mainCamera);
 }
 
 static void generateMesh()
@@ -279,9 +340,48 @@ static void generateMesh()
   LOG_INFO("New model mesh has been generated successfully!");
 }
 
+#include <iostream>
+
+using namespace ostream_overloads;
+
 void gameUpdate(Application* app, float64 delta)
 {
+  quat rotQuat = rotation_quat(gameData.mainCamera.rotationAxis,
+                               toRad(gameData.mainCamera.angle));
+    
+  if(gameData.sceneViewport.focused)
+  {
 
+    float3 forward = qrot(rotQuat, float3(0.0f, 0.0f, 1.0f));
+    float3 side = qrot(rotQuat, float3(1.0f, 0.0f, 0.0f));
+
+    // std::cout << gameData.mainCamera.position << std::endl;
+    std::cout << forward << std::endl;
+    
+    GLFWwindow* window = applicationGetWindow();
+    if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    {
+      gameData.mainCamera.position -= forward;
+    }
+    else if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    {
+      gameData.mainCamera.position += forward;
+    }    
+
+    if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+      gameData.mainCamera.position += side;
+    }
+    else if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+      gameData.mainCamera.position -= side;
+
+    }    
+    
+  }
+
+  gameData.mainCamera.transform = inverse(mul(translation_matrix(gameData.mainCamera.position),
+                                              rotation_matrix(rotQuat)));  
 }
 
 static void gameGenerateLayout(Application* app)
@@ -297,18 +397,18 @@ static void gameGenerateLayout(Application* app)
     
     ImGui::DockBuilderSetNodeSize(mainNodeID, ImVec2(screenWidth, screenHeight));
 
-    ImGuiID sideBarID, viewportID;
+    ImGuiID sideBarID, sceneViewportID;
 
     /** DockBuilderSpitNode() splits given node on two parts */
-    ImGui::DockBuilderSplitNode(mainNodeID, ImGuiDir_Left, 0.25f, &sideBarID, &viewportID);
+    ImGui::DockBuilderSplitNode(mainNodeID, ImGuiDir_Left, 0.25f, &sideBarID, &sceneViewportID);
 
     ImGui::DockBuilderDockWindow(gameData.sideBarWindowName, sideBarID);
-    ImGui::DockBuilderDockWindow(gameData.viewportWindowName, viewportID);    
+    ImGui::DockBuilderDockWindow(gameData.viewportWindowName, sceneViewportID);    
 
     ImGui::DockBuilderFinish(mainNodeID);
 
     gameData.sideBarID = sideBarID;
-    gameData.viewportID = viewportID;
+    gameData.sceneViewportID = sceneViewportID;
   }
 
   ImGui::SetNextWindowPos(ImVec2(0, 0));
@@ -331,12 +431,34 @@ static void generateSidebarWindow(Application* app)
 {
   ImGui::Begin(gameData.sideBarWindowName, nullptr);
 
+  bool cameraChanged = false;
+  
+  ImGui::Text("Camera parameters");
+  cameraChanged |= ImGui::SliderFloat("Camera X axis", &gameData.mainCamera.rotationAxis.x, -1.0f, 1.0f, "%.2f");
+  cameraChanged |= ImGui::SliderFloat("Camera Y axis", &gameData.mainCamera.rotationAxis.y, -1.0f, 1.0f, "%.2f");
+  cameraChanged |= ImGui::SliderFloat("Camera Z axis", &gameData.mainCamera.rotationAxis.z, -1.0f, 1.0f, "%.2f");
+  cameraChanged |= ImGui::SliderFloat("Camera Angle", &gameData.mainCamera.angle, 0.0f, 360.0f, "%.2f");  
+  if(cameraChanged)
+  {
+    gameData.mainCamera.rotationAxis = normalize(gameData.mainCamera.rotationAxis);
+  }
+  bool sceneObjChanged = false;
+  
   ImGui::Text("Scene object parameters");
-  ImGui::SliderFloat("X axis", &gameData.sceneModel.rotationAxis.x, -1.0f, 1.0f, "%.2f");
-  ImGui::SliderFloat("Y axis", &gameData.sceneModel.rotationAxis.y, -1.0f, 1.0f, "%.2f");
-  ImGui::SliderFloat("Z axis", &gameData.sceneModel.rotationAxis.z, -1.0f, 1.0f, "%.2f");
-  ImGui::SliderFloat("Angle", &gameData.sceneModel.rotationAngle, 0.0f, 360.0f, "%.2f");
-  gameData.sceneModel.rotationAxis = normalize(gameData.sceneModel.rotationAxis);
+  sceneObjChanged |= ImGui::SliderFloat("X axis", &gameData.sceneModel.rotationAxis.x, -1.0f, 1.0f, "%.2f");
+  sceneObjChanged |= ImGui::SliderFloat("Y axis", &gameData.sceneModel.rotationAxis.y, -1.0f, 1.0f, "%.2f");
+  sceneObjChanged |= ImGui::SliderFloat("Z axis", &gameData.sceneModel.rotationAxis.z, -1.0f, 1.0f, "%.2f");
+  sceneObjChanged |= ImGui::SliderFloat("Angle", &gameData.sceneModel.rotationAngle, 0.0f, 360.0f, "%.2f");
+  if(sceneObjChanged)
+  {
+    gameData.sceneModel.rotationAxis = normalize(gameData.sceneModel.rotationAxis);    
+
+    float angle = toRad(gameData.sceneModel.rotationAngle);
+    quat rotQuat = rotation_quat(gameData.sceneModel.rotationAxis, angle);
+    gameData.sceneModel.transform = rotation_matrix(rotQuat);
+  }
+
+  ImGui::Checkbox("Enable wireframe", &gameData.wireframeMode);
   
   ImGui::Dummy(ImVec2(0.0f, 32.0f));
   
@@ -353,29 +475,51 @@ static void generateSidebarWindow(Application* app)
   ImGui::End();
 }
 
+static void renderScene()
+{
+  GLint prevViewportData[4];
+  glGetIntegerv(GL_VIEWPORT, prevViewportData);
+  glViewport(0, 0, gameData.sceneViewport.size.x, gameData.sceneViewport.size.y);
+
+  glBindFramebuffer(GL_FRAMEBUFFER, gameData.sceneViewport.framebufferHandle);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glEnable(GL_DEPTH_TEST);
+  glPolygonMode(GL_FRONT_AND_BACK, gameData.wireframeMode ? GL_LINE : GL_FILL);
+  
+  glUseProgram(gameData.shaderProgramHandle);
+
+  GLint modelUniformLocation = glGetUniformLocation(gameData.shaderProgramHandle, "model");
+  GLint viewUniformLocation = glGetUniformLocation(gameData.shaderProgramHandle, "view");
+  GLint projectionUniformLocation = glGetUniformLocation(gameData.shaderProgramHandle, "projection");
+  
+  glUniformMatrix4fv(modelUniformLocation, 1, GL_FALSE, &gameData.sceneModel.transform[0][0]);
+  glUniformMatrix4fv(viewUniformLocation, 1, GL_FALSE, &gameData.mainCamera.transform[0][0]);
+  glUniformMatrix4fv(projectionUniformLocation, 1, GL_FALSE, &gameData.mainCamera.projection[0][0]);  
+  
+  glBindVertexArray(gameData.sceneModel.meshVAO);
+  glDrawArrays(GL_TRIANGLES, 0, gameData.sceneModel.meshVertices.size());
+
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glViewport(prevViewportData[0], prevViewportData[1], prevViewportData[2], prevViewportData[3]);
+}
+
 static void generateViewportWindow(Application* app)
 {
   ImGui::Begin(gameData.viewportWindowName, nullptr);
-  ImVec2 size = ImGui::GetWindowSize();
-  size.y -= 35;
-  if(gameData.viewportSize.x != size.x || gameData.viewportSize.y != size.y)
+  ImVec2 size = ImGui::GetWindowSize(); size.y -= 35;
+  
+  if(gameData.sceneViewport.size.x != size.x || gameData.sceneViewport.size.y != size.y)
   {
-    updateViewportFramebuffer(size);
+    updateSceneViewportData(size);
   }
 
-  glBindFramebuffer(GL_FRAMEBUFFER, gameData.viewportFramebufferHandle);
-  glClear(GL_COLOR_BUFFER_BIT);
-  glViewport(0, 0, size.x, size.y);
-
-  glUseProgram(gameData.shaderProgramHandle);
-  glBindVertexArray(gameData.sceneModel.meshVAO);
-  glDrawArrays(GL_TRIANGLES, 0, 3);
-
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-  glViewport(0, 0, applicationGetScreenWidth(), applicationGetScreenHeight());
-
-  ImGui::Image((void*)gameData.viewportTextureHandle, gameData.viewportSize, ImVec2(1.0, 0.0), ImVec2(0.0f, -1.0f));
+  gameData.sceneViewport.focused = ImGui::IsWindowFocused();
+  renderScene();
+  
+  ImGui::Image((void*)gameData.sceneViewport.colorTarget,
+               gameData.sceneViewport.size,
+               ImVec2(1.0, 0.0), ImVec2(0.0f, -1.0f));
   
   ImGui::End();  
 }
