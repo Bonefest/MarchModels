@@ -13,7 +13,7 @@ enum MemoryType
 EDITOR_API bool8 editorInitMemoryManager();
 EDITOR_API void editorShutdownMemoryManager();
 EDITOR_API void* editorAllocMem(uint32 memorySize, MemoryType memoryType = MEMORY_TYPE_UNDEFINED);
-EDITOR_API void editorFreeMem(void* memory, uint32 memorySize, MemoryType memoryType);
+EDITOR_API void editorFreeMem(void* memory, uint32 memorySize, MemoryType memoryType = MEMORY_TYPE_UNDEFINED);
 EDITOR_API void editorSetZeroMem(void* memory, uint32 memorySize);
 EDITOR_API void editorCopyMem(void* dst, void* src, uint32 memorySize);
 
