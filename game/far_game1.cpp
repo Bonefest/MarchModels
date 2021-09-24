@@ -16,10 +16,17 @@ using namespace linalg::aliases;
 
 struct NewModelParams
 {
-  float r = 0.5f;
-  float c = 1.0f;
-  float d = 1.0f;
-  float theta = 90.0;
+
+  float32 r = 0.5f;
+  float32 c = 1.0f;
+  float32 d = 1.0f;
+  float32 theta = 90.0;
+  float32 startAlpha = HALF_PI;
+  float32 endAlpha = TWO_PI;
+  float32 alphaStepSize = 0.1f;
+  float32 startT = 0.0f;
+  float32 endT = 10.0f;
+  float32 tStepSize = 0.1f;  
 };
 
 struct VertexData
@@ -31,7 +38,7 @@ struct VertexData
 struct SceneModel
 {
   float3 rotationAxis = float3(1.0, 0.0, 0.0);
-  float rotationAngle = 0.0f;
+  float rotationAngle = -90.0f;
   float4x4 transform = scaling_matrix(float3(0.5));
   
   uint32 meshVAO;
@@ -51,12 +58,14 @@ struct SceneViewport
 struct Camera
 {
   float3 position = float3(0.0f, 0.0f, -10.0f);
-  float3 rotationAxis = float3(0.0f, 1.0f, 0.0f);
-  float angle = 180.0f;
+  float32 yaw = ONE_PI;
+  float32 pitch = 0.0f;
+  float32 movSpeed = 5.0f;
+  float32 rotSpeed = TWO_PI / 3.0f;
   
-  float nearPlane = 0.01f;
-  float farPlane = 100.0f;
-  float fovY = 45.0f;
+  float32 nearPlane = 0.01f;
+  float32 farPlane = 100.0f;
+  float32 fovY = 45.0f;
   
   float4x4 transform;
   float4x4 projection;
@@ -145,11 +154,11 @@ static bool8 generateShaderProgram(const char* vertexShaderPath,
 
 static float3 calculateSurfacePoint(float alpha, float t)
 {
-  float r = gameData.newModelParams.r;
-  float c = gameData.newModelParams.c;
-  float d = gameData.newModelParams.d;
-  float O = toRad(gameData.newModelParams.theta);
-  float alpha0 = 0.0f;
+  float32 r = gameData.newModelParams.r;
+  float32 c = gameData.newModelParams.c;
+  float32 d = gameData.newModelParams.d;
+  float32 O = toRad(gameData.newModelParams.theta);
+  float32 alpha0 = 0.0f;
   
   float x = r * cos(alpha) - (r * (alpha0 - alpha) + t * cos(O) - c * sin(d * t)*sin(O)) * sin(alpha);
   float y = r * sin(alpha) - (r * (alpha0 - alpha) + t * cos(O) - c * sin(d * t)*sin(O)) * cos(alpha);
@@ -158,30 +167,47 @@ static float3 calculateSurfacePoint(float alpha, float t)
   return float3(x, y, z);
 }
 
+static float3 calculateSurfaceNormal(float alpha, float t)
+{
+  float3 point = calculateSurfacePoint(alpha, t);
+  float3 shiftR = normalize(calculateSurfacePoint(alpha + 0.001, t) - point);
+  float3 shiftU = normalize(calculateSurfacePoint(alpha, t + 0.001) - point);
+  
+  return normalize(cross(shiftR, shiftU));
+}
+
 static std::vector<VertexData> generateMeshVertices(const NewModelParams& newModelParams)
 {
   std::vector<VertexData> newMesh;
 
-  const uint32 alphaSteps = 300;
-  const float32 tStep = 0.1;
-
-  auto getAlpha = [alphaSteps](uint32 index){ return float32(index % alphaSteps) / float32(alphaSteps) * TWO_PI; };
-  
-  for(float32 t = -5.0; t < 5.0; t += tStep)
+  for(float32 alpha = newModelParams.startAlpha;
+      alpha < newModelParams.endAlpha;
+      alpha += newModelParams.alphaStepSize)
   {
-    float32 nextT = t + tStep;
-    for(uint32 i = 0; i < alphaSteps + 1; i++)
+    float32 nextAlpha = alpha + newModelParams.alphaStepSize;
+    
+    for(float32 t = newModelParams.startT;
+        t < newModelParams.endT;
+        t+= newModelParams.tStepSize)
     {
-      float32 alpha = getAlpha(i);
-      float32 nextAlpha = getAlpha(i + 1);
 
-      VertexData v1 = {calculateSurfacePoint(alpha, t)};
-      VertexData v2 = {calculateSurfacePoint(nextAlpha, t)};
-      VertexData v3 = {calculateSurfacePoint(alpha, nextT)};
+      float32 nextT = t + newModelParams.tStepSize;
+      
+      VertexData v1 = {calculateSurfacePoint(alpha, t), calculateSurfaceNormal(alpha, t)};
+      VertexData v2 = {calculateSurfacePoint(nextAlpha, t), calculateSurfaceNormal(nextAlpha, t)};
+      VertexData v3 = {calculateSurfacePoint(alpha, nextT), calculateSurfaceNormal(alpha, nextT)};
+
+      VertexData v4 = {calculateSurfacePoint(nextAlpha, t), calculateSurfaceNormal(nextAlpha, t)};      
+      VertexData v5 = {calculateSurfacePoint(nextAlpha, nextT), calculateSurfaceNormal(nextAlpha, nextT)};
+      VertexData v6 = {calculateSurfacePoint(alpha, nextT), calculateSurfaceNormal(alpha, nextT)};      
 
       newMesh.push_back(v1);
       newMesh.push_back(v2);
-      newMesh.push_back(v3);      
+      newMesh.push_back(v3);
+      newMesh.push_back(v4);
+      newMesh.push_back(v5);
+      newMesh.push_back(v6);
+      
     }
   }
 
@@ -192,6 +218,7 @@ static std::vector<VertexData> generateMeshVertices(const NewModelParams& newMod
 // Initialization/Shutdown functions
 // ----------------------------------------------------------------------------
 
+static void updateModelTransforms(SceneModel& model);
 static void generateMesh();
 
 bool8 gameExtractSetupConfig(Application* app,
@@ -217,9 +244,9 @@ static bool8 generateMeshGLData()
   glBindVertexArray(gameData.sceneModel.meshVAO);
   glBindBuffer(GL_ARRAY_BUFFER, gameData.sceneModel.meshVBO);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float3), (void*)offsetof(VertexData, position));
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, position));
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float3), (void*)offsetof(VertexData, normal));
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData), (void*)offsetof(VertexData, normal));
   glEnableVertexAttribArray(1);  
   glBindVertexArray(0);
   
@@ -264,6 +291,8 @@ static bool8 initializeGLData()
   
   if(!generateFramebufferGLData()) return FALSE;
 
+  updateModelTransforms(gameData.sceneModel);
+  
   return TRUE;
 }
 
@@ -283,6 +312,15 @@ void gameShutdown(Application* app)
 // ----------------------------------------------------------------------------
 // Main logic
 // ----------------------------------------------------------------------------
+
+void updateModelTransforms(SceneModel& model)
+{
+  model.rotationAxis = normalize(gameData.sceneModel.rotationAxis);    
+
+  float angle = toRad(model.rotationAngle);
+  quat rotQuat = rotation_quat(model.rotationAxis, angle);
+  model.transform = rotation_matrix(rotQuat);  
+}
 
 static void updateCameraProjMatrix(ImVec2 size, Camera& camera)
 {
@@ -340,41 +378,61 @@ static void generateMesh()
   LOG_INFO("New model mesh has been generated successfully!");
 }
 
-#include <iostream>
-
-using namespace ostream_overloads;
-
 void gameUpdate(Application* app, float64 delta)
 {
-  quat rotQuat = rotation_quat(gameData.mainCamera.rotationAxis,
-                               toRad(gameData.mainCamera.angle));
+  Camera& mainCamera = gameData.mainCamera;
+  
+  quat yawQuat = rotation_quat(float3(0.0f, 1.0f, 0.0), mainCamera.yaw);
+  quat pitchQuat = rotation_quat(float3(1.0f, 0.0f, 0.0), mainCamera.pitch);
+  quat rotQuat = qmul(pitchQuat, yawQuat);
     
   if(gameData.sceneViewport.focused)
   {
-
+    GLFWwindow* window = applicationGetWindow();
+    
     float3 forward = qrot(rotQuat, float3(0.0f, 0.0f, 1.0f));
     float3 side = qrot(rotQuat, float3(1.0f, 0.0f, 0.0f));
+    float3 up = float3(0.0f, 1.0f, 0.0f);
 
-    // std::cout << gameData.mainCamera.position << std::endl;
-    std::cout << forward << std::endl;
+    float32 speed = mainCamera.movSpeed;
+    speed *= (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) ? 2.0f : 1.0f;
     
-    GLFWwindow* window = applicationGetWindow();
     if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
-      gameData.mainCamera.position -= forward;
+      mainCamera.position -= forward * speed * float32(delta);
     }
     else if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     {
-      gameData.mainCamera.position += forward;
+      gameData.mainCamera.position += forward * speed * float32(delta);
     }    
 
     if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {
-      gameData.mainCamera.position += side;
+      gameData.mainCamera.position += side * speed * float32(delta);
     }
     else if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     {
-      gameData.mainCamera.position -= side;
+      gameData.mainCamera.position -= side * speed * float32(delta);
+
+    }    
+
+    if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+    {
+      gameData.mainCamera.position += up * speed * float32(delta);
+    }
+    else if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    {
+      gameData.mainCamera.position -= up * speed * float32(delta);
+
+    }    
+    
+    if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    {
+      gameData.mainCamera.yaw += mainCamera.rotSpeed * float32(delta);
+    }
+    else if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    {
+      gameData.mainCamera.yaw -= mainCamera.rotSpeed * float32(delta);
 
     }    
     
@@ -427,23 +485,20 @@ static void gameGenerateLayout(Application* app)
   ImGui::End();
 }
 
-static void generateSidebarWindow(Application* app)
+static void generateCameraSidebarSection(Application* app)
 {
-  ImGui::Begin(gameData.sideBarWindowName, nullptr);
-
-  bool cameraChanged = false;
-  
   ImGui::Text("Camera parameters");
-  cameraChanged |= ImGui::SliderFloat("Camera X axis", &gameData.mainCamera.rotationAxis.x, -1.0f, 1.0f, "%.2f");
-  cameraChanged |= ImGui::SliderFloat("Camera Y axis", &gameData.mainCamera.rotationAxis.y, -1.0f, 1.0f, "%.2f");
-  cameraChanged |= ImGui::SliderFloat("Camera Z axis", &gameData.mainCamera.rotationAxis.z, -1.0f, 1.0f, "%.2f");
-  cameraChanged |= ImGui::SliderFloat("Camera Angle", &gameData.mainCamera.angle, 0.0f, 360.0f, "%.2f");  
-  if(cameraChanged)
-  {
-    gameData.mainCamera.rotationAxis = normalize(gameData.mainCamera.rotationAxis);
-  }
+  ImGui::SliderAngle("Camera Yaw", &gameData.mainCamera.yaw);
+  ImGui::SliderAngle("Camera Pitch", &gameData.mainCamera.pitch, -90.0f, 90.0f);
+  ImGui::SliderFloat3("Camera position", (float32*)&gameData.mainCamera.position, -10.0f, 10.0f, "%.1f");
+
+  gameData.mainCamera.yaw = fmod(gameData.mainCamera.yaw, float32(TWO_PI));
+}
+
+static void generateSceneModelSidebarSection(Application* app)
+{
   bool sceneObjChanged = false;
-  
+
   ImGui::Text("Scene object parameters");
   sceneObjChanged |= ImGui::SliderFloat("X axis", &gameData.sceneModel.rotationAxis.x, -1.0f, 1.0f, "%.2f");
   sceneObjChanged |= ImGui::SliderFloat("Y axis", &gameData.sceneModel.rotationAxis.y, -1.0f, 1.0f, "%.2f");
@@ -451,26 +506,45 @@ static void generateSidebarWindow(Application* app)
   sceneObjChanged |= ImGui::SliderFloat("Angle", &gameData.sceneModel.rotationAngle, 0.0f, 360.0f, "%.2f");
   if(sceneObjChanged)
   {
-    gameData.sceneModel.rotationAxis = normalize(gameData.sceneModel.rotationAxis);    
-
-    float angle = toRad(gameData.sceneModel.rotationAngle);
-    quat rotQuat = rotation_quat(gameData.sceneModel.rotationAxis, angle);
-    gameData.sceneModel.transform = rotation_matrix(rotQuat);
+    updateModelTransforms(gameData.sceneModel);
   }
 
-  ImGui::Checkbox("Enable wireframe", &gameData.wireframeMode);
-  
-  ImGui::Dummy(ImVec2(0.0f, 32.0f));
-  
+  ImGui::Checkbox("Enable wireframe", &gameData.wireframeMode);  
+}
+
+static void generateNewModelSidebarSection(Application* app)
+{
   ImGui::Text("New object parameters");
   ImGui::SliderFloat("r constant", &gameData.newModelParams.r, 0.1f, 5.0f, "%.2f");
   ImGui::SliderFloat("c constant", &gameData.newModelParams.c, 0.1f, 5.0f, "%.2f");
   ImGui::SliderFloat("d constant", &gameData.newModelParams.d, 0.1f, 5.0f, "%.2f");
-  ImGui::SliderFloat("theta angle", &gameData.newModelParams.theta, 0.0f, 360.0f, "%.2f");
+  ImGui::SliderFloat("theta angle", &gameData.newModelParams.theta, 0.0f, 360.0f, "%.2f");  
+  ImGui::Spacing();
+  ImGui::SliderAngle("start alpha", &gameData.newModelParams.startAlpha);
+  ImGui::SliderAngle("end alpha", &gameData.newModelParams.endAlpha);
+  ImGui::SliderFloat("alpha step size", &gameData.newModelParams.alphaStepSize, 0.01f, 1.0f);
+  ImGui::Spacing();
+  ImGui::SliderFloat("start t", &gameData.newModelParams.startT, -10.0, 10.0, "%.2f");
+  ImGui::SliderFloat("end t", &gameData.newModelParams.endT, gameData.newModelParams.startT, 10.0, "%.2f");
+  ImGui::SliderFloat("t step size", &gameData.newModelParams.tStepSize, 0.05, 1.0, "%.2f");
+  ImGui::Spacing();  
   if(ImGui::Button("Regenerate", ImVec2(0.0f, 0.0f)))
   {
     generateMesh();
   }
+ 
+}
+
+static void generateSidebarWindow(Application* app)
+{
+  ImGui::Begin(gameData.sideBarWindowName, nullptr);
+
+  generateCameraSidebarSection(app);
+  ImGui::Separator();
+  generateSceneModelSidebarSection(app);
+  ImGui::Separator();  
+  generateNewModelSidebarSection(app);
+  ImGui::Separator();  
   
   ImGui::End();
 }
