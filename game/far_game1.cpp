@@ -101,7 +101,7 @@ static bool8 loadShader(GLenum shaderType, const char* path, uint32* outShaderHa
   assert(file != nullptr);
 
   fseek(file, 0, SEEK_END);
-  uint32 fileSize = ftell(file);
+  uint32 fileSize = ftell(file) + 1;
   fseek(file, 0, SEEK_SET);
 
   char* fileContent = (char*)editorAllocMem(fileSize);
@@ -384,7 +384,7 @@ void gameUpdate(Application* app, float64 delta)
   
   quat yawQuat = rotation_quat(float3(0.0f, 1.0f, 0.0), mainCamera.yaw);
   quat pitchQuat = rotation_quat(float3(1.0f, 0.0f, 0.0), mainCamera.pitch);
-  quat rotQuat = qmul(pitchQuat, yawQuat);
+  quat rotQuat = qmul(yawQuat, pitchQuat);
     
   if(gameData.sceneViewport.focused)
   {
@@ -458,7 +458,7 @@ static void gameGenerateLayout(Application* app)
     ImGuiID sideBarID, sceneViewportID;
 
     /** DockBuilderSpitNode() splits given node on two parts */
-    ImGui::DockBuilderSplitNode(mainNodeID, ImGuiDir_Left, 0.25f, &sideBarID, &sceneViewportID);
+    ImGui::DockBuilderSplitNode(mainNodeID, ImGuiDir_Left, 0.275f, &sideBarID, &sceneViewportID);
 
     ImGui::DockBuilderDockWindow(gameData.sideBarWindowName, sideBarID);
     ImGui::DockBuilderDockWindow(gameData.viewportWindowName, sceneViewportID);    
@@ -485,60 +485,108 @@ static void gameGenerateLayout(Application* app)
   ImGui::End();
 }
 
+
+static void generateHelpSection(Application* app)
+{
+  if(ImGui::TreeNode("About"))
+  {
+    ImGui::Bullet();
+    ImGui::TextWrapped("Variant #12: Monge Surface with a Cylindrical Directrix Surface and with a"
+                "Sinusoid as Meridian");
+    ImGui::Spacing();
+
+    ImGui::Bullet();    
+    ImGui::TextWrapped("Movement: WASD, arrow up, arrown down");
+
+    ImGui::Bullet();    
+    ImGui::TextWrapped("Rotation: Q/E - Turn left/right");
+    ImGui::Spacing();
+
+    ImGui::Bullet();    
+    ImGui::TextWrapped("In order to change main camera properties, select \"Camera parameters\" section");
+
+    ImGui::Bullet();    
+    ImGui::TextWrapped("In order to change scene object properties, select \"Scene object paramters\" section");
+
+    ImGui::Bullet();    
+    ImGui::TextWrapped("In order to generate a new mesh, select \"New object parameters\" section");
+    ImGui::Spacing();
+    ImGui::Spacing();
+
+    ImGui::Bullet();    
+    ImGui::TextWrapped("Author: Mykyta Tereshchenko TI-82");
+
+    ImGui::TreePop();
+  }
+}
+
 static void generateCameraSidebarSection(Application* app)
 {
-  ImGui::Text("Camera parameters");
-  ImGui::SliderAngle("Camera Yaw", &gameData.mainCamera.yaw);
-  ImGui::SliderAngle("Camera Pitch", &gameData.mainCamera.pitch, -90.0f, 90.0f);
-  ImGui::SliderFloat3("Camera position", (float32*)&gameData.mainCamera.position, -10.0f, 10.0f, "%.1f");
+  if(ImGui::TreeNode("Camera parameters"))
+  {
+    ImGui::SliderAngle("Camera Yaw", &gameData.mainCamera.yaw);
+    ImGui::SliderAngle("Camera Pitch", &gameData.mainCamera.pitch, -90.0f, 90.0f);
+    ImGui::SliderFloat3("Camera position", (float32*)&gameData.mainCamera.position, -10.0f, 10.0f, "%.1f");
 
-  gameData.mainCamera.yaw = fmod(gameData.mainCamera.yaw, float32(TWO_PI));
+    gameData.mainCamera.yaw = fmod(gameData.mainCamera.yaw, float32(TWO_PI));    
+    
+    ImGui::TreePop();
+  }
+
 }
 
 static void generateSceneModelSidebarSection(Application* app)
 {
   bool sceneObjChanged = false;
 
-  ImGui::Text("Scene object parameters");
-  sceneObjChanged |= ImGui::SliderFloat("X axis", &gameData.sceneModel.rotationAxis.x, -1.0f, 1.0f, "%.2f");
-  sceneObjChanged |= ImGui::SliderFloat("Y axis", &gameData.sceneModel.rotationAxis.y, -1.0f, 1.0f, "%.2f");
-  sceneObjChanged |= ImGui::SliderFloat("Z axis", &gameData.sceneModel.rotationAxis.z, -1.0f, 1.0f, "%.2f");
-  sceneObjChanged |= ImGui::SliderFloat("Angle", &gameData.sceneModel.rotationAngle, 0.0f, 360.0f, "%.2f");
-  if(sceneObjChanged)
+  if(ImGui::TreeNode("Scene object parameters"))
   {
-    updateModelTransforms(gameData.sceneModel);
-  }
+    sceneObjChanged |= ImGui::SliderFloat("X axis", &gameData.sceneModel.rotationAxis.x, -1.0f, 1.0f, "%.2f");
+    sceneObjChanged |= ImGui::SliderFloat("Y axis", &gameData.sceneModel.rotationAxis.y, -1.0f, 1.0f, "%.2f");
+    sceneObjChanged |= ImGui::SliderFloat("Z axis", &gameData.sceneModel.rotationAxis.z, -1.0f, 1.0f, "%.2f");
+    sceneObjChanged |= ImGui::SliderFloat("Angle", &gameData.sceneModel.rotationAngle, 0.0f, 360.0f, "%.2f");
+    if(sceneObjChanged)
+    {
+      updateModelTransforms(gameData.sceneModel);
+    }
 
-  ImGui::Checkbox("Enable wireframe", &gameData.wireframeMode);  
+    ImGui::Checkbox("Enable wireframe", &gameData.wireframeMode);
+    ImGui::TreePop();    
+  }
 }
 
 static void generateNewModelSidebarSection(Application* app)
 {
-  ImGui::Text("New object parameters");
-  ImGui::SliderFloat("r constant", &gameData.newModelParams.r, 0.1f, 5.0f, "%.2f");
-  ImGui::SliderFloat("c constant", &gameData.newModelParams.c, 0.1f, 5.0f, "%.2f");
-  ImGui::SliderFloat("d constant", &gameData.newModelParams.d, 0.1f, 5.0f, "%.2f");
-  ImGui::SliderFloat("theta angle", &gameData.newModelParams.theta, 0.0f, 360.0f, "%.2f");  
-  ImGui::Spacing();
-  ImGui::SliderAngle("start alpha", &gameData.newModelParams.startAlpha);
-  ImGui::SliderAngle("end alpha", &gameData.newModelParams.endAlpha);
-  ImGui::SliderFloat("alpha step size", &gameData.newModelParams.alphaStepSize, 0.01f, 1.0f);
-  ImGui::Spacing();
-  ImGui::SliderFloat("start t", &gameData.newModelParams.startT, -10.0, 10.0, "%.2f");
-  ImGui::SliderFloat("end t", &gameData.newModelParams.endT, gameData.newModelParams.startT, 10.0, "%.2f");
-  ImGui::SliderFloat("t step size", &gameData.newModelParams.tStepSize, 0.05, 1.0, "%.2f");
-  ImGui::Spacing();  
-  if(ImGui::Button("Regenerate", ImVec2(0.0f, 0.0f)))
+  if(ImGui::TreeNode("New object parameters"))
   {
-    generateMesh();
+    ImGui::SliderFloat("r constant", &gameData.newModelParams.r, 0.1f, 5.0f, "%.2f");
+    ImGui::SliderFloat("c constant", &gameData.newModelParams.c, 0.1f, 5.0f, "%.2f");
+    ImGui::SliderFloat("d constant", &gameData.newModelParams.d, 0.1f, 5.0f, "%.2f");
+    ImGui::SliderFloat("theta angle", &gameData.newModelParams.theta, 0.0f, 360.0f, "%.2f");  
+    ImGui::Spacing();
+    ImGui::SliderAngle("start alpha", &gameData.newModelParams.startAlpha);
+    ImGui::SliderAngle("end alpha", &gameData.newModelParams.endAlpha);
+    ImGui::SliderFloat("alpha step size", &gameData.newModelParams.alphaStepSize, 0.01f, 1.0f);
+    ImGui::Spacing();
+    ImGui::SliderFloat("start t", &gameData.newModelParams.startT, -10.0, 10.0, "%.2f");
+    ImGui::SliderFloat("end t", &gameData.newModelParams.endT, gameData.newModelParams.startT, 10.0, "%.2f");
+    ImGui::SliderFloat("t step size", &gameData.newModelParams.tStepSize, 0.05, 1.0, "%.2f");
+    ImGui::Spacing();  
+    if(ImGui::Button("Regenerate", ImVec2(0.0f, 0.0f)))
+    {
+      generateMesh();
+    }
+
+    ImGui::TreePop();
   }
- 
 }
 
 static void generateSidebarWindow(Application* app)
 {
   ImGui::Begin(gameData.sideBarWindowName, nullptr);
 
+  generateHelpSection(app);
+  ImGui::Separator();  
   generateCameraSidebarSection(app);
   ImGui::Separator();
   generateSceneModelSidebarSection(app);
