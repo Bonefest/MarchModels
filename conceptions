@@ -90,3 +90,17 @@ Process of rendering:
   7. Closest shape is shaded (in beauty mode its material code is evaluated, lighting is done)
 
 Shapes are forming some sort of hierarchy in some way similiar to a scene graph pattern
+
+Scene is created from a set of shapes.
+Shape contains an operation that will be applied to its child (intersection, union, subtract)
+Shape contains a list of shapes which are forming a tree.
+Leaf shapes are called 'primitives' - they evaluate a real SDF value. Primitives doesn't require an operation, because they does not contain other objects.
+Not leaf shapes contains other shapes. They require operation.
+
+To form a new shape, we need to open "shape builder mode", enter a name of a new shape, select root operation (by default union). After that, start choosing already created shapes from a content list. Placed shapes can be combined into another <sub>shape. At the end, a complex tree may be a result, forming a new shape. We can save that shape and add it to a content list and save on a disk.
+
+Each place LEAF shape also have parameters like: Position, orientation, scale. These parameters are relative to the parent (if parent has scale = 0.1, then its children also are downscaled 10 times). Additionally, leaf shapes original parameters can also be tweaked (e.g if it's a distorted pyramid, then its height parameter, distortion power ... can be changed too).
+
+In this way we can create a shape "Home" which is formed by a bunch of boxes, pyramids, spheres, cylindres in a complex structure. After that, we can use "Home" to create yet another shape, e.g "Destructed home", where some of its parts are cutted off.
+
+Shapes can also have an attached octree (not all shapes do) and AABB, which allows to build an octree representation of a scene.
