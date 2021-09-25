@@ -50,7 +50,7 @@ static void filmReallocateGLTexture(Film* film)
 
 bool8 createFilm(uint2 size, Film** film)
 {
-  *film = editorAllocObject<Film>(MEMORY_TYPE_FILM);
+  *film = engineAllocObject<Film>(MEMORY_TYPE_FILM);
   (*film)->size = size;
   (*film)->pixels = nullptr;
 
@@ -63,7 +63,7 @@ void destroyFilm(Film* film)
 {
   if(film->pixels != nullptr)
   {
-    editorFreeMem(film->pixels, calculateMemSize(film->size), MEMORY_TYPE_FILM);
+    engineFreeMem(film->pixels, calculateMemSize(film->size), MEMORY_TYPE_FILM);
   }
 
   if(film->textureGLAllocated == TRUE)
@@ -71,17 +71,17 @@ void destroyFilm(Film* film)
     glDeleteTextures(1, &film->textureGL);
   }
   
-  editorFreeObject(film, MEMORY_TYPE_FILM);
+  engineFreeObject(film, MEMORY_TYPE_FILM);
 }
 
 bool8 filmResize(Film* film, uint2 newSize)
 {
   if(film->pixels != nullptr)
   {
-    editorFreeMem(film->pixels, calculateMemSize(film->size), MEMORY_TYPE_FILM);
+    engineFreeMem(film->pixels, calculateMemSize(film->size), MEMORY_TYPE_FILM);
   }
 
-  film->pixels = (float3*)editorAllocMem(calculateMemSize(newSize), MEMORY_TYPE_FILM);
+  film->pixels = (float3*)engineAllocMem(calculateMemSize(newSize), MEMORY_TYPE_FILM);
 
   if(film->textureGLAllocated)
   {

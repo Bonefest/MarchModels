@@ -7,8 +7,8 @@ struct Application;
 
 bool8 startApplication();
 
-EDITOR_API uint32 applicationGetScreenWidth();
-EDITOR_API uint32 applicationGetScreenHeight();
-EDITOR_API const char* applicationGetName();
-EDITOR_API GLFWwindow* applicationGetWindow();
+ENGINE_API uint32 applicationGetScreenWidth();
+ENGINE_API uint32 applicationGetScreenHeight();
+ENGINE_API const char* applicationGetName();
+ENGINE_API GLFWwindow* applicationGetWindow();
 

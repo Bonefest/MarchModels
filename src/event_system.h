@@ -75,19 +75,19 @@ typedef bool8(*fpListenerCallback)(EventData eventData, void* sender, void* list
 bool8 initEventSystem();
 void shutdownEventSystem();
 
-EDITOR_API bool8 registerListener(EventType eventType, void* listener, fpListenerCallback callback);
-EDITOR_API bool8 unregisterListener(EventType eventType, void* listener);
+ENGINE_API bool8 registerListener(EventType eventType, void* listener, fpListenerCallback callback);
+ENGINE_API bool8 unregisterListener(EventType eventType, void* listener);
 
 /** Notifies all registered listeners immediately. It's not a recommended way of communication */
-EDITOR_API void triggerEvent(EventType eventType, EventData eventData, void* sender = nullptr);
+ENGINE_API void triggerEvent(EventType eventType, EventData eventData, void* sender = nullptr);
 
 /** 
  * Pushes events on the queue. Events then can be processed through pollEvent().
  * 
  * @note Current implementation executes pollEvent() automatically.
  */
-EDITOR_API void pushEvent(EventType eventType, EventData eventData, void* sender = nullptr);
-EDITOR_API bool8 pollEvent(EventData* outEventData, void** outSender = nullptr);
+ENGINE_API void pushEvent(EventType eventType, EventData eventData, void* sender = nullptr);
+ENGINE_API bool8 pollEvent(EventData* outEventData, void** outSender = nullptr);
 
 
 

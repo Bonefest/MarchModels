@@ -104,7 +104,7 @@ static bool8 loadShader(GLenum shaderType, const char* path, uint32* outShaderHa
   uint32 fileSize = ftell(file) + 1;
   fseek(file, 0, SEEK_SET);
 
-  char* fileContent = (char*)editorAllocMem(fileSize);
+  char* fileContent = (char*)engineAllocMem(fileSize);
   fread(fileContent, fileSize, 1, file);
   
   uint32 shaderHandle = glCreateShader(shaderType);
@@ -123,7 +123,7 @@ static bool8 loadShader(GLenum shaderType, const char* path, uint32* outShaderHa
     return FALSE;
   }
 
-  editorFreeMem(fileContent, fileSize);
+  engineFreeMem(fileContent, fileSize);
   *outShaderHandle = shaderHandle;
 
   return TRUE;

@@ -534,6 +534,10 @@ namespace linalg
     template<class T, int M> constexpr vec<T,M> mul(const mat<T,M,1> & a, const vec<T,1> & b) { return a.x*b.x; }
     template<class T, int M> constexpr vec<T,M> mul(const mat<T,M,2> & a, const vec<T,2> & b) { return a.x*b.x + a.y*b.y; }
     template<class T, int M> constexpr vec<T,M> mul(const mat<T,M,3> & a, const vec<T,3> & b) { return a.x*b.x + a.y*b.y + a.z*b.z; }
+
+    // CUSTOM_PATCH: Multiplying mat4x4 by vec3
+  template<class T> constexpr vec<T,3> mul(const mat<T,4,4> & a, const vec<T,3> & b) { return swizzle<0, 1, 2>(a.x)*b.x + swizzle<0, 1, 2>(a.y)*b.y + swizzle<0, 1, 2>(a.z)*b.z + swizzle<0, 1, 2>(a.w); }
+    // END CUSTOM_PATCH
     template<class T, int M> constexpr vec<T,M> mul(const mat<T,M,4> & a, const vec<T,4> & b) { return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w; }
     template<class T, int M, int N> constexpr mat<T,M,1> mul(const mat<T,M,N> & a, const mat<T,N,1> & b) { return {mul(a,b.x)}; }
     template<class T, int M, int N> constexpr mat<T,M,2> mul(const mat<T,M,N> & a, const mat<T,N,2> & b) { return {mul(a,b.x), mul(a,b.y)}; }

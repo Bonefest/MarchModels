@@ -4,18 +4,18 @@
 #include "logging.h"
 #include "memory_manager.h"
 
-bool8 editorInitMemoryManager()
+bool8 engineInitMemoryManager()
 {
   /** Allocate memory for each memory type */
   return TRUE;
 }
 
-void editorShutdownMemoryManager()
+void engineShutdownMemoryManager()
 {
 
 }
 
-void* editorAllocMem(uint32 memorySize, MemoryType memoryType)
+void* engineAllocMem(uint32 memorySize, MemoryType memoryType)
 {
   if(memoryType == MEMORY_TYPE_UNDEFINED)
   {
@@ -28,17 +28,17 @@ void* editorAllocMem(uint32 memorySize, MemoryType memoryType)
   return mem;
 }
 
-void editorFreeMem(void* memory, uint32 memorySize, MemoryType memoryType)
+void engineFreeMem(void* memory, uint32 memorySize, MemoryType memoryType)
 {
   return free(memory);
 }
 
-void editorSetZeroMem(void* memory, uint32 memorySize)
+void engineSetZeroMem(void* memory, uint32 memorySize)
 {
   memset(memory, 0, memorySize);
 }
 
-void editorCopyMem(void* dst, void* src, uint32 memorySize)
+void engineCopyMem(void* dst, void* src, uint32 memorySize)
 {
   memcpy(dst, src, memorySize);
 }

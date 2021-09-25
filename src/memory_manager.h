@@ -11,26 +11,26 @@ enum MemoryType
   MEMORY_TYPE_FILM,
 };
 
-EDITOR_API bool8 editorInitMemoryManager();
-EDITOR_API void editorShutdownMemoryManager();
-EDITOR_API void* editorAllocMem(uint32 memorySize, MemoryType memoryType = MEMORY_TYPE_UNDEFINED);
-EDITOR_API void editorFreeMem(void* memory, uint32 memorySize, MemoryType memoryType = MEMORY_TYPE_UNDEFINED);
-EDITOR_API void editorSetZeroMem(void* memory, uint32 memorySize);
-EDITOR_API void editorCopyMem(void* dst, void* src, uint32 memorySize);
+ENGINE_API bool8 engineInitMemoryManager();
+ENGINE_API void engineShutdownMemoryManager();
+ENGINE_API void* engineAllocMem(uint32 memorySize, MemoryType memoryType = MEMORY_TYPE_UNDEFINED);
+ENGINE_API void engineFreeMem(void* memory, uint32 memorySize, MemoryType memoryType = MEMORY_TYPE_UNDEFINED);
+ENGINE_API void engineSetZeroMem(void* memory, uint32 memorySize);
+ENGINE_API void engineCopyMem(void* dst, void* src, uint32 memorySize);
 
 template <typename T>
-T* editorAllocObject(MemoryType memoryType)
+T* engineAllocObject(MemoryType memoryType)
 {
-  T* newObj = static_cast<T*>(editorAllocMem(sizeof(T), memoryType));
+  T* newObj = static_cast<T*>(engineAllocMem(sizeof(T), memoryType));
   new(newObj) T;
 
   return newObj;
 }
 
 template <typename T>
-T* editorAllocObjectsArray(uint32 arraySize, MemoryType memoryType)
+T* engineAllocObjectsArray(uint32 arraySize, MemoryType memoryType)
 {
-  T* newArray = static_cast<T*>(editorAllocMem(sizeof(T) * arraySize, memoryType));
+  T* newArray = static_cast<T*>(engineAllocMem(sizeof(T) * arraySize, memoryType));
   for(uint32 i = 0; i < arraySize; i++)
   {
     new(newArray + i) T;
@@ -40,18 +40,18 @@ T* editorAllocObjectsArray(uint32 arraySize, MemoryType memoryType)
 }
 
 template <typename T>
-void editorFreeObject(T* memory, MemoryType memoryType)
+void engineFreeObject(T* memory, MemoryType memoryType)
 {
   memory->~T();
-  editorFreeMem(memory, sizeof(T), memoryType);
+  engineFreeMem(memory, sizeof(T), memoryType);
 }
 
 template <typename T>
-void editorFreeObjectsArray(T* memory, uint32 arraySize, MemoryType memoryType)
+void engineFreeObjectsArray(T* memory, uint32 arraySize, MemoryType memoryType)
 {
   for(uint32 i = 0; i < arraySize; i++)
   {
     memory[i].~T();
   }
-  editorFreeMem(memory, sizeof(T) * arraySize, memoryType);
+  engineFreeMem(memory, sizeof(T) * arraySize, memoryType);
 }

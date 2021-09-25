@@ -4,7 +4,7 @@
  
 int main(void)
 {
-  if(editorInitMemoryManager() != TRUE)
+  if(engineInitMemoryManager() != TRUE)
   {
     LOG_ERROR("Cannot initialize a memory manager!");
     return -1;
@@ -16,6 +16,6 @@ int main(void)
     return -2;
   }
   
-  editorShutdownMemoryManager();
+  engineShutdownMemoryManager();
   return 0;
 }

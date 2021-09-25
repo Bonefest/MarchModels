@@ -30,4 +30,4 @@ using float64 = double;
 #define TRUE 1
 #define FALSE 0
 
-#define EDITOR_API
+#define ENGINE_API
