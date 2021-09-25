@@ -29,6 +29,25 @@ static inline float3* calculatePixel(Film* film, int2 location)
   return film->pixels + calculatePixelIndex(film, location);
 }
 
+static void filmReallocateGLTexture(Film* film)
+{
+  if(film->textureGLAllocated == FALSE)
+  {
+    glGenTextures(1, &film->textureGL);
+
+    glBindTexture(GL_TEXTURE_2D, film->textureGL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);    
+    glBindTexture(GL_TEXTURE_2D, 0);                    
+  }
+
+  glBindTexture(GL_TEXTURE_2D, film->textureGL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, film->size.x, film->size.y, 0, GL_RGB, GL_FLOAT, film->pixels);
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  assert(glGetError() == GL_NO_ERROR);    
+}
+
 bool8 createFilm(uint2 size, Film** film)
 {
   *film = editorAllocObject<Film>(MEMORY_TYPE_FILM);
@@ -63,6 +82,12 @@ bool8 filmResize(Film* film, uint2 newSize)
   }
 
   film->pixels = (float3*)editorAllocMem(calculateMemSize(newSize), MEMORY_TYPE_FILM);
+
+  if(film->textureGLAllocated)
+  {
+    filmReallocateGLTexture(film);
+  }
+  
   return TRUE;
 }
 
@@ -97,13 +122,16 @@ GLenum filmGetGLTexture(Film* film)
 {
   if(film->textureGLAllocated == FALSE)
   {
-    glGenTextures(1, &film->textureGL);
+    // NOTE: Reallocation also uploads pixels data
+    filmReallocateGLTexture(film);
     film->textureGLAllocated = TRUE;
   }
-
-  glBindTexture(GL_TEXTURE_2D, film->textureGL);
-  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, film->size.x, film->size.y, GL_RGB, GL_FLOAT, film->pixels);
-  glBindTexture(GL_TEXTURE_2D, 0);
+  else
+  {
+    glBindTexture(GL_TEXTURE_2D, film->textureGL);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, film->size.x, film->size.y, GL_RGB, GL_FLOAT, film->pixels);
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
 
   return film->textureGL;
 }

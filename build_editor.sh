@@ -10,7 +10,7 @@ assembly="editor"
 compilerFlags="-g -O0 -fPIC"
 includeFlags="-Isrc -Ithrdparty -Igame"
 linkerFlags="-lglfw -lpthread -lXxf86vm -ldl -lxcb -lX11 -lX11-xcb -lxkbcommon-x11 -L/usr/lib/X11"
-defines="-DDEBUG -DENABLE_FAR_GAME1"
+defines="-DDEBUG -DENABLE_TESTBED_GAME"
 
 clear
 
