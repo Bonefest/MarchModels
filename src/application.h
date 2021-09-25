@@ -3,10 +3,6 @@
 #include "defines.h"
 #include "logging.h"
 
-#include <glad/glad.h>
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
-
 struct Application;
 
 bool8 startApplication();

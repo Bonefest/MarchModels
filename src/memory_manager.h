@@ -8,6 +8,7 @@ enum MemoryType
   MEMORY_TYPE_APPLICATION,
   MEMORY_TYPE_GENERAL,
   MEMORY_TYPE_PER_FRAME,
+  MEMORY_TYPE_FILM,
 };
 
 EDITOR_API bool8 editorInitMemoryManager();
