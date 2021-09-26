@@ -87,9 +87,9 @@ static float sphereSDF(float4 sphere, float3 p)
   return length(p - swizzle<0, 1, 2>(sphere)) - sphere.w;
 }
 
-static float3 integrate(Ray ray)
+static float3 integrate(Ray ray, float64 delta)
 {
-  const float4 sphere = float4(0.0f, 0.0f, 5.0f, 1.0f);
+  const float4 sphere = float4(std::sin(glfwGetTime()), 1.0f, 5.0f, 1.0f);
   const float32 minLimit = 0.1f;
   const uint32 maxIters = 3;
 
@@ -112,12 +112,16 @@ static float3 integrate(Ray ray)
   return radiance;
 }
 
-static void drawImage()
+static void drawImage(float64 delta)
 {
   for(uint32 y = 0; y < data.filmSize.y; y++)
   {
+    if(y % 13 != 0) continue;
+    
     for(uint32 x = 0; x < data.filmSize.x; x++)
     {
+      if(x % 13 != 0) continue;
+      
       int2 location(x, y);
       data.centerSampler->startSamplingPixel(data.centerSampler, location);
 
@@ -130,21 +134,33 @@ static void drawImage()
 
         // TODO: Weight it somehow
         Ray ray = cameraGenerateWorldRay(data.camera, sampleNDCPos);
-        radiance += integrate(ray);
+        radiance += integrate(ray, delta);
       }
 
       filmSetPixel(data.film, location, radiance);
     }
   }
+
 }
 
 void draw(Application* app, float64 delta)
 {
-  drawImage();
+  drawImage(delta);
   
   ImGui::SetNextWindowSize(ImVec2(640.0f, 480.0f));
   ImGui::Begin("Test window");
-  ImGui::Image((void*)filmGetGLTexture(data.film), ImVec2(data.filmSize.x, data.filmSize.y));
+
+  // NOTE: Image is reflected around X and Y axes (aka rotated 180 degrees)
+  // Reasons:
+  //   - From camera view positive x is on the left, positive y is on the top (RHS)
+  //   - From screen view positive x is on the right, positive y is on the top
+  //   - If a sphere is at the point (1.0, 0.0, 5.0), then camera sees it on the
+  //     top-left side of the screen. At the same time, on the screen it's
+  //     displayed on the top-right side of the screen.
+  //   - ImGui vertically mirrors an image, so we need to undo this.
+  //   - We want to see what camera sees.
+  ImGui::Image((void*)filmGetGLTexture(data.film),
+               ImVec2(data.filmSize.x, data.filmSize.y), ImVec2(1.0f, 1.0f), ImVec2(0.0f, 0.0f));
   ImGui::End();
 }
 
