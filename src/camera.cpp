@@ -165,6 +165,7 @@ Ray cameraGenerateCameraRay(Camera* camera, float2 ndc)
   float4 fullNDC = float4(ndc.x, ndc.y, 0.0f, 1.0f);
   float4 localDir = mul(camera->transformNDCToCamera, fullNDC);
   localDir /= localDir.w;
+  localDir = normalize(localDir);
 
   return Ray(float3(), swizzle<0, 1, 2>(localDir));
 }
@@ -176,6 +177,7 @@ Ray cameraGenerateWorldRay(Camera* camera, float2 ndc)
   float4 fullNDC = float4(ndc.x, ndc.y, 0.0f, 1.0f);
   float4 globalDir = mul(camera->transformNDCToWorld, fullNDC);
   globalDir /= globalDir.w;
+  globalDir = normalize(globalDir);
 
   return Ray(camera->position, swizzle<0, 1, 2>(globalDir)); 
 }

@@ -14,10 +14,10 @@ struct Sampler
   void* internalData;
 };
 
-ENGINE_API bool8 createCenterSampler(int2 sampleAreaSize, Sampler** outSampler);
+ENGINE_API bool8 createCenterSampler(uint2 sampleAreaSize, Sampler** outSampler);
 ENGINE_API void destroyCenterSampler(Sampler* sampler);
 
-ENGINE_API bool8 createRandomSampler(int2 sampleAreaSize,
+ENGINE_API bool8 createRandomSampler(uint2 sampleAreaSize,
                                      uint32 seed,
                                      uint32 samplesPerPixel,
                                      Sampler** outSampler);

@@ -25,11 +25,13 @@ static bool8 generateSample(Sampler* sampler, float2& outNDC)
   }
 
   float2 samplePosition = float2(data->location.x, data->location.y) + float2(0.5f, 0.5f);
-  outNDC = samplePosition * data->inversedAreaSize;
+  outNDC = (samplePosition * data->inversedAreaSize) * 2.0f - 1.0f;
+  data->sampleGenerated = TRUE;
+  
   return TRUE;
 }
 
-bool8 createCenterSampler(int2 sampleAreaSize, Sampler** outSampler)
+bool8 createCenterSampler(uint2 sampleAreaSize, Sampler** outSampler)
 {
   *outSampler = engineAllocObject<Sampler>(MEMORY_TYPE_GENERAL);
   Sampler* sampler = *outSampler;
