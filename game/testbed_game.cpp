@@ -63,8 +63,6 @@ bool8 extractSetupConfig(Application* app,
   return TRUE;
 }
 
-#include "sol/sol.hpp"
-
 bool8 initialize(Application* app)
 {
   data.filmSize = uint2(640, 480);

@@ -12,7 +12,7 @@ compilerFlags="-g -std=c++1z -O0 -fPIC"
 # TODO: Add lua5.3 to the thrdparty folder
 includeFlags="-Isrc -Ithrdparty -Igame -I/usr/include/lua5.3"
 linkerFlags="-lglfw -lpthread -lXxf86vm -ldl -lxcb -lX11 -lX11-xcb -lxkbcommon-x11 -L/usr/lib/X11 -llua5.3"
-defines="-DDEBUG -DENABLE_TESTBED_GAME"
+defines="-DDEBUG -DENABLE_EDITOR_GAME"
 
 clear
 
