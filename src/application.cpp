@@ -4,6 +4,7 @@
 
 #include "event_system.h"
 #include "memory_manager.h"
+#include "lua/lua_system.h"
 
 #include "application.h"
 #include "game_framework.h"
@@ -205,6 +206,18 @@ static bool8 initApplication()
   {
     LOG_INFO("ImGUI has been initialized successfully!");
   }
+
+  /** --- Lua system initialization ---------------------------------------- */
+  if(initializeLuaSystem() == FALSE)
+  {
+    LOG_ERROR("Cannot initialize Lua system!");
+    return FALSE;
+  }
+  else
+  {
+    LOG_INFO("Lua system has been initialized successfully!");
+  }
+
   
   /** --- Game initialization ---------------------------------------------- */
 
@@ -232,6 +245,7 @@ static void shutdownApplication()
   }
      
   game.shutdown(&application);
+  shutdownLuaSystem();
   shutdownImGUI();
   shutdownGLFW();
 

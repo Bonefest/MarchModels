@@ -60,6 +60,8 @@ bool8 extractSetupConfig(Application* app,
   return TRUE;
 }
 
+#include "sol/sol.hpp"
+
 bool8 initialize(Application* app)
 {
   data.filmSize = uint2(640, 480);
@@ -69,6 +71,13 @@ bool8 initialize(Application* app)
                                  toRad(45.0f),
                                  1.0f, 100.0f,
                                  &data.camera));
+
+  sol::state lua;
+  int x = 0;
+  lua.set_function("beep", [&x]{ ++x; });
+  lua.script("beep()");
+  assert(x == 1);
+  
   return TRUE;
 }
 

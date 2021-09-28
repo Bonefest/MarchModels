@@ -6,6 +6,12 @@
 
 using namespace linalg::aliases;
 
+struct Sample
+{
+  float2 ndc;
+  float32 weight;
+};
+
 struct Sampler
 {
   void(*startSamplingPixel)(Sampler* sampler, int2 location);
