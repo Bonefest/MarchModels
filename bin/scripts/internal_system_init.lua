@@ -6,5 +6,7 @@ function loadNameSpace(namespace)
    end
 end
 
+float3 = require("scripts/internal_vector")
+
 loadNameSpace(math)
 

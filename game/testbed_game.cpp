@@ -10,6 +10,7 @@
 #include <camera.h>
 #include <sampler.h>
 #include <logging.h>
+#include <dfunction.h>
 #include <application.h>
 #include <memory_manager.h>
 #include <game_framework.h>
@@ -20,6 +21,8 @@ struct TestbedData
   Sampler* centerSampler;
   Camera* camera;
   uint2 filmSize;
+
+  SDF* testSDF;
 };
 
 static TestbedData data;
@@ -72,11 +75,16 @@ bool8 initialize(Application* app)
                                  1.0f, 100.0f,
                                  &data.camera));
 
-  sol::state lua;
-  int x = 0;
-  lua.set_function("beep", [&x]{ ++x; });
-  lua.script("beep()");
-  assert(x == 1);
+  
+  const char* code = 
+    "function test_sdf()\n"
+    "  return float3.length(args[\"p\"] - float3(0.0, 0.0, 3.0)) - 1.0\n"
+    "end";
+
+  vector<DFunctionParam> params = {};
+  
+  registerSDF("test_sdf", code, params, TRUE);
+  createSDF("test_sdf", &data.testSDF);
   
   return TRUE;
 }
@@ -108,7 +116,8 @@ static float3 integrate(Ray ray, float64 delta)
   for(uint32 n = 0; n < maxIters; n++)
   {
     float minDistance = 64.0f;    
-    minDistance = min(minDistance, sphereSDF(sphere, p));
+    //minDistance = min(minDistance, sphereSDF(sphere, p));
+    minDistance = min(minDistance, executeSDF(data.testSDF, p));
     if(minDistance < minLimit)
     {
       radiance = float3(1.0f);
@@ -171,6 +180,7 @@ void draw(Application* app, float64 delta)
   ImGui::Image((void*)filmGetGLTexture(data.film),
                ImVec2(data.filmSize.x, data.filmSize.y), ImVec2(1.0f, 1.0f), ImVec2(0.0f, 0.0f));
   ImGui::End();
+
 }
 
 void processInput(Application* app, const EventData& eventData, void* sender)
