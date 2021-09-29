@@ -21,5 +21,5 @@ void sceneWidgetSetCamera(Widget* widget, Camera* camera);
 // void sceneWidgetSetScene(Widget* widget, Scene* scene);
 void sceneWidgetSetShape(Widget* widget, Shape* shape);
 
-
-
+// Integration of the scene is not the part of the scene_widget. We should have something like
+// DebugIntegrator, FastIntegrator etc.

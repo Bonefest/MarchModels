@@ -493,7 +493,7 @@ static void generateHelpSection(Application* app)
     ImGui::Bullet();
     ImGui::TextWrapped("Variant #12: Monge Surface with a Cylindrical Directrix Surface and with a"
                 "Sinusoid as Meridian");
-    ImGui::Spacing();
+v    ImGui::Spacing();
 
     ImGui::Bullet();    
     ImGui::TextWrapped("Movement: WASD, arrow up, arrown down");

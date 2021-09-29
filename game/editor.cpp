@@ -17,6 +17,7 @@
 #include <memory_manager.h>
 #include <game_framework.h>
 
+#include "editor.h"
 #include "views/sdf_editor_view.h"
 
 using std::string;
@@ -25,22 +26,10 @@ using std::unordered_map;
 struct EditorInternalData
 {
   unordered_map<string, View*> viewsMap;
-  View* currentView;
+  View* currentView = nullptr;
 };
 
 static EditorInternalData editorInternalData;
-
-static const ImGuiWindowFlags viewWindowFlags =
-  ImGuiWindowFlags_NoTitleBar |
-  ImGuiWindowFlags_NoResize |
-  ImGuiWindowFlags_NoMove |
-  ImGuiWindowFlags_NoScrollbar |
-  ImGuiWindowFlags_NoCollapse |
-  ImGuiWindowFlags_NoBackground |
-  ImGuiWindowFlags_NoSavedSettings |
-  ImGuiWindowFlags_NoBringToFrontOnFocus |
-  ImGuiWindowFlags_NoDocking |
-  ImGuiWindowFlags_NoNavFocus;
 
 static bool8 extractSetupConfig(Application* app,
                                 uint32* outScreenWidth,
@@ -54,7 +43,9 @@ static void update(Application* app, float64 delta);
 static void draw(Application* app, float64 delta);
 static void processInput(Application* app, const EventData& eventData, void* sender);
 
-
+// ----------------------------------------------------------------------------
+// Initialization-related functions
+// ----------------------------------------------------------------------------
 bool8 initializeGameFramework(GameFramework* outFramework)
 {
   outFramework->extractSetupConfig = extractSetupConfig;
@@ -82,16 +73,18 @@ bool8 extractSetupConfig(Application* app,
 
 static bool8 initialize(Application* app)
 {
+  uint32 screenWidth = applicationGetScreenWidth(), screenHeight = applicationGetScreenHeight();
+  
   View* sdfEditorView = nullptr;
-  assert(createSDFEditorView(&sdfEditorView));
-  editorInternalData.viewsMap[sdfEditorView->name] = sdfEditorView;
+  assert(createSDFEditorView(uint2(screenWidth, screenHeight), &sdfEditorView));
+  editorInternalData.viewsMap[viewGetName(sdfEditorView)] = sdfEditorView;
 
   for(auto viewPair: editorInternalData.viewsMap)
   {
-    assert(viewPair.second->initialize());
+    assert(initializeView(viewPair.second));
   }
 
-  editorInternalData.currentView = sdfEditorView;
+  editorSetView(viewGetName(sdfEditorView));
   
   return TRUE;
 }
@@ -100,16 +93,48 @@ static void shutdown(Application* app)
 {
   for(auto viewPair: editorInternalData.viewsMap)
   {
-    viewPair.second->shutdown();
     destroyView(viewPair.second);
   }
 
   editorInternalData.viewsMap.clear();
 }
 
+// ----------------------------------------------------------------------------
+// General API functions
+// ----------------------------------------------------------------------------
+
+bool8 editorSetView(const std::string& viewName)
+{
+  auto viewIt = editorInternalData.viewsMap.find(viewName);
+  if(viewIt == editorInternalData.viewsMap.end())
+  {
+    LOG_ERROR("View \"%s\" is not found!", viewName.c_str());
+    return FALSE;
+  }
+
+  if(editorInternalData.currentView != nullptr)
+  {
+    viewOnUnload(editorInternalData.currentView);
+  }
+  
+  editorInternalData.currentView = viewIt->second;
+  viewOnLoad(editorInternalData.currentView);
+  
+  return TRUE;
+}
+
+View* editorGetCurrentView()
+{
+  return editorInternalData.currentView;
+}
+
+// ----------------------------------------------------------------------------
+// Internal logic
+// ----------------------------------------------------------------------------
+
 static void update(Application* app, float64 delta)
 {
-  editorInternalData.currentView->update(delta);
+  updateView(editorInternalData.currentView, delta);
 }
 
 static void draw(Application* app, float64 delta)
@@ -153,17 +178,12 @@ static void draw(Application* app, float64 delta)
   }
   ImGui::EndMainMenuBar();
 
-  
-  ImGui::SetNextWindowPos(ImVec2(0, 0));
-  ImGui::SetNextWindowSize(ImVec2(screenWidth, screenHeight));
-  ImGui::Begin(editorInternalData.currentView->name.c_str(), nullptr, viewWindowFlags);
-  editorInternalData.currentView->draw(delta);
-  ImGui::End();
+  drawView(editorInternalData.currentView, delta);
 }
 
 static void processInput(Application* app, const EventData& eventData, void* sender)
 {
-  editorInternalData.currentView->processInput(eventData, sender);
+  processInputView(editorInternalData.currentView, eventData, sender);
 }
 
 // Editor GUI consists of many windows:

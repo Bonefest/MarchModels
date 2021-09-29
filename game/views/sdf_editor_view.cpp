@@ -11,11 +11,6 @@ const char* sdfPreview1WidgetName = "Preview 1";
 const char* sdfPreview2WidgetName = "Preview 2";
 const char* consoleWidgetName = "Console";
 
-struct SDFEditorData
-{
-  
-};
-
 /**
  * SDF Editor will have approximately the next layout:
  *        +----------+
@@ -24,13 +19,13 @@ struct SDFEditorData
  *        +-c-n-l-|P2|
  *        |__o_s__|__|
  */
-static void updateLayout(uint2 screenSize)
+static void updateSDFEditorLayout(View* view, uint2 viewSize)
 {
-  ImGuiID viewNodeID = ImGui::GetID(viewName);
+  ImGuiID viewNodeID = viewGetMainNodeID(view);
 
   ImGui::DockBuilderRemoveNode(viewNodeID);
   ImGui::DockBuilderAddNode(viewNodeID, ImGuiDockNodeFlags_DockSpace);
-  ImGui::DockBuilderSetNodeSize(viewNodeID, ImVec2(screenSize.x, screenSize.y));
+  ImGui::DockBuilderSetNodeSize(viewNodeID, ImVec2(viewSize.x, viewSize.y));
 
   ImGuiID leftNodeID, rightNodeID;
   ImGui::DockBuilderSplitNode(viewNodeID, ImGuiDir_Left, 0.75f, &leftNodeID, &rightNodeID);
@@ -49,7 +44,7 @@ static void updateLayout(uint2 screenSize)
   ImGui::DockBuilderFinish(viewNodeID);
 }
 
-static bool8 initializeSDFEditor()
+static bool8 initializeSDFEditor(View* view)
 {
   // create two scene widgets, setup one camera for them.
   // first widget will be delayed with better quality
@@ -59,59 +54,54 @@ static bool8 initializeSDFEditor()
   return TRUE;
 }
 
-static void shutdownSDFEditor()
+static void shutdownSDFEditor(View* view)
 {
 
 }
 
-static void onLoadSDFEditor()
+static void onLoadSDFEditor(View* view)
 {
 
 }
 
-static void onUnloadSDFEditor()
+static void onUnloadSDFEditor(View* view)
 {
 
 }
 
-static void onResizeSDFEditor(uint2 newSize)
+static void onResizeSDFEditor(View* view, uint2 newSize)
 {
 
 }
 
-static void updateSDFEditor(float64 delta)
+static void updateSDFEditor(View* view, float64 delta)
 {
 
 }
 
-static void drawSDFEditor(float64 delta)
+static void drawSDFEditor(View* view, float64 delta)
 {
-  ImGui::Text("Abc");
-
   ImGui::Begin(codeEditorWidgetName);
-
   ImGui::Text("Cdef");
-  
   ImGui::End();
 }
 
-static void processInputSDFEditor(const EventData& eventData, void* sender)
+static void processInputSDFEditor(View* view, const EventData& eventData, void* sender)
 {
 
 }
 
-bool8 createSDFEditorView(View** outView)
+bool8 createSDFEditorView(uint2 initialViewSize, View** outView)
 {
-  *outView = engineAllocObject<View>(MEMORY_TYPE_GENERAL);
-  View* view = *outView;
-  view->initialize = initializeSDFEditor;
-  view->shutdown = shutdownSDFEditor;
-  view->onLoad = onLoadSDFEditor;
-  view->onUnload = onUnloadSDFEditor;
-  view->update = updateSDFEditor;
-  view->draw = drawSDFEditor;
-  view->processInput = processInputSDFEditor;
-  view->name = "SDF Editor";
+  ViewInterface interface = {};
+  interface.initialize = initializeSDFEditor;
+  interface.shutdown = shutdownSDFEditor;
+  interface.onLoad = onLoadSDFEditor;
+  interface.onUnload = onUnloadSDFEditor;
+  interface.updateLayout = updateSDFEditorLayout;
+  interface.update = updateSDFEditor;
+  interface.draw = drawSDFEditor;
+  interface.processInput = processInputSDFEditor;
 
-  return TRUE;
+  return createView("SDF Editor", interface, initialViewSize, outView);
 }
