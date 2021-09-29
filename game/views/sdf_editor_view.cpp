@@ -1,5 +1,7 @@
 #include <memory_manager.h>
 
+#include "widgets/text_edit_widget.h"
+
 #include "sdf_editor_view.h"
 
 #include <imgui/imgui.h>
@@ -10,6 +12,13 @@ const char* codeEditorWidgetName = "Code editor";
 const char* sdfPreview1WidgetName = "Preview 1";
 const char* sdfPreview2WidgetName = "Preview 2";
 const char* consoleWidgetName = "Console";
+
+struct SDFEditorInternalData
+{
+  Widget* textEditorWidget;
+};
+
+static SDFEditorInternalData internalData;
 
 /**
  * SDF Editor will have approximately the next layout:
@@ -51,6 +60,9 @@ static bool8 initializeSDFEditor(View* view)
   // second widget will be real-time with fast debug quality
   // create widget for text editing
   // create widget for console output
+
+  assert(createTextEditWidget(&internalData.textEditorWidget));
+  
   return TRUE;
 }
 
@@ -76,10 +88,9 @@ static void updateSDFEditor(View* view, float64 delta)
 
 static void drawSDFEditor(View* view, ImVec2 viewOffset, ImVec2 viewSize, float64 delta)
 {
-  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+
   ImGui::Begin(codeEditorWidgetName);
-  ImGui::PopStyleVar();
-  ImGui::Text("Cdef");
+  drawWidget(internalData.textEditorWidget, view, delta);
   ImGui::End();
 }
 
