@@ -21,21 +21,18 @@ struct View
   ViewInterface interface;
   std::string name;
 
-  bool8 layoutNeedUpdate;
-  uint2 viewSize;
+  ImVec2 viewSize;
   
   bool8 initialized;
   void* internalData;
 };
 
-bool8 createView(const std::string& name, const ViewInterface& interface, uint2 initialViewSize, View** outView)
+bool8 createView(const std::string& name, const ViewInterface& interface, View** outView)
 {
   *outView = engineAllocObject<View>(MEMORY_TYPE_GENERAL);
   View* view = *outView;
   view->interface = interface;
   view->name = name;  
-  view->layoutNeedUpdate = TRUE;
-  view->viewSize = initialViewSize;
   view->initialized = FALSE;
   view->internalData = nullptr;
 
@@ -74,31 +71,24 @@ void viewOnUnload(View* view)
   view->interface.onUnload(view);
 }
 
-void viewOnResize(View* view, uint2 newViewSize)
+void drawView(View* view, ImVec2 viewOffset, ImVec2 viewSize, float64 delta)
 {
-  view->layoutNeedUpdate = FALSE;
-  view->viewSize = newViewSize;
-}
-
-void drawView(View* view, float64 delta)
-{
-  if(view->layoutNeedUpdate == TRUE)
+  if(view->viewSize.x != viewSize.x || view->viewSize.y != viewSize.y)
   {
-    view->interface.updateLayout(view, view->viewSize);
-    view->layoutNeedUpdate = FALSE;
+    view->interface.updateLayout(view, viewSize);
+    view->viewSize = viewSize;
   }
 
   ImGuiID viewNodeID = viewGetMainNodeID(view);
-
-
-  ImGui::SetNextWindowPos(ImVec2(0, 0));
-  ImGui::SetNextWindowSize(ImVec2(view->viewSize.x, view->viewSize.y));
+  
+  ImGui::SetNextWindowPos(viewOffset);
+  ImGui::SetNextWindowSize(viewSize);
   
   ImGui::Begin(view->name.c_str(), nullptr, viewWindowFlags);
   ImGui::DockSpace(viewNodeID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);  
   ImGui::End();
   
-  view->interface.draw(view, delta);
+  view->interface.draw(view, viewOffset, viewSize, delta);
 }
 
 void updateView(View* view, float64 delta)

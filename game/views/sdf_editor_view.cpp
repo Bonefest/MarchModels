@@ -19,13 +19,13 @@ const char* consoleWidgetName = "Console";
  *        +-c-n-l-|P2|
  *        |__o_s__|__|
  */
-static void updateSDFEditorLayout(View* view, uint2 viewSize)
+static void updateSDFEditorLayout(View* view, ImVec2 viewSize)
 {
   ImGuiID viewNodeID = viewGetMainNodeID(view);
 
   ImGui::DockBuilderRemoveNode(viewNodeID);
   ImGui::DockBuilderAddNode(viewNodeID, ImGuiDockNodeFlags_DockSpace);
-  ImGui::DockBuilderSetNodeSize(viewNodeID, ImVec2(viewSize.x, viewSize.y));
+  ImGui::DockBuilderSetNodeSize(viewNodeID, viewSize);
 
   ImGuiID leftNodeID, rightNodeID;
   ImGui::DockBuilderSplitNode(viewNodeID, ImGuiDir_Left, 0.75f, &leftNodeID, &rightNodeID);
@@ -69,19 +69,16 @@ static void onUnloadSDFEditor(View* view)
 
 }
 
-static void onResizeSDFEditor(View* view, uint2 newSize)
-{
-
-}
-
 static void updateSDFEditor(View* view, float64 delta)
 {
 
 }
 
-static void drawSDFEditor(View* view, float64 delta)
+static void drawSDFEditor(View* view, ImVec2 viewOffset, ImVec2 viewSize, float64 delta)
 {
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
   ImGui::Begin(codeEditorWidgetName);
+  ImGui::PopStyleVar();
   ImGui::Text("Cdef");
   ImGui::End();
 }
@@ -91,7 +88,7 @@ static void processInputSDFEditor(View* view, const EventData& eventData, void* 
 
 }
 
-bool8 createSDFEditorView(uint2 initialViewSize, View** outView)
+bool8 createSDFEditorView(View** outView)
 {
   ViewInterface interface = {};
   interface.initialize = initializeSDFEditor;
@@ -103,5 +100,5 @@ bool8 createSDFEditorView(uint2 initialViewSize, View** outView)
   interface.draw = drawSDFEditor;
   interface.processInput = processInputSDFEditor;
 
-  return createView("SDF Editor", interface, initialViewSize, outView);
+  return createView("SDF Editor", interface, outView);
 }

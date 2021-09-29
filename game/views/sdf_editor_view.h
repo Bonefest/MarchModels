@@ -4,5 +4,5 @@
 
 #include "view.h"
 
-bool8 createSDFEditorView(uint2 initialSize, View** outView);
+bool8 createSDFEditorView(View** outView);
 void sdfEditorSetSDF(SDF* sdf);

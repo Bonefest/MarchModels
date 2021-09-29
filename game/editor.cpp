@@ -73,10 +73,8 @@ bool8 extractSetupConfig(Application* app,
 
 static bool8 initialize(Application* app)
 {
-  uint32 screenWidth = applicationGetScreenWidth(), screenHeight = applicationGetScreenHeight();
-  
   View* sdfEditorView = nullptr;
-  assert(createSDFEditorView(uint2(screenWidth, screenHeight), &sdfEditorView));
+  assert(createSDFEditorView(&sdfEditorView));
   editorInternalData.viewsMap[viewGetName(sdfEditorView)] = sdfEditorView;
 
   for(auto viewPair: editorInternalData.viewsMap)
@@ -139,9 +137,12 @@ static void update(Application* app, float64 delta)
 
 static void draw(Application* app, float64 delta)
 {
-  uint32 screenWidth = applicationGetScreenWidth(), screenHeight = applicationGetScreenHeight();    
+  uint32 screenWidth = applicationGetScreenWidth(), screenHeight = applicationGetScreenHeight();
 
+  ImVec2 menuBarSize;
+  
   ImGui::BeginMainMenuBar();
+  
   if(ImGui::BeginMenu("New"))
   {
     if(ImGui::MenuItem("Scene editor"))
@@ -176,9 +177,15 @@ static void draw(Application* app, float64 delta)
     
     ImGui::EndMenu();
   }
+
+  menuBarSize = ImGui::GetWindowSize();
+  
   ImGui::EndMainMenuBar();
 
-  drawView(editorInternalData.currentView, delta);
+  ImVec2 viewSize = ImVec2(screenWidth, screenHeight - menuBarSize.y);
+  ImVec2 viewOffset = ImVec2(0, menuBarSize.y);
+  
+  drawView(editorInternalData.currentView, viewOffset, viewSize, delta);
 }
 
 static void processInput(Application* app, const EventData& eventData, void* sender)

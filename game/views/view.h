@@ -16,15 +16,14 @@ struct ViewInterface
 
   void (*onLoad)(View*);
   void (*onUnload)(View*);
-  void (*onResize)(View*, uint2 newViewSize);
 
-  void (*updateLayout)(View*, uint2 newViewSize);
+  void (*updateLayout)(View*, ImVec2 newViewSize);
   void (*update)(View*, float64 delta);  
-  void (*draw)(View*, float64 delta);
+  void (*draw)(View*, ImVec2 viewOffset, ImVec2 viewSize, float64 delta);
   void (*processInput)(View*, const EventData& eventData, void* sender);
 };
 
-bool8 createView(const std::string& name, const ViewInterface& interface, uint2 initialViewSize, View** outView);
+bool8 createView(const std::string& name, const ViewInterface& interface, View** outView);
 void destroyView(View* view);
 
 bool8 initializeView(View* view);
@@ -33,7 +32,7 @@ void viewOnLoad(View* view);
 void viewOnUnload(View* view);
 void viewOnResize(View* view, uint2 newViewSize);
 
-void drawView(View* view, float64 delta);
+void drawView(View* view, ImVec2 viewOffset, ImVec2 viewSize, float64 delta);
 void updateView(View* view, float64 delta);
 void processInputView(View* view, const EventData& eventData, void* sender);
 
