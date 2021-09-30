@@ -10,7 +10,6 @@
 
 #include <film.h>
 #include <camera.h>
-#include <sampler.h>
 #include <logging.h>
 #include <dfunction.h>
 #include <application.h>

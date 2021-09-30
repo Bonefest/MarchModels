@@ -44,7 +44,7 @@ void destroyImageIntegrator(ImageIntegrator* integrator)
   engineFreeObject(integrator, MEMORY_TYPE_GENERAL);
 }
 
-void imageIntegratorExecute(ImageIntegrator* integrator)
+void imageIntegratorExecute(ImageIntegrator* integrator, float32 time)
 {
   uint2 filmSize = filmGetSize(integrator->film);
   for(int32 y = 0; y < filmSize.y; y++)
@@ -61,10 +61,14 @@ void imageIntegratorExecute(ImageIntegrator* integrator)
         Sample sample;
         while(samplerGenerateSample(integrator->sampler, sample))
         {
-          // generate ray
-          // pass data to ray integrator
-          // retrieve radiance
-          // weight radiance
+          Ray viewRay = cameraGenerateWorldRay(integrator->camera, sample.ndc);
+          
+          float3 sampleRadiance = rayIntegratorCalculateRadiance(integrator->rayIntegrator,
+                                                                 viewRay,
+                                                                 integrator->scene,
+                                                                 time);
+
+          radiance += sampleRadiance * sample.weight;
         }
       }
 
