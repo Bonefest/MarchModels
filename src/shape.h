@@ -1,5 +1,13 @@
 #pragma once
-                          
+
+#include <string>
+#include <vector>
+
+#include "dfunction.h"
+#include "maths/common.h"
+
+struct Material;
+
 enum CombinationFunction
 {
   COMBINATION_INTERSECTION,
@@ -10,23 +18,26 @@ enum CombinationFunction
 struct Shape
 {
   // Common data
-  string name;
+  std::string name;
   
-  vector<IDF*> idfs;
-  vector<ODF*> odfs;
+  std::vector<IDF*> idfs;
+  std::vector<ODF*> odfs;
 
   float32 scale;
   float3 position;
   quat orientation;
 
+  Shape* parent;
+  
   // Branch shape data
-  vector<Shape*> children;  
+  std::vector<Shape*> children;  
   CombinationFunction combinationFunction;
 
   // Leaf shape data
   Material* material;
 };
 
+float3 shapeCalculateNormal(Shape* shape, Ray ray);
 
 // User can register:
 // 1. SDF (Signed Distance Function)

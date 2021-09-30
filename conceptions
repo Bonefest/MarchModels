@@ -104,3 +104,15 @@ Each place LEAF shape also have parameters like: Position, orientation, scale. T
 In this way we can create a shape "Home" which is formed by a bunch of boxes, pyramids, spheres, cylindres in a complex structure. After that, we can use "Home" to create yet another shape, e.g "Destructed home", where some of its parts are cutted off.
 
 Shapes can also have an attached octree (not all shapes do) and AABB, which allows to build an octree representation of a scene.
+
+Scene - Represents a virtual scene. Contains all shapes that a scene can have, contains all light data and other objects (e.g triggers, ray redirectors etc). Contains an accelerated structure. Provides a function which allows to find an intersection of a given ray with the scene. Provides a function which allows to calculate shading for a given intersection.
+
+For things like SDF or DF editor, a special scene will be created, which contains only a single object.
+
+RayIntegrator/TexelIntegrator - Calculates rendering equation (radiance) for a single output ray (camera ray). PBRRayIntegrator may use surface's material BRDF, emmision and other parameters, reflect ray, refract it or scatter subsurface. DebugRayIntegrator on the other hand will return a debug color for a surface (e.g based on its normal) without any reflections or shadowing.
+
+ImageIntegrator - Represents a single way of forming an image. It contains a film, scene which should be integrated, point of view, Sampler and RayIntegrator:
+
+ * ImageIntegrator with step x = 13, y = 13, CenterSampler and RayIntegrator = Debug will evaluate each 13th pixel and shade it in some debug color returned by a ray integrator.
+
+ * ImageIntegrator with step x = 1, y = 1, MonteCarloSampler, RayIntegrator = PBR will evaluate each pixel, calculate shading from light, shadowing, reflections, global illumination and so on.
