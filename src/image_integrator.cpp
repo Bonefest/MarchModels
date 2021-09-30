@@ -39,7 +39,7 @@ bool8 allocateImageIntegrator(ImageIntegratorInterface interface,
 
 void destroyImageIntegrator(ImageIntegrator* integrator)
 {
-  integrator->interface.shutdown(integrator);
+  integrator->interface.destroy(integrator);
 
   engineFreeObject(integrator, MEMORY_TYPE_GENERAL);
 }

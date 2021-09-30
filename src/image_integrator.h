@@ -10,7 +10,7 @@ struct ImageIntegrator;
 
 struct ImageIntegratorInterface
 {
-  void (*shutdown)(ImageIntegrator*);  
+  void (*destroy)(ImageIntegrator*);  
   bool8 (*shouldIntegratePixelLocation)(int2 location);
 };
 

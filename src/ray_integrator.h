@@ -7,7 +7,7 @@ struct RayIntegrator;
 
 struct RayIntegratorInterface
 {
-  void(*shutdown)(RayIntegrator*);
+  void(*destroy)(RayIntegrator*);
   float3(*calculateRadiance)(RayIntegrator* integrator, Ray viewRay, Scene* scene, float32 time);
 };
 

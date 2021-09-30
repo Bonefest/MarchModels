@@ -21,7 +21,7 @@ bool8 allocateRayIntegrator(RayIntegratorInterface interface, RayIntegrator** ou
 
 void destroyRayIntegrator(RayIntegrator* integrator)
 {
-  integrator->interface.shutdown(integrator);
+  integrator->interface.destroy(integrator);
   engineFreeObject(integrator, MEMORY_TYPE_GENERAL);
 }
 

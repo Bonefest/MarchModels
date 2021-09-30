@@ -1,13 +1,12 @@
 #pragma once
 
+#include <vector>
+
 #include "shape.h"
 
 struct LightSource;
 
-struct Scene
-{
-
-};
+struct Scene;
 
 struct IntersectionDetails
 {
@@ -16,15 +15,15 @@ struct IntersectionDetails
   float distance;
 };
 
-bool8 createScene(Scene** outScene);
-void destroyScene(Scene* scene);
+ENGINE_API bool8 createScene(Scene** outScene);
+ENGINE_API void destroyScene(Scene* scene);
 
-void sceneAddShape(Scene* scene, Shape* shape);
-void sceneRemoveShape(Scene* scene, Shape* shape);
-const std::vector<Shape*>& sceneGetShapes(Scene* scene);
+ENGINE_API void sceneAddShape(Scene* scene, Shape* shape);
+ENGINE_API bool8 sceneRemoveShape(Scene* scene, Shape* shape);
+ENGINE_API const std::vector<Shape*>& sceneGetShapes(Scene* scene);
 
-void sceneAddLightSource(Scene* scene, LightSource* lightSource);
-void sceneRemoveLightSource(Scene* scene, LightSource* lightSource);
-const std::vector<LightSource*>& sceneGetLightSources(Scene* scene);
+ENGINE_API void sceneAddLightSource(Scene* scene, LightSource* lightSource);
+ENGINE_API void sceneRemoveLightSource(Scene* scene, LightSource* lightSource);
+ENGINE_API const std::vector<LightSource*>& sceneGetLightSources(Scene* scene);
 
-IntersectionDetails sceneFindIntersection(Scene* scene, Ray ray);
+ENGINE_API IntersectionDetails sceneFindIntersection(Scene* scene, Ray ray);
