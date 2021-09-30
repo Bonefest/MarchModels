@@ -60,3 +60,6 @@ ENGINE_API bool8 createSDF(const string& name, SDF** outSDF);
 ENGINE_API bool8 isSDFRegistered(const string& name);
 ENGINE_API DFunctionArgs& sdfGetArguments(SDF* sdf);
 ENGINE_API float32 executeSDF(SDF* sdf, float3 p);
+
+ENGINE_API float3 executeIDF(IDF* idf, float3 p);
+ENGINE_API float32 executeODF(ODF* odf, float32 distance);

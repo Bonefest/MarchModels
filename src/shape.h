@@ -27,7 +27,7 @@ ENGINE_API void shapeSetScale(Shape* shape, float32 scale);
 ENGINE_API float32 shapeGetScale(Shape* shape);
 
 ENGINE_API void shapeSetPosition(Shape* shape, float3 position);
-ENGINE_API float32 shapeGetPosition(Shape* shape);
+ENGINE_API float3 shapeGetPosition(Shape* shape);
 
 ENGINE_API void shapeSetOrientation(Shape* shape, quat orientation);
 ENGINE_API quat shapeGetOrientation(Shape* shape);
@@ -52,7 +52,9 @@ ENGINE_API bool8 shapeIsLeaf(Shape* shape);
 // ENGINE_API float32 shapeGetRadius(Shape* shape);
 
 ENGINE_API float32 shapeCalculateDistanceToPoint(Shape* shape, float3 p, Shape** outClosestLeafShape = nullptr);
-ENGINE_API float3 shapeCalculateNormal(Shape* shape, Ray ray);
+
+// WARNING: Highly unoptimized!
+ENGINE_API float3 shapeCalculateNormal(Shape* shape, float3 p);
 
 // ----------------------------------------------------------------------------
 // Branch shape-related interface
@@ -60,6 +62,7 @@ ENGINE_API float3 shapeCalculateNormal(Shape* shape, Ray ray);
 
 ENGINE_API void shapeAddChild(Shape* shape, Shape* child);
 ENGINE_API bool8 shapeRemoveChild(Shape* shape, Shape* child);
+ENGINE_API std::vector<Shape*> shapeGetChildren(Shape* shape);
 
 ENGINE_API void shapeSetCombinationFunction(Shape* shape, CombinationFunction function);
 ENGINE_API CombinationFunction shapeGetCombinationFunction(Shape* shape);
