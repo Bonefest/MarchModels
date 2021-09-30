@@ -7,8 +7,8 @@ struct Shape
   // Common data
   std::string name;
   
-  std::vector<IDF*> idfs;
-  std::vector<ODF*> odfs;
+  std::vector<ScriptFunction*> idfs;
+  std::vector<ScriptFunction*> odfs;
 
   float32 scale;
   float3 position;
@@ -21,7 +21,7 @@ struct Shape
   CombinationFunction combinationFunction;
 
   // Leaf shape data
-  SDF* sdf;
+  ScriptFunction* sdf;
   Material* material;
 };
 
@@ -136,22 +136,22 @@ quat shapeGetOrientation(Shape* shape)
   return shape->orientation;
 }
 
-void shapeAddIDF(Shape* shape, IDF* idf)
+void shapeAddIDF(Shape* shape, ScriptFunction* idf)
 {
   shape->idfs.push_back(idf);
 }
 
-std::vector<IDF*>& shapeGetIDFs(Shape* shape)
+std::vector<ScriptFunction*>& shapeGetIDFs(Shape* shape)
 {
   return shape->idfs;
 }
 
-void shapeAddODF(Shape* shape, ODF* odf)
+void shapeAddODF(Shape* shape, ScriptFunction* odf)
 {
   shape->odfs.push_back(odf);
 }
 
-std::vector<ODF*>& shapeGetODFs(Shape* shape)
+std::vector<ScriptFunction*>& shapeGetODFs(Shape* shape)
 {
   return shape->odfs;
 }
@@ -193,7 +193,7 @@ bool8 shapeIsLeaf(Shape* shape)
 
 float32 shapeCalculateDistanceToPoint(Shape* shape, float3 p, Shape** outClosestLeafShape)
 {
-  for(IDF* idf: shape->idfs)
+  for(ScriptFunction* idf: shape->idfs)
   {
     p = executeIDF(idf, p);
   }
@@ -229,7 +229,7 @@ float32 shapeCalculateDistanceToPoint(Shape* shape, float3 p, Shape** outClosest
     }
   }
 
-  for(ODF* odf: shape->odfs)
+  for(ScriptFunction* odf: shape->odfs)
   {
     distance = executeODF(odf, distance);
   }
@@ -290,12 +290,12 @@ CombinationFunction shapeGetCombinationFunction(Shape* shape)
 // Leaft shape-related interface
 // ----------------------------------------------------------------------------
 
-void shapeSetSDF(Shape* shape, SDF* sdf)
+void shapeSetSDF(Shape* shape, ScriptFunction* sdf)
 {
   shape->sdf = sdf;
 }
 
-SDF* shapeGetSDF(Shape* shape)
+ScriptFunction* shapeGetSDF(Shape* shape)
 {
   return shape->sdf;
 }

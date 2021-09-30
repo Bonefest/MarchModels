@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#include "dfunction.h"
 #include "maths/common.h"
+#include "script_function.h"
 
 struct Material;
 
@@ -32,11 +32,11 @@ ENGINE_API float3 shapeGetPosition(Shape* shape);
 ENGINE_API void shapeSetOrientation(Shape* shape, quat orientation);
 ENGINE_API quat shapeGetOrientation(Shape* shape);
 
-ENGINE_API void shapeAddIDF(Shape* shape, IDF* idf);
-ENGINE_API std::vector<IDF*>& shapeGetIDFs(Shape* shape);
+ENGINE_API void shapeAddIDF(Shape* shape, ScriptFunction* idf);
+ENGINE_API std::vector<ScriptFunction*>& shapeGetIDFs(Shape* shape);
 
-ENGINE_API void shapeAddODF(Shape* shape, ODF* odf);
-ENGINE_API std::vector<ODF*>& shapeGetODFs(Shape* shape);
+ENGINE_API void shapeAddODF(Shape* shape, ScriptFunction* odf);
+ENGINE_API std::vector<ScriptFunction*>& shapeGetODFs(Shape* shape);
 
 ENGINE_API void shapeSetName(Shape* shape, const std::string& name);
 ENGINE_API const std::string& shapeGetName(Shape* shape);
@@ -71,5 +71,5 @@ ENGINE_API CombinationFunction shapeGetCombinationFunction(Shape* shape);
 // Leaft shape-related interface
 // ----------------------------------------------------------------------------
 
-ENGINE_API void shapeSetSDF(Shape* shape, SDF* sdf);
-ENGINE_API SDF* shapeGetSDF(Shape* shape);
+ENGINE_API void shapeSetSDF(Shape* shape, ScriptFunction* sdf);
+ENGINE_API ScriptFunction* shapeGetSDF(Shape* shape);

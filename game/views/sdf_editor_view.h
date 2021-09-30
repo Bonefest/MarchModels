@@ -1,8 +1,8 @@
 #pragma once
 
-#include <dfunction.h>
+#include <script_function.h>
 
 #include "view.h"
 
 bool8 createSDFEditorView(View** outView);
-void sdfEditorSetSDF(SDF* sdf);
+void sdfEditorSetSDF(ScriptFunction* sdf);

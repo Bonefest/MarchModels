@@ -11,10 +11,10 @@
 #include <film.h>
 #include <camera.h>
 #include <logging.h>
-#include <dfunction.h>
 #include <application.h>
 #include <memory_manager.h>
 #include <game_framework.h>
+#include <script_function.h>
 
 #include "editor.h"
 #include "views/sdf_editor_view.h"
