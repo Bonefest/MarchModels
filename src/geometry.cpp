@@ -10,11 +10,20 @@ struct Geometry
   std::vector<ScriptFunction*> idfs;
   std::vector<ScriptFunction*> odfs;
 
+  Geometry* parent;
+  
   float32 scale;
+  float3 origin;
   float3 position;
   quat orientation;
 
-  Geometry* parent;
+  float4x4 transformToLocal;
+  float4x4 transformToWorld;
+  
+  float4x4 transformToLocalFromParent;
+  float4x4 transformToParentFromLocal;
+  
+  bool8 dirty;
   
   // Branch geometry data
   std::vector<Geometry*> children;  
@@ -83,6 +92,56 @@ float32 combineDistances(Geometry* geometry,
   }
 
   return result;
+}
+
+static void geometryRecalculateFullTransforms(Geometry* geometry, bool8 parentWasDirty = FALSE)
+{
+  // NOTE: If parent was dirty, then its matrices have been recalculated in some way, hence, even
+  // if child is not dirty, its transforms still should be recalculated
+  if(geometry->dirty == TRUE || parentWasDirty == TRUE)
+  {
+    float4x4 transformFromLocal = mul(translation_matrix(geometry->position),
+                                      mul(rotation_matrix(geometry->orientation),
+                                          scaling_matrix(float3(geometry->scale, geometry->scale, geometry->scale))));
+
+    float4x4 transformToLocal = inverse(transformFromLocal);
+  
+    if(geometryIsRoot(geometry))
+    {
+      // NOTE: Root geometry doesn't have a parent => use identity matrix for parent-related
+      // transforms
+      geometry->transformToLocalFromParent = scaling_matrix(float3(1.0f, 1.0f, 1.0f));
+      geometry->transformToParentFromLocal = scaling_matrix(float3(1.0f, 1.0f, 1.0f));
+
+      geometry->transformToLocal = transformToLocal;
+      geometry->transformToWorld = transformFromLocal;
+    }
+    else
+    {
+      geometry->transformToLocalFromParent = transformToLocal;
+      geometry->transformToParentFromLocal = transformFromLocal;
+      
+      // NOTE: To convert from world to local, first use parent transform to parent's space
+      // and only then apply transform from parent's space to the space of the current geometry
+      geometry->transformToLocal = mul(transformToLocal, geometry->parent->transformToLocal);
+
+      // NOTE: To convert from local to world, first convert to the parent space, for which transformation
+      // from local space to world is known and use that.
+      geometry->transformToWorld = mul(geometry->parent->transformToWorld, transformFromLocal);
+    }
+  }
+
+  for(Geometry* child: geometry->children)
+  {
+    geometryRecalculateFullTransforms(child, geometry->dirty || parentWasDirty);
+  }
+
+  geometry->dirty = FALSE;      
+}
+
+static void geometryRecalculateTransforms(Geometry* geometry)
+{
+  geometryRecalculateTransforms(geometryGetRoot(geometry));
 }
 
 // ----------------------------------------------------------------------------
@@ -199,6 +258,50 @@ bool8 geometryIsBranch(Geometry* geometry)
 bool8 geometryIsLeaf(Geometry* geometry)
 {
   return geometry->children.size() == 0;
+}
+
+float3 geometryTransformToParent(Geometry* geometry, float3 p)
+{
+  if(geometry->dirty == TRUE)
+  {
+    geometryRecalculateTransforms(geometry);
+  }
+
+  float4 transformedP = mul(geometry->transformToParentFromLocal, float4(p.x, p.y, p.z, 1.0f));
+  return swizzle<0, 1, 2>(transformedP);
+}
+
+float3 geometryTransformFromParent(Geometry* geometry, float3 p)
+{
+  if(geometry->dirty == TRUE)
+  {
+    geometryRecalculateTransforms(geometry);
+  }
+
+  float4 transformedP = mul(geometry->transformToLocalFromParent, float4(p.x, p.y, p.z, 1.0f));
+  return swizzle<0, 1, 2>(transformedP);
+}
+
+float3 geometryTransformToLocal(Geometry* geometry, float3 p)
+{
+  if(geometry->dirty == TRUE)
+  {
+    geometryRecalculateTransforms(geometry);
+  }
+
+  float4 transformedP = mul(geometry->transformToLocal, float4(p.x, p.y, p.z, 1.0f));
+  return swizzle<0, 1, 2>(transformedP);
+}
+
+float3 geometryTransformToWorld(Geometry* geometry, float3 p)
+{
+  if(geometry->dirty == TRUE)
+  {
+    geometryRecalculateTransforms(geometry);
+  }
+
+  float4 transformedP = mul(geometry->transformToWorld, float4(p.x, p.y, p.z, 1.0f));
+  return swizzle<0, 1, 2>(transformedP);
 }
 
 float32 geometryCalculateDistanceToPoint(Geometry* geometry,

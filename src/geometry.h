@@ -52,6 +52,11 @@ ENGINE_API bool8 geometryIsLeaf(Geometry* geometry);
 // ENGINE_API AABB geometryGetAABB(Geometry* geometry);
 // ENGINE_API float32 geometryGetRadius(Geometry* geometry);
 
+ENGINE_API float3 geometryTransformToParent(Geometry* geometry, float3 p);
+ENGINE_API float3 geometryTransformFromParent(Geometry* geometry, float3 p);
+ENGINE_API float3 geometryTransformToLocal(Geometry* geometry, float3 p);
+ENGINE_API float3 geometryTransformToWorld(Geometry* geometry, float3 p);
+
 ENGINE_API float32 geometryCalculateDistanceToPoint(Geometry* geometry,
                                                     float3 p,
                                                     Geometry** outClosestLeafGeometry = nullptr);
