@@ -176,6 +176,16 @@ Geometry* geometryGetParent(Geometry* geometry)
   return geometry->parent;
 }
 
+Geometry* geometryGetRoot(Geometry* geometry)
+{
+  if(geometryIsRoot(geometry))
+  {
+    return geometry;
+  }
+
+  return geometryGetRoot(geometry->parent);
+}
+
 bool8 geometryIsRoot(Geometry* geometry)
 {
   return geometry->parent == nullptr;
@@ -246,6 +256,15 @@ float32 geometryCalculateDistanceToPoint(Geometry* geometry,
 //      the whole geometry's hierarchy (we still need to consider parent's ODFs/IDFs though)
 float3 geometryCalculateNormal(Geometry* geometry, float3 p)
 {
+
+  // NOTE: If geometry is not root - find its root and use that instead.
+  // We need to use root of the hierarchy, because otherwise IDFs and ODFs of its parents won't
+  // be accounted for.
+  if(!geometryIsRoot(geometry))
+  {
+    return geometryCalculateNormal(geometryGetRoot(geometry), p);
+  }
+  
   float32 distance = geometryCalculateDistanceToPoint(geometry, p);
   
   float32 step = 0.001f;

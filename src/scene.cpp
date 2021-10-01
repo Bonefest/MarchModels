@@ -9,6 +9,7 @@ using std::vector;
 struct Scene
 {
   vector<Geometry*> geometryArray;
+  vector<LightSource*> lightSourceArray;
 };
 
 bool8 createScene(Scene** outScene)
@@ -61,8 +62,52 @@ void sceneRemoveLightSource(Scene* scene, LightSource* lightSource)
 
 // }
 
-IntersectionDetails sceneFindIntersection(Scene* scene, Ray ray)
+IntersectionDetails sceneFindIntersection(Scene* scene, Ray ray, bool8 calculateNormal)
 {
+  // TODO: Load these data from configuration system
+  const static float32 MIN_SDF_VALUE = 0.01f;
+  const static uint32 MAX_STEPS = 8;
+  
+  Ray localRay = ray;
 
+  IntersectionDetails details = {};
+
+  uint32 step;
+  for(step = 0; step < MAX_STEPS; step++)
+  {
+    float32 minDistance = std::numeric_limits<float32>::max();
+    Geometry* closestGeometry = nullptr;
+    
+    for(Geometry* geometry: scene->geometryArray)
+    {
+      Geometry* closestLeaf = nullptr;
+      float32 distance = geometryCalculateDistanceToPoint(geometry, ray.origin, &closestLeaf);
+      if(distance < minDistance)
+      {
+        minDistance = distance;
+        closestGeometry = closestLeaf;
+      }
+    }
+
+    if(minDistance < MIN_SDF_VALUE)
+    {
+      details.geometry = closestGeometry;
+      if(calculateNormal)
+      {
+        details.normal = geometryCalculateNormal(closestGeometry, ray.origin);
+      }
+
+      break;
+    }
+    else
+    {
+      details.totalDistance += minDistance;
+      localRay.origin += localRay.direction * minDistance;
+    }
+  }
+
+  details.intersected = step >= MAX_STEPS ? FALSE : TRUE;
+
+  return details;
 }
 

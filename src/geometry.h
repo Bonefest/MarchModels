@@ -43,6 +43,7 @@ ENGINE_API const std::string& geometryGetName(Geometry* geometry);
 
 ENGINE_API void geometrySetParent(Geometry* geometry, Geometry* parent);
 ENGINE_API Geometry* geometryGetParent(Geometry* geometry);
+ENGINE_API Geometry* geometryGetRoot(Geometry* geometry);
 
 ENGINE_API bool8 geometryIsRoot(Geometry* geometry);
 ENGINE_API bool8 geometryIsBranch(Geometry* geometry);
