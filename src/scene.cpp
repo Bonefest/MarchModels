@@ -8,7 +8,7 @@ using std::vector;
 
 struct Scene
 {
-  vector<Shape*> shapesArray;
+  vector<Geometry*> geometryArray;
 };
 
 bool8 createScene(Scene** outScene)
@@ -23,27 +23,27 @@ void destroyScene(Scene* scene)
   engineFreeObject(scene, MEMORY_TYPE_GENERAL);
 }
 
-void sceneAddShape(Scene* scene, Shape* shape)
+void sceneAddGeometry(Scene* scene, Geometry* geometry)
 {
-  scene->shapesArray.push_back(shape);
+  scene->geometryArray.push_back(geometry);
 }
 
-bool8 sceneRemoveShape(Scene* scene, Shape* shape)
+bool8 sceneRemoveGeometry(Scene* scene, Geometry* geometry)
 {
-  auto it = std::find(scene->shapesArray.begin(), scene->shapesArray.end(), shape);
-  if(it == scene->shapesArray.end())
+  auto it = std::find(scene->geometryArray.begin(), scene->geometryArray.end(), geometry);
+  if(it == scene->geometryArray.end())
   {
     return FALSE;
   }
 
-  scene->shapesArray.erase(it);
+  scene->geometryArray.erase(it);
   
   return TRUE;
 }
 
-const vector<Shape*>& sceneGetShapes(Scene* scene)
+const vector<Geometry*>& sceneGetGeometrys(Scene* scene)
 {
-  return scene->shapesArray;
+  return scene->geometryArray;
 }
 
 void sceneAddLightSource(Scene* scene, LightSource* lightSource)

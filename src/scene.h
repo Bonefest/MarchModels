@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "shape.h"
+#include "geometry.h"
 
 struct LightSource;
 
@@ -10,7 +10,7 @@ struct Scene;
 
 struct IntersectionDetails
 {
-  Shape* shape;
+  Geometry* geometry;
   // float3 normal;
   float distance;
 };
@@ -18,9 +18,9 @@ struct IntersectionDetails
 ENGINE_API bool8 createScene(Scene** outScene);
 ENGINE_API void destroyScene(Scene* scene);
 
-ENGINE_API void sceneAddShape(Scene* scene, Shape* shape);
-ENGINE_API bool8 sceneRemoveShape(Scene* scene, Shape* shape);
-ENGINE_API const std::vector<Shape*>& sceneGetShapes(Scene* scene);
+ENGINE_API void sceneAddGeometry(Scene* scene, Geometry* geometry);
+ENGINE_API bool8 sceneRemoveGeometry(Scene* scene, Geometry* geometry);
+ENGINE_API const std::vector<Geometry*>& sceneGetGeometry(Scene* scene);
 
 ENGINE_API void sceneAddLightSource(Scene* scene, LightSource* lightSource);
 ENGINE_API void sceneRemoveLightSource(Scene* scene, LightSource* lightSource);
