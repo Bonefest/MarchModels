@@ -81,7 +81,7 @@ IntersectionDetails sceneFindIntersection(Scene* scene, Ray ray, bool8 calculate
     for(Geometry* geometry: scene->geometryArray)
     {
       Geometry* closestLeaf = nullptr;
-      float32 distance = geometryCalculateDistanceToPoint(geometry, ray.origin, &closestLeaf);
+      float32 distance = geometryCalculateDistanceToPoint(geometry, localRay.origin, &closestLeaf);
       if(distance < minDistance)
       {
         minDistance = distance;

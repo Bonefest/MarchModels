@@ -14,8 +14,13 @@ static void destroyDebugRayIntegrator(RayIntegrator* integrator)
 
 static float3 debugRayCalculateRadiance(RayIntegrator* integrator, Ray viewRay, Scene* scene, float32 time)
 {
-  // TODO;
-  return float3(1.0f, 0.0f, 0.0f);
+  IntersectionDetails details = sceneFindIntersection(scene, viewRay, FALSE);
+  if(details.intersected == TRUE)
+  {
+    return float3(1.0f, 0.0f, 0.0f);
+  }
+
+  return float3(0.0f, 0.2f, 0.8f);
 }
 
 bool8 createDebugRayIntegrator(DebugRayIntegratorMode mode, RayIntegrator** outIntegrator)

@@ -167,7 +167,9 @@ Ray cameraGenerateCameraRay(Camera* camera, float2 ndc)
   localDir /= localDir.w;
   localDir = normalize(localDir);
 
-  return Ray(float3(), swizzle<0, 1, 2>(localDir));
+  float3 normalizedDir = normalize(swizzle<0, 1, 2>(localDir));  
+
+  return Ray(float3(), normalizedDir);
 }
 
 Ray cameraGenerateWorldRay(Camera* camera, float2 ndc)
@@ -177,9 +179,10 @@ Ray cameraGenerateWorldRay(Camera* camera, float2 ndc)
   float4 fullNDC = float4(ndc.x, ndc.y, 0.0f, 1.0f);
   float4 globalDir = mul(camera->transformNDCToWorld, fullNDC);
   globalDir /= globalDir.w;
-  globalDir = normalize(globalDir);
 
-  return Ray(camera->position, swizzle<0, 1, 2>(globalDir)); 
+  float3 normalizedDir = normalize(swizzle<0, 1, 2>(globalDir));
+
+  return Ray(camera->position, normalizedDir);
 }
 
 void cameraSetAspectRatio(Camera* camera, float32 aspectRatio)

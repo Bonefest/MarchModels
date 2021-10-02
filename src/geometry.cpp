@@ -141,7 +141,7 @@ static void geometryRecalculateFullTransforms(Geometry* geometry, bool8 parentWa
 
 static void geometryRecalculateTransforms(Geometry* geometry)
 {
-  geometryRecalculateTransforms(geometryGetRoot(geometry));
+  geometryRecalculateFullTransforms(geometryGetRoot(geometry));
 }
 
 // ----------------------------------------------------------------------------
@@ -156,6 +156,7 @@ bool8 createGeometry(const std::string& name, Geometry** outGeometry)
   geometry->scale = 1.0f;
   geometry->position = float3(0.0f, 0.0f, 0.0f);
   geometry->orientation = quat(0.0f, 0.0f, 1.0f, 0.0f);
+  geometry->dirty = TRUE;
 
   return TRUE;
 }
@@ -167,6 +168,7 @@ void destroyGeometry(Geometry* geometry)
 
 void geometrySetScale(Geometry* geometry, float32 scale)
 {
+  geometry->dirty = TRUE;
   geometry->scale = scale;
 }
 
@@ -177,6 +179,7 @@ float32 geometryGetScale(Geometry* geometry)
 
 void geometrySetPosition(Geometry* geometry, float3 position)
 {
+  geometry->dirty = TRUE;
   geometry->position = position;
 }
 
@@ -187,6 +190,7 @@ float3 geometryGetPosition(Geometry* geometry)
 
 void geometrySetOrientation(Geometry* geometry, quat orientation)
 {
+  geometry->dirty = TRUE;
   geometry->orientation = orientation;
 }
 

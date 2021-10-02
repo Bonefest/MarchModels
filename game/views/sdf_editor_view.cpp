@@ -73,16 +73,10 @@ static void updateSDFEditorLayout(View* view, ImVec2 viewSize)
 
 static bool8 initializeSDFEditor(View* view)
 {
-  // create two scene widgets, setup one camera for them.
-  // first widget will be delayed with better quality
-  // second widget will be real-time with fast debug quality
-  // create widget for text editing
-  // create widget for console output
-
   vector<string> parameters = {"r"};
   declareScriptFunction(SCRIPT_FUNCTION_TYPE_SDF,
                         "sphereSDF",
-                        "return vectors.length(args[\"p\"]) - args[\"r\"]",
+                        "return float3.length(args[\"p\"]) - args[\"r\"]",
                         parameters);
   assert(createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF, "sphereSDF", &internalData.sphereSDF));
   scriptFunctionSetArgValue(internalData.sphereSDF, "r", 1.0f);
@@ -99,7 +93,7 @@ static bool8 initializeSDFEditor(View* view)
   
   assert(createDebugRayIntegrator(DEBUG_RAY_INTEGRATOR_MODE_ONE_COLOR, &internalData.rayIntegrator));
   assert(createCenterSampler(uint2(64, 64), &internalData.sampler));
-  assert(createDebugImageIntegrator(uint2(5, 5), uint2(0,0),
+  assert(createDebugImageIntegrator(uint2(13, 13), uint2(0,0),
                                     internalData.scene,
                                     internalData.sampler,
                                     internalData.rayIntegrator,
