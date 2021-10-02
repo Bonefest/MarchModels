@@ -1,21 +1,36 @@
 #include <memory_manager.h>
 
+#include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
+
+#include <film.h>
+#include <camera.h>
+#include <debug_ray_integrator.h>
+#include <debug_image_integrator.h>
+#include <samplers/center_sampler.h>
+
 #include "widgets/text_edit_widget.h"
 
 #include "sdf_editor_view.h"
 
-#include <imgui/imgui.h>
-#include <imgui/imgui_internal.h>
-
 const char* viewName = "SDF Editor";
-const char* codeEditorWidgetName = "Code editor";
-const char* sdfPreview1WidgetName = "Preview 1";
-const char* sdfPreview2WidgetName = "Preview 2";
-const char* consoleWidgetName = "Console";
+const char* codeEditorWidgetName = "Code editor##sdf_editor";
+const char* sdfPreview1WidgetName = "Preview 1##sdf_editor";
+const char* sdfPreview2WidgetName = "Preview 2##sdf_editor";
+const char* consoleWidgetName = "Console##sdf_editor";
 
 struct SDFEditorInternalData
 {
   Widget* textEditorWidget;
+
+  Geometry* geometry;
+  
+  Scene* scene;
+  Camera* camera;
+  Film* film;
+  RayIntegrator* rayIntegrator;
+  Sampler* sampler;
+  ImageIntegrator* imageIntegrator;
 };
 
 static SDFEditorInternalData internalData;
@@ -51,6 +66,10 @@ static void updateSDFEditorLayout(View* view, ImVec2 viewSize)
   ImGui::DockBuilderDockWindow(sdfPreview2WidgetName, preview2NodeID);
 
   ImGui::DockBuilderFinish(viewNodeID);
+
+  filmResize(internalData.film, uint2(viewSize.x, viewSize.y));
+  cameraSetAspectRatio(internalData.camera, viewSize.x / viewSize.y);
+  centerSamplerSetAreaSize(internalData.sampler, uint2(viewSize.x, viewSize.y));
 }
 
 static bool8 initializeSDFEditor(View* view)
@@ -61,6 +80,22 @@ static bool8 initializeSDFEditor(View* view)
   // create widget for text editing
   // create widget for console output
 
+  assert(createGeometry("Test geometry", &internalData.geometry));
+  assert(createScene(&internalData.scene));
+  sceneAddGeometry(internalData.scene, internalData.geometry);
+  
+  assert(createFilm(uint2(64, 64), &internalData.film));
+  assert(createPerspectiveCamera(1.0f, toRad(45.0f), 0.01f, 100.0f, &internalData.camera));
+  assert(createDebugRayIntegrator(DEBUG_RAY_INTEGRATOR_MODE_ONE_COLOR, &internalData.rayIntegrator));
+  assert(createCenterSampler(uint2(64, 64), &internalData.sampler));
+  assert(createDebugImageIntegrator(uint2(5, 5), uint2(0,0),
+                                    internalData.scene,
+                                    internalData.sampler,
+                                    internalData.rayIntegrator,
+                                    internalData.film,
+                                    internalData.camera,
+                                    &internalData.imageIntegrator));
+  
   assert(createTextEditWidget(&internalData.textEditorWidget));
   
   return TRUE;

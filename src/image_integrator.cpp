@@ -1,3 +1,4 @@
+#include "lua/lua_system.h"
 #include "memory_manager.h"
 
 #include "image_integrator.h"
@@ -14,6 +15,13 @@ struct ImageIntegrator
 
   void* internalData;
 };
+
+static void imageIntegratorSetupCommonScriptData(ImageIntegrator* integrator, float32 time)
+{
+  sol::state& lua = luaGetMainState();
+  lua["args"]["time"] = time;
+  // lua["args"]["camera"] = cameraGetLuaTable(integrator->camera);
+}
 
 bool8 allocateImageIntegrator(ImageIntegratorInterface interface,
                               Scene* scene,
@@ -46,6 +54,8 @@ void destroyImageIntegrator(ImageIntegrator* integrator)
 
 void imageIntegratorExecute(ImageIntegrator* integrator, float32 time)
 {
+  imageIntegratorSetupCommonScriptData(integrator, time);
+  
   uint2 filmSize = filmGetSize(integrator->film);
   for(int32 y = 0; y < filmSize.y; y++)
   {
@@ -95,6 +105,11 @@ void imageIntegratorSetRayIntegrator(ImageIntegrator* integrator, RayIntegrator*
 void imageIntegratorSetFilm(ImageIntegrator* integrator, Film* film)
 {
   integrator->film = film;
+}
+
+Film* imageIntegratorGetFilm(ImageIntegrator* integrator)
+{
+  return integrator->film;
 }
  
 void imageIntegratorSetCamera(ImageIntegrator* integrator, Camera* camera)

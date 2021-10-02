@@ -4,6 +4,7 @@
 
 struct CenterSamplerData
 {
+  uint2 areaSize;
   float2 inversedAreaSize;
   int2 location;
   bool8 sampleGenerated;
@@ -48,11 +49,23 @@ bool8 createCenterSampler(uint2 sampleAreaSize, Sampler** outSampler)
   allocateSampler(interface, outSampler);
 
   CenterSamplerData* data = engineAllocObject<CenterSamplerData>(MEMORY_TYPE_GENERAL);
-  data->inversedAreaSize = float2(1.0f / float32(sampleAreaSize.x), 1.0f / float32(sampleAreaSize.y));
   data->sampleGenerated = TRUE;
 
   samplerSetInternalData(*outSampler, data);
+  centerSamplerSetAreaSize(*outSampler, sampleAreaSize);
 
   return TRUE;
 }
 
+void centerSamplerSetAreaSize(Sampler* sampler, uint2 newAreaSize)
+{
+  CenterSamplerData* data = (CenterSamplerData*)samplerGetInternalData(sampler);
+  data->inversedAreaSize = float2(1.0f / float32(newAreaSize.x), 1.0f / float32(newAreaSize.y));  
+  data->areaSize = newAreaSize;
+}
+
+uint2 centerSamplerGetAreaSize(Sampler* sampler)
+{
+  CenterSamplerData* data = (CenterSamplerData*)samplerGetInternalData(sampler);  
+  return data->areaSize;
+}

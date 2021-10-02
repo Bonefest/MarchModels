@@ -30,6 +30,7 @@ ENGINE_API void imageIntegratorSetScene(ImageIntegrator* integrator, Scene* scen
 ENGINE_API void imageIntegratorSetSampler(ImageIntegrator* integrator, Sampler* sampler);
 ENGINE_API void imageIntegratorSetRayIntegrator(ImageIntegrator* integrator, RayIntegrator* rayIntegrator);
 ENGINE_API void imageIntegratorSetFilm(ImageIntegrator* integrator, Film* film);
+ENGINE_API Film* imageIntegratorGetFilm(ImageIntegrator* integrator);
 ENGINE_API void imageIntegratorSetCamera(ImageIntegrator* integrator, Camera* camera);
 
 void imageIntegratorSetInternalData(ImageIntegrator* integrator, void* internalData);
