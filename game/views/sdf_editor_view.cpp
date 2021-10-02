@@ -10,6 +10,7 @@
 #include <samplers/center_sampler.h>
 
 #include "widgets/text_edit_widget.h"
+#include "widgets/image_integrator_display_widget.h"
 
 #include "sdf_editor_view.h"
 
@@ -22,7 +23,9 @@ const char* consoleWidgetName = "Console##sdf_editor";
 struct SDFEditorInternalData
 {
   Widget* textEditorWidget;
+  Widget* imageIntegratorDisplayWidget;
 
+  ScriptFunction* sphereSDF;
   Geometry* geometry;
   
   Scene* scene;
@@ -80,12 +83,24 @@ static bool8 initializeSDFEditor(View* view)
   // create widget for text editing
   // create widget for console output
 
+  vector<string> parameters = {"r"};
+  declareScriptFunction(SCRIPT_FUNCTION_TYPE_SDF,
+                        "sphereSDF",
+                        "return vectors.length(args[\"p\"]) - args[\"r\"]",
+                        parameters);
+  assert(createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF, "sphereSDF", &internalData.sphereSDF));
+  scriptFunctionSetArgValue(internalData.sphereSDF, "r", 1.0f);
+  
   assert(createGeometry("Test geometry", &internalData.geometry));
+  geometrySetSDF(internalData.geometry, internalData.sphereSDF);
+  geometrySetPosition(internalData.geometry, float3(0.0f, 0.0f, 5.0f));
+  
   assert(createScene(&internalData.scene));
   sceneAddGeometry(internalData.scene, internalData.geometry);
   
   assert(createFilm(uint2(64, 64), &internalData.film));
   assert(createPerspectiveCamera(1.0f, toRad(45.0f), 0.01f, 100.0f, &internalData.camera));
+  
   assert(createDebugRayIntegrator(DEBUG_RAY_INTEGRATOR_MODE_ONE_COLOR, &internalData.rayIntegrator));
   assert(createCenterSampler(uint2(64, 64), &internalData.sampler));
   assert(createDebugImageIntegrator(uint2(5, 5), uint2(0,0),
@@ -96,7 +111,11 @@ static bool8 initializeSDFEditor(View* view)
                                     internalData.camera,
                                     &internalData.imageIntegrator));
   
-  assert(createTextEditWidget(&internalData.textEditorWidget));
+  assert(createTextEditWidget(codeEditorWidgetName, &internalData.textEditorWidget));
+  assert(createImageIntegratorDisplayWidget(sdfPreview1WidgetName,
+                                            internalData.imageIntegrator,
+                                            10.0f,
+                                            &internalData.imageIntegratorDisplayWidget));
   
   return TRUE;
 }
@@ -118,15 +137,14 @@ static void onUnloadSDFEditor(View* view)
 
 static void updateSDFEditor(View* view, float64 delta)
 {
-
+  updateWidget(internalData.textEditorWidget, view, delta);
+  updateWidget(internalData.imageIntegratorDisplayWidget, view, delta);  
 }
 
 static void drawSDFEditor(View* view, ImVec2 viewOffset, ImVec2 viewSize, float64 delta)
 {
-
-  ImGui::Begin(codeEditorWidgetName);
   drawWidget(internalData.textEditorWidget, view, delta);
-  ImGui::End();
+  drawWidget(internalData.imageIntegratorDisplayWidget, view, delta);
 }
 
 static void processInputSDFEditor(View* view, const EventData& eventData, void* sender)

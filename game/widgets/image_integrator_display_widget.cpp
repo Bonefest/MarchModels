@@ -41,6 +41,9 @@ static void drawImageIntegratorDisplayWidget(Widget* widget, View* view, float64
   uint2 filmSize = filmGetSize(film);
   
   ImGui::Begin(data->identifier.c_str());
+
+  // TODO: Get size, check and update camera, film etc correspondingly
+  
   ImGui::Image((void*)filmGetGLTexture(film),
                ImVec2(filmSize.x, filmSize.y), ImVec2(1.0f, 1.0f), ImVec2(0.0f, 0.0f));  
   ImGui::End();
