@@ -11,7 +11,7 @@ struct ImageIntegrator;
 struct ImageIntegratorInterface
 {
   void (*destroy)(ImageIntegrator*);  
-  bool8 (*shouldIntegratePixelLocation)(int2 location);
+  bool8 (*shouldIntegratePixelLocation)(ImageIntegrator* integrator, int2 location);
 };
 
 ENGINE_API bool8 allocateImageIntegrator(ImageIntegratorInterface interface,
@@ -32,3 +32,5 @@ ENGINE_API void imageIntegratorSetRayIntegrator(ImageIntegrator* integrator, Ray
 ENGINE_API void imageIntegratorSetFilm(ImageIntegrator* integrator, Film* film);
 ENGINE_API void imageIntegratorSetCamera(ImageIntegrator* integrator, Camera* camera);
 
+void imageIntegratorSetInternalData(ImageIntegrator* integrator, void* internalData);
+void* imageIntegratorGetInternalData(ImageIntegrator* integrator);

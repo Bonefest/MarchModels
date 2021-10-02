@@ -54,7 +54,7 @@ void imageIntegratorExecute(ImageIntegrator* integrator, float32 time)
       int2 pixelLocation(x, y);
 
       float3 radiance(0.0f, 0.0f, 0.0f);
-      if(integrator->interface.shouldIntegratePixelLocation(pixelLocation))
+      if(integrator->interface.shouldIntegratePixelLocation(integrator, pixelLocation))
       {
         samplerStartSamplingPixel(integrator->sampler, pixelLocation);
 
@@ -100,4 +100,14 @@ void imageIntegratorSetFilm(ImageIntegrator* integrator, Film* film)
 void imageIntegratorSetCamera(ImageIntegrator* integrator, Camera* camera)
 {
   integrator->camera = camera;
+}
+
+void imageIntegratorSetInternalData(ImageIntegrator* integrator, void* internalData)
+{
+  integrator->internalData = internalData;
+}
+
+void* imageIntegratorGetInternalData(ImageIntegrator* integrator)
+{
+  return integrator->internalData;
 }

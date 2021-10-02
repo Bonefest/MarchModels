@@ -337,7 +337,14 @@ float32 geometryCalculateDistanceToPoint(Geometry* geometry,
   }
   else
   {
-    distance = executeSDF(geometry->sdf, p);
+    // NOTE: To use transformations in SDF, we need to translate point in local space. That's because
+    // SDF is expressed in local space. For example, sdf of sphere should be expressed relative to the
+    // local origin.
+    //
+    // TODO: If a geometry has scaling, this transformation will be wrong!
+    float3 transformedP = geometryTransformToLocal(geometry, p);
+    
+    distance = executeSDF(geometry->sdf, transformedP);
     if(outClosestLeafGeometry != nullptr)
     {
       *outClosestLeafGeometry = geometry;

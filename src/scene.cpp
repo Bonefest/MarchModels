@@ -57,10 +57,10 @@ void sceneRemoveLightSource(Scene* scene, LightSource* lightSource)
 
 }
 
-// const std::vector<LightSource*>& sceneGetLightSources(Scene* scene)
-// {
-
-// }
+const std::vector<LightSource*>& sceneGetLightSources(Scene* scene)
+{
+  return scene->lightSourceArray;
+}
 
 IntersectionDetails sceneFindIntersection(Scene* scene, Ray ray, bool8 calculateNormal)
 {
