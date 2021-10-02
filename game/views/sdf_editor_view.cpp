@@ -69,10 +69,6 @@ static void updateSDFEditorLayout(View* view, ImVec2 viewSize)
   ImGui::DockBuilderDockWindow(sdfPreview2WidgetName, preview2NodeID);
 
   ImGui::DockBuilderFinish(viewNodeID);
-
-  filmResize(internalData.film, uint2(viewSize.x, viewSize.y));
-  cameraSetAspectRatio(internalData.camera, viewSize.x / viewSize.y);
-  centerSamplerSetAreaSize(internalData.sampler, uint2(viewSize.x, viewSize.y));
 }
 
 static bool8 initializeSDFEditor(View* view)

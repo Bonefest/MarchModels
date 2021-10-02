@@ -28,6 +28,12 @@ static void updateImageIntegratorDisplayWidget(Widget* widget, View* view, float
   data->elapsedTime += delta;
 }
 
+static void updateImageIntegratorDisplayWidgetSize(Widget* widget, uint2 size)
+{
+  ImageIntegratorDisplayWidgetData* data = (ImageIntegratorDisplayWidgetData*)widgetGetInternalData(widget);
+  imageIntegratorSetSize(data->integrator, size);
+}
+
 static void drawImageIntegratorDisplayWidget(Widget* widget, View* view, float64 delta)
 {
   ImageIntegratorDisplayWidgetData* data = (ImageIntegratorDisplayWidgetData*)widgetGetInternalData(widget);  
@@ -39,14 +45,19 @@ static void drawImageIntegratorDisplayWidget(Widget* widget, View* view, float64
 
   Film* film = imageIntegratorGetFilm(data->integrator);
   uint2 filmSize = filmGetSize(film);
-  
+
   ImGui::Begin(data->identifier.c_str());
 
-  // TODO: Get size, check and update camera, film etc correspondingly
+  ImVec2 widgetSize = ImGui::GetWindowContentAreaSize();
+  if(widgetSize.x != filmSize.x || widgetSize.y != filmSize.y)
+  {
+    updateImageIntegratorDisplayWidgetSize(widget, uint2(widgetSize.x, widgetSize.y));
+  }
   
   ImGui::Image((void*)filmGetGLTexture(film),
                ImVec2(filmSize.x, filmSize.y), ImVec2(1.0f, 1.0f), ImVec2(0.0f, 0.0f));  
   ImGui::End();
+
 }
 
 static void processInputImageIntegratorDisplayWidget(Widget* widget,

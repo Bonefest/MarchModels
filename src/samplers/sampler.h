@@ -17,15 +17,20 @@ struct SamplerInterface
   void(*destroy)(Sampler* sampler);
   void(*startSamplingPixel)(Sampler* sampler, int2 location);
   bool8(*generateSample)(Sampler* sampler, Sample& outSample);
-
-  void* internalData;
 };
 
-ENGINE_API bool8 allocateSampler(const SamplerInterface& interface, Sampler** outSampler);
+ENGINE_API bool8 allocateSampler(const SamplerInterface& interface, uint2 sampleAreaSize, Sampler** outSampler);
 ENGINE_API void destroySampler(Sampler* sampler);
 
 ENGINE_API void samplerStartSamplingPixel(Sampler* sampler, int2 location);
 ENGINE_API bool8 samplerGenerateSample(Sampler* sampler, Sample& outSampler);
 
-ENGINE_API void samplerSetInternalData(Sampler* sampler, void* internalData);
-ENGINE_API void* samplerGetInternalData(Sampler* sampler);
+ENGINE_API void samplerSetSampleAreaSize(Sampler* sampler, uint2 sampleAreaSize);
+ENGINE_API uint2 samplerGetSampleAreaSize(Sampler* sampler);
+
+float2 samplerConvertLocationToNDC(Sampler* sampler, int2 location);
+float2 samplerConvertLocationToNDC(Sampler* sampler, float2 location);
+
+void samplerSetInternalData(Sampler* sampler, void* internalData);
+void* samplerGetInternalData(Sampler* sampler);
+

@@ -87,21 +87,43 @@ void imageIntegratorExecute(ImageIntegrator* integrator, float32 time)
   }
 }
 
+void imageIntegratorSetSize(ImageIntegrator* integrator, uint2 size)
+{
+  filmResize(integrator->film, size);
+  cameraSetAspectRatio(integrator->camera, float32(size.x) / float32(size.y));
+  samplerSetSampleAreaSize(integrator->sampler, size);
+}
+
 void imageIntegratorSetScene(ImageIntegrator* integrator, Scene* scene)
 {
   integrator->scene = scene;
+}
+
+Scene* imageIntegratorGetScene(ImageIntegrator* integrator)
+{
+  return integrator->scene;
 }
  
 void imageIntegratorSetSampler(ImageIntegrator* integrator, Sampler* sampler)
 {
   integrator->sampler = sampler;
 }
- 
+
+Sampler* imageIntegratorGetSampler(ImageIntegrator* integrator)
+{
+  return integrator->sampler;
+}
+
 void imageIntegratorSetRayIntegrator(ImageIntegrator* integrator, RayIntegrator* rayIntegrator)
 {
   integrator->rayIntegrator = rayIntegrator;
 }
- 
+
+RayIntegrator* imageIntegratorGetRayIntegrator(ImageIntegrator* integrator)
+{
+  return integrator->rayIntegrator;
+}
+
 void imageIntegratorSetFilm(ImageIntegrator* integrator, Film* film)
 {
   integrator->film = film;

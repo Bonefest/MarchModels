@@ -87,6 +87,8 @@ bool8 filmResize(Film* film, uint2 newSize)
   {
     filmReallocateGLTexture(film);
   }
+
+  film->size = newSize;
   
   return TRUE;
 }

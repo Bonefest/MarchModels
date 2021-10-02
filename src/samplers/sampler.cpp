@@ -5,16 +5,20 @@
 struct Sampler
 {
   SamplerInterface interface;
-
+  uint2 areaSize;
+  float2 inversedAreaSize;
+  
   void* internalData;
 };
 
-bool8 allocateSampler(const SamplerInterface& interface, Sampler** outSampler)
+bool8 allocateSampler(const SamplerInterface& interface, uint2 sampleAreaSize, Sampler** outSampler)
 {
   *outSampler = engineAllocObject<Sampler>(MEMORY_TYPE_GENERAL);
   Sampler* sampler = *outSampler;
   sampler->interface = interface;
   sampler->internalData = nullptr;
+
+  samplerSetSampleAreaSize(*outSampler, sampleAreaSize);
   
   return TRUE;
 }
@@ -35,6 +39,28 @@ bool8 samplerGenerateSample(Sampler* sampler, Sample& outSample)
 {
   return sampler->interface.generateSample(sampler, outSample);
 }
+
+void samplerSetSampleAreaSize(Sampler* sampler, uint2 sampleAreaSize)
+{
+  sampler->areaSize = sampleAreaSize;
+  sampler->inversedAreaSize = float2(1.0f / float32(sampleAreaSize.x), 1.0f / float32(sampleAreaSize.y));
+}
+
+uint2 samplerGetSampleAreaSize(Sampler* sampler)
+{
+  return sampler->areaSize;
+}
+
+float2 samplerConvertLocationToNDC(Sampler* sampler, int2 location)
+{
+  return samplerConvertLocationToNDC(sampler, float2(location.x, location.y));
+}
+
+float2 samplerConvertLocationToNDC(Sampler* sampler, float2 location)
+{
+  return location * sampler->inversedAreaSize * 2.0f - 1.0f;
+}
+
 
 void samplerSetInternalData(Sampler* sampler, void* internalData)
 {

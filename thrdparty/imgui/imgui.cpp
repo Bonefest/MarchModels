@@ -7417,6 +7417,14 @@ ImVec2 ImGui::GetWindowSize()
     return window->Size;
 }
 
+ImVec2 ImGui::GetWindowContentAreaSize()
+{
+  ImVec2 regMin = ImGui::GetWindowContentRegionMin();
+  ImVec2 regMax = ImGui::GetWindowContentRegionMax();
+
+  return ImVec2(regMax.x - regMin.x, regMax.y - regMin.y);
+}
+
 void ImGui::SetWindowSize(ImGuiWindow* window, const ImVec2& size, ImGuiCond cond)
 {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
