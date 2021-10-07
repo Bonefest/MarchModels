@@ -138,9 +138,23 @@ static bool8 initImGUI()
   application.imguiIO = &ImGui::GetIO();
   application.imguiIO->ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   (void)(*application.imguiIO);
-
+  
   ImGui_ImplGlfw_InitForOpenGL(application.window, true);
   ImGui_ImplOpenGL3_Init("#version 150");
+
+  application.imguiIO->Fonts->AddFontDefault();
+
+  static const ImWchar iconsRange[] = {ICON_MIN_KI, ICON_MAX_KI};
+
+  // NOTE: See https://github.com/ocornut/imgui/blob/master/docs/FONTS.md for details
+  ImFontConfig iconsFontConfig;
+  iconsFontConfig.MergeMode = true;
+  iconsFontConfig.GlyphMinAdvanceX = 13.0f; // Default font size is 13.0 pixels wide.
+                                            // This allows us to be monospace
+  application.imguiIO->Fonts->AddFontFromFileTTF("assets/fonts/kenney-icon-font.ttf",
+                                                 13.0f,
+                                                 &iconsFontConfig,
+                                                 iconsRange);
   
   return TRUE;
 }

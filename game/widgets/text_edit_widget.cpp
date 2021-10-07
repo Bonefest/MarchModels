@@ -27,7 +27,7 @@ static void textEditWidgetDraw(Widget* widget, View* view, float64 delta)
   TextEditWidgetData* data = (TextEditWidgetData*)widgetGetInternalData(widget);
   
   ImGui::Begin(data->identifier.c_str());
-  ImVec2 editWindowSize = ImGui::GetWindowSize();
+  ImVec2 editWindowSize = ImGui::GetWindowContentAreaSize();
   ImGui::InputTextMultiline("##", data->buffer, MAX_BUF_SIZE, editWindowSize);
   ImGui::End();
 }

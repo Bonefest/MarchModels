@@ -16,6 +16,13 @@
 
 #include "main_view.h"
 
+struct MainViewData
+{
+  Widget* codeEditorWidget;
+};
+
+static MainViewData viewData;
+
 const char* codeWindowName = "Code##MainView";
 const char* consoleWindowName = "Console##MainView";
 const char* assetsWindowName = "Assets##MainView";
@@ -26,12 +33,14 @@ const char* actionWindowName = "Actions##MainView";
 
 static bool8 mainViewInitialize(View* view)
 {
+  assert(createTextEditWidget(codeWindowName, &viewData.codeEditorWidget));
+  
   return TRUE;
 }
 
 static void mainViewShutdown(View* view)
 {
-
+  freeWidget(viewData.codeEditorWidget);
 }
 
 static void mainViewOnLoad(View* view)
@@ -75,7 +84,7 @@ static void mainViewUpdateLayout(View* view, ImVec2 viewSize)
     ImGui::DockBuilderSplitNode(lgroupNodeID, ImGuiDir_Up, 0.5f, &previewNodeID, &contextNodeID);
   }
 
-  // Finding ids of nodes of the second column (Hierarchy, Action)
+  // Finding ids of nodes of the third column (Hierarchy, Action)
   ImGuiID sceneHierarchyNodeID, actionNodeID;
   {
     ImGui::DockBuilderSplitNode(rgroupNodeID, ImGuiDir_Up, 0.5f, &sceneHierarchyNodeID, &actionNodeID);
@@ -94,15 +103,15 @@ static void mainViewUpdateLayout(View* view, ImVec2 viewSize)
 
 static void mainViewUpdate(View* view, float64 delta)
 {
-
+  updateWidget(viewData.codeEditorWidget, view, delta);
 }
 
 static void mainViewDraw(View* view, ImVec2 viewOffset, ImVec2 viewSize, float64 delta)
 {
-  ImGui::Begin(codeWindowName);
-  ImGui::End();
-
+  drawWidget(viewData.codeEditorWidget, view, delta);
+  
   ImGui::Begin(consoleWindowName);
+  ImGui::Button(ICON_KI_INFO " Info");
   ImGui::End();
   
   ImGui::Begin(assetsWindowName);
