@@ -17,6 +17,7 @@
 #include <script_function.h>
 
 #include "editor.h"
+#include "views/main_view.h"
 #include "views/sdf_editor_view.h"
 
 using std::string;
@@ -72,16 +73,17 @@ bool8 extractSetupConfig(Application* app,
 
 static bool8 initialize(Application* app)
 {
-  View* sdfEditorView = nullptr;
-  assert(createSDFEditorView(&sdfEditorView));
-  editorInternalData.viewsMap[viewGetName(sdfEditorView)] = sdfEditorView;
+  View* view = nullptr;
+  assert(createMainView(&view));
+  
+  editorInternalData.viewsMap[viewGetName(view)] = view;
 
   for(auto viewPair: editorInternalData.viewsMap)
   {
     assert(initializeView(viewPair.second));
   }
 
-  editorSetView(viewGetName(sdfEditorView));
+  editorSetView(viewGetName(view));
   
   return TRUE;
 }

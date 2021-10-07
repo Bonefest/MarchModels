@@ -20,6 +20,13 @@ const char* sdfPreview1WidgetName = "Preview 1##sdf_editor";
 const char* sdfPreview2WidgetName = "Preview 2##sdf_editor";
 const char* consoleWidgetName = "Console##sdf_editor";
 
+const char* v1 = "v1";
+const char* v2 = "v2";
+const char* v3 = "v3";
+const char* v4 = "v4";
+const char* v5 = "v5";
+const char* v6 = "v6";
+
 struct SDFEditorInternalData
 {
   Widget* textEditorWidget;
@@ -55,6 +62,7 @@ static void updateSDFEditorLayout(View* view, ImVec2 viewSize)
   ImGui::DockBuilderSetNodeSize(viewNodeID, viewSize);
 
   ImGuiID leftNodeID, rightNodeID;
+
   ImGui::DockBuilderSplitNode(viewNodeID, ImGuiDir_Left, 0.75f, &leftNodeID, &rightNodeID);
 
   ImGuiID codeEditorNodeID, consoleNodeID;
@@ -67,7 +75,7 @@ static void updateSDFEditorLayout(View* view, ImVec2 viewSize)
   ImGui::DockBuilderDockWindow(consoleWidgetName, consoleNodeID);
   ImGui::DockBuilderDockWindow(sdfPreview1WidgetName, preview1NodeID);
   ImGui::DockBuilderDockWindow(sdfPreview2WidgetName, preview2NodeID);
-
+  
   ImGui::DockBuilderFinish(viewNodeID);
 }
 
