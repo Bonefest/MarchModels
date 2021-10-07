@@ -28,6 +28,23 @@ static void textEditWidgetDraw(Widget* widget, View* view, float64 delta)
   
   ImGui::Begin(data->identifier.c_str());
   ImVec2 editWindowSize = ImGui::GetWindowContentAreaSize();
+
+
+  int32 offsetPosX, clearButtonSize = 65.0f, offset = 10.0f;
+  {
+    offsetPosX = editWindowSize.x - clearButtonSize;
+    ImGui::SameLine(offsetPosX);  
+    ImGui::Button(ICON_KI_TIMES" Clear");
+    clearButtonSize = ImGui::GetItemRectSize().x;
+  }
+
+  {
+    int32 compileButtonSize = 78.0f;
+    offsetPosX = editWindowSize.x - clearButtonSize - compileButtonSize - offset;
+    ImGui::SameLine(offsetPosX);
+    ImGui::Button(ICON_KI_WRENCH" Compile");
+  }
+  
   ImGui::InputTextMultiline("##", data->buffer, MAX_BUF_SIZE, editWindowSize);
   ImGui::End();
 }

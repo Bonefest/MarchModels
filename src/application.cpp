@@ -155,6 +155,15 @@ static bool8 initImGUI()
                                                  13.0f,
                                                  &iconsFontConfig,
                                                  iconsRange);
+
+  // TODO: Load this from a configuration?
+  ImGuiStyle& style = ImGui::GetStyle();
+  
+  style.WindowPadding = ImVec2(0.0f, 0.0f);
+  style.WindowRounding = 12.0f;
+  style.FrameRounding = 6.0f;
+  style.TabRounding = 0.0f;
+  style.WindowMenuButtonPosition = ImGuiDir_None;
   
   return TRUE;
 }

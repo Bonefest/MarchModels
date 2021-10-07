@@ -29,7 +29,8 @@ const char* assetsWindowName = "Assets##MainView";
 const char* previewWindowName = "Preview##MainView";
 const char* contextWindowName = "Context##MainView";
 const char* sceneHierarchyWindowName = "Scene hierarchy##MainView";
-const char* actionWindowName = "Actions##MainView";
+//const char* actionWindowName = "Actions##MainView";
+const char* actionWindowName = "Dear ImGui Style Editor";
 
 static bool8 mainViewInitialize(View* view)
 {
@@ -111,7 +112,6 @@ static void mainViewDraw(View* view, ImVec2 viewOffset, ImVec2 viewSize, float64
   drawWidget(viewData.codeEditorWidget, view, delta);
   
   ImGui::Begin(consoleWindowName);
-  ImGui::Button(ICON_KI_INFO " Info");
   ImGui::End();
   
   ImGui::Begin(assetsWindowName);
@@ -125,9 +125,11 @@ static void mainViewDraw(View* view, ImVec2 viewOffset, ImVec2 viewSize, float64
 
   ImGui::Begin(sceneHierarchyWindowName);
   ImGui::End();
+
+  ImGui::ShowDemoWindow();
   
-  ImGui::Begin(actionWindowName);
-  ImGui::End();  
+  // ImGui::Begin(actionWindowName);
+  // ImGui::End();  
 }
 
 static void mainViewProcessInput(View* view, const EventData& eventData, void* sender)
