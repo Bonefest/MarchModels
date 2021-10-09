@@ -4,7 +4,6 @@
 
 struct ImageIntegratorDisplayWidgetData
 {
-  std::string identifier;
   ImageIntegrator* integrator;
   float32 maxFPS;
   float32 timePerFrame;
@@ -46,7 +45,7 @@ static void drawImageIntegratorDisplayWidget(Widget* widget, View* view, float64
   Film* film = imageIntegratorGetFilm(data->integrator);
   uint2 filmSize = filmGetSize(film);
 
-  ImGui::Begin(data->identifier.c_str());
+  ImGui::Begin(widgetGetIdentifier(widget).c_str());
 
   ImVec2 widgetSize = ImGui::GetWindowContentAreaSize();
   if(widgetSize.x != filmSize.x || widgetSize.y != filmSize.y)
@@ -80,13 +79,12 @@ bool8 createImageIntegratorDisplayWidget(const std::string& identifier,
   interface.draw = drawImageIntegratorDisplayWidget;
   interface.processInput = processInputImageIntegratorDisplayWidget;
 
-  if(allocateWidget(interface, outWidget) == FALSE)
+  if(allocateWidget(interface, identifier, outWidget) == FALSE)
   {
     return FALSE;
   }
 
   ImageIntegratorDisplayWidgetData* data = engineAllocObject<ImageIntegratorDisplayWidgetData>(MEMORY_TYPE_GENERAL);
-  data->identifier = identifier;
   data->integrator = integrator;
   data->elapsedTime = 0.0f;
 

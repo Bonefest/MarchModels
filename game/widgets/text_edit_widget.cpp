@@ -6,7 +6,6 @@ const static uint32 MAX_BUF_SIZE = 2048;
 
 struct TextEditWidgetData
 {
-  std::string identifier;
   char buffer[MAX_BUF_SIZE];
   
 };
@@ -26,7 +25,7 @@ static void textEditWidgetDraw(Widget* widget, View* view, float64 delta)
 {
   TextEditWidgetData* data = (TextEditWidgetData*)widgetGetInternalData(widget);
   
-  ImGui::Begin(data->identifier.c_str());
+  ImGui::Begin(widgetGetIdentifier(widget).c_str());
   ImVec2 editWindowSize = ImGui::GetWindowContentAreaSize();
 
 
@@ -56,11 +55,12 @@ bool8 createTextEditWidget(const std::string& identifier, Widget** outWidget)
   interface.update = textEditWidgetUpdate;
   interface.draw = textEditWidgetDraw;
 
-  allocateWidget(interface, outWidget);
+  if(allocateWidget(interface, identifier, outWidget) == FALSE)
+  {
+    return FALSE;
+  }
 
   TextEditWidgetData* data = engineAllocObject<TextEditWidgetData>(MEMORY_TYPE_GENERAL);
-  data->identifier = identifier;
-
   widgetSetInternalData(*outWidget, data);
 
   return TRUE;

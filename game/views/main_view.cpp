@@ -11,14 +11,14 @@
 #include <debug_image_integrator.h>
 #include <samplers/center_sampler.h>
 
-#include "widgets/text_edit_widget.h"
+#include "widgets/console_widget.h"
 #include "widgets/image_integrator_display_widget.h"
 
 #include "main_view.h"
 
 struct MainViewData
 {
-  Widget* codeEditorWidget;
+  Widget* consoleWidget;
 };
 
 static MainViewData viewData;
@@ -35,14 +35,15 @@ const char* consoleWindowName = "Console##MainView";
 
 static bool8 mainViewInitialize(View* view)
 {
-  // assert(createTextEditWidget(codeWindowName, &viewData.codeEditorWidget));
+  assert(createConsoleWidget(consoleWindowName, &viewData.consoleWidget));
+  assert(initializeWidget(viewData.consoleWidget));
   
   return TRUE;
 }
 
 static void mainViewShutdown(View* view)
 {
-  freeWidget(viewData.codeEditorWidget);
+  freeWidget(viewData.consoleWidget);
 }
 
 static void mainViewOnLoad(View* view)
@@ -82,12 +83,12 @@ static void mainViewUpdateLayout(View* view, ImVec2 viewSize)
 
 static void mainViewUpdate(View* view, float64 delta)
 {
-  // updateWidget(viewData.codeEditorWidget, view, delta);
+  updateWidget(viewData.consoleWidget, view, delta);
 }
 
 static void mainViewDraw(View* view, ImVec2 viewOffset, ImVec2 viewSize, float64 delta)
 {
-  // drawWidget(viewData.codeEditorWidget, view, delta);
+  drawWidget(viewData.consoleWidget, view, delta);
 
   ImGui::Begin(toolbarWindowName);
   ImGui::End();
@@ -96,9 +97,6 @@ static void mainViewDraw(View* view, ImVec2 viewOffset, ImVec2 viewSize, float64
   ImGui::End();
 
   ImGui::Begin(sceneHierarchyWindowName);
-  ImGui::End();
-
-  ImGui::Begin(consoleWindowName);
   ImGui::End();
   
   ImGui::ShowDemoWindow();

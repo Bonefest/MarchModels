@@ -159,7 +159,7 @@ static bool8 initImGUI()
   // TODO: Load this from a configuration?
   ImGuiStyle& style = ImGui::GetStyle();
   
-  style.WindowPadding = ImVec2(0.0f, 0.0f);
+  style.WindowPadding = ImVec2(4.0f, 4.0f);
   style.WindowRounding = 12.0f;
   style.FrameRounding = 6.0f;
   style.TabRounding = 0.0f;
@@ -253,8 +253,10 @@ static bool8 initApplication()
   {
     LOG_INFO("Game \"%s\" has been initialized successfully!", application.name);
   }
-
+  
   application.initialized = TRUE;
+
+  LOG_INFO("TEST");
   
   return TRUE;
 }
