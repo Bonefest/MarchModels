@@ -140,51 +140,8 @@ static void draw(Application* app, float64 delta)
 {
   uint32 screenWidth = applicationGetScreenWidth(), screenHeight = applicationGetScreenHeight();
 
-  ImVec2 menuBarSize;
-  
-  ImGui::BeginMainMenuBar();
-  
-  if(ImGui::BeginMenu("New"))
-  {
-    if(ImGui::MenuItem("Scene editor"))
-    {
-      
-    }
-
-    else if(ImGui::MenuItem("SDF"))
-    {
-
-    }
-
-    else if(ImGui::MenuItem("IDF"))
-    {
-      
-    }
-
-    else if(ImGui::MenuItem("ODF"))
-    {
-
-    }
-
-    else if(ImGui::MenuItem("Shape"))
-    {
-
-    }
-
-    else if(ImGui::MenuItem("Material"))
-    {
-
-    }
-    
-    ImGui::EndMenu();
-  }
-
-  menuBarSize = ImGui::GetWindowSize();
-  
-  ImGui::EndMainMenuBar();
-
-  ImVec2 viewSize = ImVec2(screenWidth, screenHeight - menuBarSize.y);
-  ImVec2 viewOffset = ImVec2(0, menuBarSize.y);
+  ImVec2 viewSize = ImVec2(screenWidth, screenHeight);
+  ImVec2 viewOffset = ImVec2(0, 0);
   
   drawView(editorInternalData.currentView, viewOffset, viewSize, delta);
 }

@@ -23,18 +23,19 @@ struct MainViewData
 
 static MainViewData viewData;
 
-const char* codeWindowName = "Code##MainView";
-const char* consoleWindowName = "Console##MainView";
-const char* assetsWindowName = "Assets##MainView";
-const char* previewWindowName = "Preview##MainView";
-const char* contextWindowName = "Context##MainView";
-const char* sceneHierarchyWindowName = "Scene hierarchy##MainView";
+//const char* codeWindowName = "Code##MainView";
+//const char* assetsWindowName = "Assets##MainView";
+// const char* contextWindowName = "Context##MainView";
 //const char* actionWindowName = "Actions##MainView";
-const char* actionWindowName = "Dear ImGui Style Editor";
+
+const char* toolbarWindowName = "Toolbar##MainView";
+const char* previewWindowName = "Preview##MainView";
+const char* sceneHierarchyWindowName = "Scene hierarchy##MainView";
+const char* consoleWindowName = "Console##MainView";
 
 static bool8 mainViewInitialize(View* view)
 {
-  assert(createTextEditWidget(codeWindowName, &viewData.codeEditorWidget));
+  // assert(createTextEditWidget(codeWindowName, &viewData.codeEditorWidget));
   
   return TRUE;
 }
@@ -62,74 +63,45 @@ static void mainViewUpdateLayout(View* view, ImVec2 viewSize)
   ImGui::DockBuilderAddNode(viewNodeID, ImGuiDockNodeFlags_DockSpace);
   ImGui::DockBuilderSetNodeSize(viewNodeID, viewSize);
 
-  ImGuiID lgroupNodeID, rgroupNodeID;
-  ImGui::DockBuilderSplitNode(viewNodeID, ImGuiDir_Left, 0.25f, &lgroupNodeID, &rgroupNodeID);
+  ImGuiID toolbarNodeID, dgroupNodeID;
+  ImGui::DockBuilderSplitNode(viewNodeID, ImGuiDir_Up, 0.1f, &toolbarNodeID, &dgroupNodeID);
 
-  // Finding ids of nodes of the first column (Code, console, assets)
-  ImGuiID codeNodeID, consoleNodeID, assetsNodeID;
-  {
-    ImGuiID ugroupNodeID;
-    ImGui::DockBuilderSplitNode(lgroupNodeID, ImGuiDir_Up, 0.5f, &ugroupNodeID, &assetsNodeID);
-
-    { 
-      ImGui::DockBuilderSplitNode(ugroupNodeID, ImGuiDir_Up, 0.7f, &codeNodeID, &consoleNodeID);       
-    }
-      
-  }
-
-  ImGui::DockBuilderSplitNode(rgroupNodeID, ImGuiDir_Left, 0.66f, &lgroupNodeID, &rgroupNodeID);
-
-  // Finding ids of nodes of the second column (Preview, Context)
-  ImGuiID previewNodeID, contextNodeID;
-  {
-    ImGui::DockBuilderSplitNode(lgroupNodeID, ImGuiDir_Up, 0.5f, &previewNodeID, &contextNodeID);
-  }
-
-  // Finding ids of nodes of the third column (Hierarchy, Action)
-  ImGuiID sceneHierarchyNodeID, actionNodeID;
-  {
-    ImGui::DockBuilderSplitNode(rgroupNodeID, ImGuiDir_Up, 0.5f, &sceneHierarchyNodeID, &actionNodeID);
-  }
+  ImGuiID lgroupNodeID, sceneHierarchyNodeID;
+  ImGui::DockBuilderSplitNode(dgroupNodeID, ImGuiDir_Left, 0.6f, &lgroupNodeID, &sceneHierarchyNodeID);
   
-  ImGui::DockBuilderDockWindow(codeWindowName, codeNodeID);
-  ImGui::DockBuilderDockWindow(consoleWindowName, consoleNodeID);
-  ImGui::DockBuilderDockWindow(assetsWindowName, assetsNodeID);
+  ImGuiID previewNodeID, consoleNodeID;
+  ImGui::DockBuilderSplitNode(lgroupNodeID, ImGuiDir_Down, 0.33f, &consoleNodeID, &previewNodeID);
+
+  ImGui::DockBuilderDockWindow(toolbarWindowName, toolbarNodeID);
   ImGui::DockBuilderDockWindow(previewWindowName, previewNodeID);
-  ImGui::DockBuilderDockWindow(contextWindowName, contextNodeID);  
-  ImGui::DockBuilderDockWindow(sceneHierarchyWindowName, sceneHierarchyNodeID);  
-  ImGui::DockBuilderDockWindow(actionWindowName, actionNodeID);
+  ImGui::DockBuilderDockWindow(sceneHierarchyWindowName, sceneHierarchyNodeID);
+  ImGui::DockBuilderDockWindow(consoleWindowName, consoleNodeID);
   
   ImGui::DockBuilderFinish(viewNodeID);  
 }
 
 static void mainViewUpdate(View* view, float64 delta)
 {
-  updateWidget(viewData.codeEditorWidget, view, delta);
+  // updateWidget(viewData.codeEditorWidget, view, delta);
 }
 
 static void mainViewDraw(View* view, ImVec2 viewOffset, ImVec2 viewSize, float64 delta)
 {
-  drawWidget(viewData.codeEditorWidget, view, delta);
-  
-  ImGui::Begin(consoleWindowName);
-  ImGui::End();
-  
-  ImGui::Begin(assetsWindowName);
+  // drawWidget(viewData.codeEditorWidget, view, delta);
+
+  ImGui::Begin(toolbarWindowName);
   ImGui::End();
   
   ImGui::Begin(previewWindowName);
-  ImGui::End();
-  
-  ImGui::Begin(contextWindowName);
   ImGui::End();
 
   ImGui::Begin(sceneHierarchyWindowName);
   ImGui::End();
 
-  ImGui::ShowDemoWindow();
+  ImGui::Begin(consoleWindowName);
+  ImGui::End();
   
-  // ImGui::Begin(actionWindowName);
-  // ImGui::End();  
+  ImGui::ShowDemoWindow();
 }
 
 static void mainViewProcessInput(View* view, const EventData& eventData, void* sender)

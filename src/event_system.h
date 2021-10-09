@@ -45,6 +45,15 @@ enum EventType
    * i32[1] = height
    */
   EVENT_TYPE_WINDOW_RESIZED,
+  
+  /** Content:
+   * u32[0] = log type
+   * u32[1] = message length
+   * ptr[0] = char* ptr to message
+   *
+   * @warning: message should be copied!
+   */
+  EVENT_TYPE_LOG_MESSAGE,
   EVENT_TYPE_COUNT,
 
   EVENT_TYPE_USER_DEFINED,
@@ -64,9 +73,11 @@ struct EventData
       uint32  u32[8];
       float32 f32[8];
       char    c[32];
+
+      void*   ptr[4];      
     };
     
-    char bytes[64];
+    char bytes[64 + sizeof(void*) * 4];
   };
 };
 

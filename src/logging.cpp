@@ -4,12 +4,11 @@
 #include <cstring>
 
 #include "logging.h"
+#include "event_system.h"
 
 struct LogSystem
 {
   FILE* logFile = NULL;
-  std::queue<std::string> messages;
-  uint32 maxMessages = 512;
 };
 
 static LogSystem systemData;
@@ -41,8 +40,6 @@ bool8 initLoggingSystem(uint32 maxMessages, const char* outputFileName)
     }
   }
 
-  systemData.maxMessages = maxMessages;  
-
   return TRUE;
 }
 
@@ -59,21 +56,24 @@ void log(LogMessageType type, const char* format, ...)
   char buf[4096] = {};
 
   // Appending prefix
-  uint32 realSize = sprintf(buf, "%s", logMessageTypeToPrefix[type]);
-
+  uint32 prefixSize = sprintf(buf, "%s", logMessageTypeToPrefix[type]);
+  
   // Formatting message
   va_list args;
   va_start(args, format);
-  realSize += vsprintf(buf + realSize, format, args);
+  uint32 msgSize = vsprintf(buf + prefixSize, format, args);
   va_end(args);
 
-  if(systemData.messages.size() > systemData.maxMessages)
-  {
-    systemData.messages.pop();
-  }
+  // Sending uncolored formatted message without prefix to the listeners
+  EventData logData = {};
+  logData.type = EVENT_TYPE_LOG_MESSAGE;
+  logData.u32[0] = type;
+  logData.u32[1] = msgSize;
+  logData.ptr[0] = buf + prefixSize;
 
-  // Save uncolored message to the queue and file
-  systemData.messages.push(buf);
+  triggerEvent(EVENT_TYPE_LOG_MESSAGE, logData);
+  
+  // Save uncolored message to the file
   if(systemData.logFile != NULL)
   {
     fprintf(systemData.logFile, "%s\n", buf);
@@ -81,9 +81,4 @@ void log(LogMessageType type, const char* format, ...)
 
   // Output colored message to the standard output
   fprintf(stdout, "\e[38;5;%dm%s\e[0m\n", logMessageTypeToColor[type], buf);
-}
-
-const std::queue<std::string>& logGetMessages()
-{
-  return systemData.messages;
 }

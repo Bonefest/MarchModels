@@ -18,8 +18,7 @@ enum LogMessageType
 bool8 initLoggingSystem(uint32 maxMessages, const char* logFileName="");
 void shutdownLoggingSystem();
 
-void log(LogMessageType type, const char* format, ...);
-const std::queue<std::string>& logGetMessages();
+ENGINE_API void log(LogMessageType type, const char* format, ...);
 
 #define LOG_ERROR(format, ...) log(LOG_MESSAGE_TYPE_ERROR, format __VA_OPT__(,) __VA_ARGS__)
 
