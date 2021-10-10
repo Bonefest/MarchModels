@@ -1,5 +1,6 @@
 #include <deque>
 
+#include <logging.h>
 #include <event_system.h>
 #include <memory_manager.h>
 
@@ -15,6 +16,7 @@ const static ImColor mapLogMessageTypeToColor[] =
 
 struct LogMessage
 {
+  LogMessageType type;  
   std::string message;
   ImColor color;
 };
@@ -22,6 +24,7 @@ struct LogMessage
 struct ConsoleWidgetData
 {
   std::deque<LogMessage> messages;
+  uint32 filterType = (uint32)LOG_MESSAGE_TYPE_COUNT;
 };
 
 bool8 logMessageCallback(EventData data, void* sender, void* listener)
@@ -29,6 +32,7 @@ bool8 logMessageCallback(EventData data, void* sender, void* listener)
   assert(data.type == EVENT_TYPE_LOG_MESSAGE);
 
   LogMessage logMessage = {};
+  logMessage.type = (LogMessageType)data.u32[0];
   logMessage.message = (char*)data.ptr[0];
   logMessage.color = mapLogMessageTypeToColor[data.u32[0]];
   
@@ -62,28 +66,58 @@ static void consoleWidgetDraw(Widget* widget, View* view, float64 delta)
 {
   ConsoleWidgetData* data = (ConsoleWidgetData*)widgetGetInternalData(widget);
   
-  char tempBuf[128];
+  char tempBuf[128]{};
   
   ImGui::Begin(widgetGetIdentifier(widget).c_str());
     ImVec2 windowSize = ImGui::GetWindowSize();
+    ImGuiStyle& style = ImGui::GetStyle();
 
-    ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor(0, 0, 0, 0));
-    ImGui::PushStyleColor(ImGuiCol_Text, (ImVec4)ImColor(192, 0, 0, 255));
-      ImGui::Button(ICON_KI_TIMES);
-    ImGui::PopStyleColor();
-    ImGui::PopStyleColor();    
+    // Rendering helper elements
+    float32 hItemSpace = 2;
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(hItemSpace, style.ItemSpacing.y));
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+    
+      const char* items[] = {"error", "warning", "info", "verbose", "all"};
+      if(ImGui::BeginCombo("##Console_filter_combo", "", ImGuiComboFlags_NoPreview))
+      {
+        for(uint32 i = 0; i <= (uint32)LOG_MESSAGE_TYPE_COUNT; i++)
+        {
+          if(ImGui::Selectable(items[i], data->filterType == i))
+          {
+            data->filterType = i;
+          }
+        }
 
-    ImGui::SameLine();
+        ImGui::EndCombo();
+      }
 
-    ImGui::InputText("##", tempBuf, 128);
+      float32 comboWidth = ImGui::GetItemRectSize().x;
+      
+      ImGui::SameLine();
 
+      float32 inputTextWidth = windowSize.x - comboWidth - hItemSpace * 2 - style.ScrollbarSize - style.WindowPadding.x;
+
+      ImGui::SetNextItemWidth(inputTextWidth);
+      ImGui::InputText("##Console_search_text", tempBuf, 128);
+
+    ImGui::PopStyleVar(2);
+
+    // Rendering list of messages
     ImGui::PushStyleVar(ImGuiStyleVar_DisabledAlpha, 1.0f);
     ImGui::PushStyleColor(ImGuiCol_Header, (ImVec4)ImColor(32, 32, 32));    
-      uint32 messageIdx = 0;
+      uint32 messageIdx = 1;
       for(const LogMessage& message: data->messages)
       {
+        if((uint32)message.type != data->filterType && data->filterType != (uint32)LOG_MESSAGE_TYPE_COUNT)
+        {
+          continue;
+        }
+        
+        char formattedMsg[512]{};
+        sprintf(formattedMsg, "%3u.%s", messageIdx, message.message.c_str());
+        
         ImGui::PushStyleColor(ImGuiCol_Text, (ImVec4)message.color);
-          ImGui::Selectable(message.message.c_str(), messageIdx % 2, ImGuiSelectableFlags_Disabled);
+          ImGui::Selectable(formattedMsg, messageIdx % 2, ImGuiSelectableFlags_Disabled);
         ImGui::PopStyleColor();
 
         messageIdx++;

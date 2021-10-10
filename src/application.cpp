@@ -150,7 +150,9 @@ static bool8 initImGUI()
   ImFontConfig iconsFontConfig;
   iconsFontConfig.MergeMode = true;
   iconsFontConfig.GlyphMinAdvanceX = 13.0f; // Default font size is 13.0 pixels wide.
-                                            // This allows us to be monospace
+                                            // This guarantees that glyph will be at least 13 pixels wide
+  
+  iconsFontConfig.GlyphOffset = ImVec2(0, 2);
   application.imguiIO->Fonts->AddFontFromFileTTF("assets/fonts/kenney-icon-font.ttf",
                                                  13.0f,
                                                  &iconsFontConfig,
@@ -257,6 +259,9 @@ static bool8 initApplication()
   application.initialized = TRUE;
 
   LOG_INFO("TEST");
+  LOG_INFO(ICON_KI_CHECK ICON_KI_GRID ICON_KI_CELLS);
+  LOG_INFO("abc" ICON_KI_CHECK ICON_KI_GRID ICON_KI_CELLS);
+  LOG_INFO("cdf" ICON_KI_SIGNAL_MEDIUM);
   
   return TRUE;
 }
