@@ -1,3 +1,4 @@
+#include <list>
 #include <deque>
 
 #include <logging.h>
@@ -5,6 +6,8 @@
 #include <memory_manager.h>
 
 #include "console_widget.h"
+
+const static uint32 MAX_BUF_SIZE = 255;
 
 const static ImColor mapLogMessageTypeToColor[] =
 {
@@ -24,6 +27,11 @@ struct LogMessage
 struct ConsoleWidgetData
 {
   std::deque<LogMessage> messages;
+  std::vector<std::string> history;
+  int32 historyIdx = 0;
+  
+  char textBuffer[MAX_BUF_SIZE]{};
+  
   uint32 filterType = (uint32)LOG_MESSAGE_TYPE_COUNT;
 };
 
@@ -43,10 +51,41 @@ bool8 logMessageCallback(EventData data, void* sender, void* listener)
   return FALSE;
 }
 
+int inputTextCallback(ImGuiInputTextCallbackData* data)
+{
+  Widget* consoleWidget = (Widget*)data->UserData;
+  ConsoleWidgetData* widgetData = (ConsoleWidgetData*)widgetGetInternalData(consoleWidget);
+  
+  if((data->EventFlag & ImGuiInputTextFlags_CallbackHistory) == ImGuiInputTextFlags_CallbackHistory
+     && !widgetData->history.empty())
+  {
+    uint32 historySize = widgetData->history.size();
+    
+    if(data->EventKey == ImGuiKey_UpArrow)
+    {
+      widgetData->historyIdx = (widgetData->historyIdx + 1) % historySize;
+    }
+    else
+    {
+      widgetData->historyIdx = (widgetData->historyIdx + historySize - 1) % historySize;
+    }
+
+    std::string& message = widgetData->history[widgetData->historyIdx];
+    
+    strcpy(data->Buf, message.c_str());
+    data->BufTextLen = strlen(data->Buf);
+    data->CursorPos = data->BufTextLen;
+    data->BufDirty = true;
+  }
+
+  return 0;
+}
+
 static bool8 consoleWidgetInitialize(Widget* widget)
 {
   registerListener(EVENT_TYPE_LOG_MESSAGE, widget, logMessageCallback);
   return TRUE;
+
 }
    
 static void consoleWidgetShutdown(Widget* widget)
@@ -66,8 +105,6 @@ static void consoleWidgetDraw(Widget* widget, View* view, float64 delta)
 {
   ConsoleWidgetData* data = (ConsoleWidgetData*)widgetGetInternalData(widget);
   
-  char tempBuf[128]{};
-  
   ImGui::Begin(widgetGetIdentifier(widget).c_str());
     ImVec2 windowSize = ImGui::GetWindowSize();
     ImGuiStyle& style = ImGui::GetStyle();
@@ -77,7 +114,7 @@ static void consoleWidgetDraw(Widget* widget, View* view, float64 delta)
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(hItemSpace, style.ItemSpacing.y));
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
     
-      const char* items[] = {"error", "warning", "info", "verbose", "all"};
+      const char* items[] = {"error", "warning", "verbose", "info", "all"};
       if(ImGui::BeginCombo("##Console_filter_combo", "", ImGuiComboFlags_NoPreview))
       {
         for(uint32 i = 0; i <= (uint32)LOG_MESSAGE_TYPE_COUNT; i++)
@@ -98,7 +135,32 @@ static void consoleWidgetDraw(Widget* widget, View* view, float64 delta)
       float32 inputTextWidth = windowSize.x - comboWidth - hItemSpace * 2 - style.ScrollbarSize - style.WindowPadding.x;
 
       ImGui::SetNextItemWidth(inputTextWidth);
-      ImGui::InputText("##Console_search_text", tempBuf, 128);
+      const ImGuiInputTextFlags inputTextFlags = ImGuiInputTextFlags_EnterReturnsTrue |
+        ImGuiInputTextFlags_CallbackHistory;
+      if(ImGui::InputText("##Console_search_text",
+                          data->textBuffer,
+                          MAX_BUF_SIZE,
+                          inputTextFlags,
+                          inputTextCallback,
+                          widget))
+      {
+        EventData eventData = {};
+        eventData.u32[0] = strlen(data->textBuffer);
+        eventData.ptr[0] = data->textBuffer;
+
+        if(eventData.u32[0] > 0)
+        {
+          triggerEvent(EVENT_TYPE_CONSOLE_MESSAGE, eventData, widget);
+          LOG_INFO(data->textBuffer);
+
+          // TODO: In future we may want to add only successful messages
+          // TODO: insert is too costly operation!
+          data->history.insert(data->history.begin(), data->textBuffer);
+          data->historyIdx = 0;
+          
+          data->textBuffer[0] = '\0';
+        }
+      }
 
     ImGui::PopStyleVar(2);
 
@@ -113,11 +175,8 @@ static void consoleWidgetDraw(Widget* widget, View* view, float64 delta)
           continue;
         }
         
-        char formattedMsg[512]{};
-        sprintf(formattedMsg, "%3u.%s", messageIdx, message.message.c_str());
-        
         ImGui::PushStyleColor(ImGuiCol_Text, (ImVec4)message.color);
-          ImGui::Selectable(formattedMsg, messageIdx % 2, ImGuiSelectableFlags_Disabled);
+          ImGui::Selectable(message.message.c_str(), messageIdx % 2, ImGuiSelectableFlags_Disabled);
         ImGui::PopStyleColor();
 
         messageIdx++;

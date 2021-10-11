@@ -257,11 +257,6 @@ static bool8 initApplication()
   }
   
   application.initialized = TRUE;
-
-  LOG_INFO("TEST");
-  LOG_INFO(ICON_KI_CHECK ICON_KI_GRID ICON_KI_CELLS);
-  LOG_INFO("abc" ICON_KI_CHECK ICON_KI_GRID ICON_KI_CELLS);
-  LOG_INFO("cdf" ICON_KI_SIGNAL_MEDIUM);
   
   return TRUE;
 }

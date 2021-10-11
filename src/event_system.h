@@ -54,6 +54,15 @@ enum EventType
    * @warning: message should be copied!
    */
   EVENT_TYPE_LOG_MESSAGE,
+
+  /**
+   * u32[0] = message length
+   * ptr[0] = char* ptr to message
+   *
+   * @warning: message should be copied!
+   */
+  EVENT_TYPE_CONSOLE_MESSAGE,
+  
   EVENT_TYPE_COUNT,
 
   EVENT_TYPE_USER_DEFINED,
