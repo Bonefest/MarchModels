@@ -6,6 +6,7 @@
 struct ViewWindowData
 {
   ImageIntegrator* integrator;
+  
   float32 maxFPS;
   float32 timePerFrame;
   float32 elapsedTime;
@@ -36,6 +37,8 @@ static void updateViewWindowSize(Window* window, uint2 size)
 
 static void drawViewWindow(Window* window, float64 delta)
 {
+  // TODO: if no scene is selected - say about it
+  
   ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);  
   if(data->elapsedTime > data->timePerFrame)
   {
@@ -68,8 +71,9 @@ static void processInputViewWindow(Window* window,
 }
 
 bool8 createViewWindow(const std::string& identifier,
-                       ImageIntegrator* integrator,
-                       float32 maxFPS,
+                       Sampler* sampler,
+                       RayIntegrator* rayIntegrator,
+                       Camera* camera,
                        Window** outWindow)
 {
   WindowInterface interface = {};
@@ -84,12 +88,19 @@ bool8 createViewWindow(const std::string& identifier,
     return FALSE;
   }
 
-  ViewWindowData* data = engineAllocObject<ViewWindowData>(MEMORY_TYPE_GENERAL);
-  data->integrator = integrator;
-  data->elapsedTime = 0.0f;
+  Film* film = nullptr;
+  assert(createFilm(uint2(8, 8), &film));
 
+  ImageIntegrator* imageIntegrator = nullptr;
+  assert(createImageIntegrator(nullptr, sampler, rayIntegrator, film, camera, &imageIntegrator));
+  
+  ViewWindowData* data = engineAllocObject<ViewWindowData>(MEMORY_TYPE_GENERAL);
+  data->integrator = imageIntegrator;
+  data->elapsedTime = 0.0f;
+  
   windowSetInternalData(*outWindow, data);
-  viewWindowSetMaxFPS(*outWindow, maxFPS);
+  
+  viewWindowSetMaxFPS(*outWindow, 10.0f);
 
   return TRUE;
 }

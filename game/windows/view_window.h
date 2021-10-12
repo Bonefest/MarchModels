@@ -6,9 +6,10 @@
 #include "window.h"
 
 bool8 createViewWindow(const std::string& identifier,
-                                         ImageIntegrator* integrator,
-                                         float32 maxFPS,
-                                         Window** outWindow);
+                       Sampler* sampler,
+                       RayIntegrator* rayIntegrator,
+                       Camera* camera,
+                       Window** outWindow);
 
 void viewWindowSetMaxFPS(Window* window, float32 maxFPS);
 float32 viewWindowGetMaxFPS(Window* window);
