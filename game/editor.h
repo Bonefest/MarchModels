@@ -19,6 +19,7 @@ Scene* editorGetCurrentScene();
 
 bool8 editorCloseWindow(const std::string& windowId);
 bool8 editorOpenWindow(Window* window);
+bool8 editorIsWindowOpened(const std::string& windowId);
 
 
 

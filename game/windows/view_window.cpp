@@ -1,6 +1,7 @@
 #include <imgui/imgui.h>
 #include <memory_manager.h>
 
+#include "editor.h"
 #include "view_window.h"
 
 struct ViewWindowData
@@ -37,10 +38,12 @@ static void updateViewWindowSize(Window* window, uint2 size)
 
 static void drawViewWindow(Window* window, float64 delta)
 {
-  // TODO: if no scene is selected - say about it
+  ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);
   
-  ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);  
-  if(data->elapsedTime > data->timePerFrame)
+  Scene* currentScene = editorGetCurrentScene();
+  imageIntegratorSetScene(data->integrator, currentScene);
+  
+  if(data->elapsedTime > data->timePerFrame && currentScene != nullptr)
   {
     imageIntegratorExecute(data->integrator, glfwGetTime());
     data->elapsedTime = 0.0f;
@@ -50,15 +53,21 @@ static void drawViewWindow(Window* window, float64 delta)
   uint2 filmSize = filmGetSize(film);
 
   ImGui::Begin(windowGetIdentifier(window).c_str());
+    ImVec2 windowSize = ImGui::GetWindowContentAreaSize();
+    if(windowSize.x != filmSize.x || windowSize.y != filmSize.y)
+    {
+      updateViewWindowSize(window, uint2(windowSize.x, windowSize.y));
+    }
 
-  ImVec2 windowSize = ImGui::GetWindowContentAreaSize();
-  if(windowSize.x != filmSize.x || windowSize.y != filmSize.y)
-  {
-    updateViewWindowSize(window, uint2(windowSize.x, windowSize.y));
-  }
-  
-  ImGui::Image((void*)filmGetGLTexture(film),
-               ImVec2(filmSize.x, filmSize.y), ImVec2(1.0f, 1.0f), ImVec2(0.0f, 0.0f));  
+    if(currentScene != nullptr)
+    {
+      ImGui::Image((void*)filmGetGLTexture(film),
+                   ImVec2(filmSize.x, filmSize.y), ImVec2(1.0f, 1.0f), ImVec2(0.0f, 0.0f));
+    }
+    else
+    {
+      ImGui::Text("Nothing to view: scene is not selected!");
+    }
   ImGui::End();
 
 }

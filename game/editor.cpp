@@ -13,6 +13,8 @@
 #include <memory_manager.h>
 #include <game_framework.h>
 #include <script_function.h>
+#include <debug_ray_integrator.h>
+#include <samplers/center_sampler.h>
 
 #include "editor.h"
 #include "windows/view_window.h"
@@ -24,12 +26,11 @@ using std::unordered_map;
 
 struct EditorData
 {
-  Scene* currentScene;
+  Scene* currentScene = nullptr;
   Camera* camera;
 
-  Window* toolbarWindow = NULL;
   Window* viewWindow;
-  Window* sceneHierarchyWindow = NULL;  
+  Window* sceneHierarchyWindow = nullptr;
   Window* consoleWindow;
 
   vector<Window*> openedWindows;
@@ -50,6 +51,18 @@ bool8 initEditor(Application* app)
   assert(createConsoleWindow(consoleWindowName, &editorData.consoleWindow));
   editorData.openedWindows.push_back(editorData.consoleWindow);
 
+  Sampler* centerSampler = nullptr;
+  assert(createCenterSampler(uint2(0, 0), &centerSampler));
+  
+  RayIntegrator* debugRayIntegrator = nullptr;
+  assert(createDebugRayIntegrator(DEBUG_RAY_INTEGRATOR_MODE_ONE_COLOR, &debugRayIntegrator));
+
+  Camera* camera = nullptr;
+  assert(createPerspectiveCamera(1.0f, toRad(45.0f), 0.01f, 100.0f, &camera));
+  
+  assert(createViewWindow(viewWindowName, centerSampler, debugRayIntegrator, camera, &editorData.viewWindow));
+  editorData.openedWindows.push_back(editorData.viewWindow);
+  
   for(Window* window: editorData.openedWindows)
   {
     initWindow(window);
@@ -171,9 +184,6 @@ void drawEditor(Application* app, float64 delta)
   
   prepareDockingLayout(ImVec2(screenWidth, screenHeight - menuSize.y),
                        ImVec2(0.0f, menuSize.y));
-  
-  ImGui::Begin(viewWindowName);
-  ImGui::End();
 
   ImGui::Begin(sceneHierarchyWindowName);
   ImGui::End();
@@ -193,4 +203,15 @@ void processInputEditor(Application* app, const EventData& eventData, void* send
   {
     processInputWindow(window, eventData, sender);
   }
+}
+
+void editorSetScene(Scene* scene)
+{
+  // TODO: Notify all that scene has changed
+  editorData.currentScene = scene;
+}
+
+Scene* editorGetCurrentScene()
+{
+  return editorData.currentScene;
 }

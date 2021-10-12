@@ -5,6 +5,9 @@
 
 #include "window.h"
 
+/**
+ * @warning: View window manages lifetime of given objects itself.
+ */
 bool8 createViewWindow(const std::string& identifier,
                        Sampler* sampler,
                        RayIntegrator* rayIntegrator,
