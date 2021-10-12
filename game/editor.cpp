@@ -1,5 +1,3 @@
-#if defined(ENABLE_EDITOR_GAME)
-
 #include <vector>
 #include <string>
 #include <unordered_map>
@@ -17,149 +15,132 @@
 #include <script_function.h>
 
 #include "editor.h"
-#include "views/main_view.h"
-#include "views/sdf_editor_view.h"
+#include "windows/view_window.h"
+#include "windows/console_window.h"
 
+using std::vector;
 using std::string;
 using std::unordered_map;
 
-struct EditorInternalData
+struct EditorData
 {
-  unordered_map<string, View*> viewsMap;
-  View* currentView = nullptr;
+  Scene* currentScene;
+  Camera* camera;
+
+  Window* toolbarWindow = NULL;
+  Window* viewWindow;
+  Window* sceneHierarchyWindow = NULL;  
+  Window* consoleWindow;
+
+  vector<Window*> openedWindows;
 };
 
-static EditorInternalData editorInternalData;
+static EditorData editorData;
 
-static bool8 extractSetupConfig(Application* app,
-                                uint32* outScreenWidth,
-                                uint32* outScreenHeight,
-                                const char** outName);
-
-static bool8 initialize(Application* app);
-
-static void shutdown(Application* app);
-static void update(Application* app, float64 delta);
-static void draw(Application* app, float64 delta);
-static void processInput(Application* app, const EventData& eventData, void* sender);
+const char* toolbarWindowName = "Toolbar##EditorWindow";
+const char* viewWindowName = "View##EditorWindow";
+const char* sceneHierarchyWindowName = "Scene hierarchy##EditorWindow";
+const char* consoleWindowName = "Console##EditorWindow";
 
 // ----------------------------------------------------------------------------
 // Initialization-related functions
 // ----------------------------------------------------------------------------
-bool8 initializeGameFramework(GameFramework* outFramework)
+bool8 initEditor(Application* app)
 {
-  outFramework->extractSetupConfig = extractSetupConfig;
-  outFramework->initialize = initialize;
-  outFramework->shutdown = shutdown;
-  outFramework->update = update;
-  outFramework->draw = draw;
-  outFramework->processInput = processInput;
-
   return TRUE;
 }
 
-bool8 extractSetupConfig(Application* app,
-                         uint32* outScreenWidth,
-                         uint32* outScreenHeight,
-                         const char** outName)
+void shutdownEditor(Application* app)
 {
-  *outScreenWidth = 1280;
-  *outScreenHeight = 720;
-  *outName = "Editor";
 
-  return TRUE;
-}
-
-
-static bool8 initialize(Application* app)
-{
-  View* view = nullptr;
-  assert(createMainView(&view));
-  
-  editorInternalData.viewsMap[viewGetName(view)] = view;
-
-  for(auto viewPair: editorInternalData.viewsMap)
-  {
-    assert(initializeView(viewPair.second));
-  }
-
-  editorSetView(viewGetName(view));
-  
-  return TRUE;
-}
-
-static void shutdown(Application* app)
-{
-  for(auto viewPair: editorInternalData.viewsMap)
-  {
-    destroyView(viewPair.second);
-  }
-
-  editorInternalData.viewsMap.clear();
 }
 
 // ----------------------------------------------------------------------------
 // General API functions
 // ----------------------------------------------------------------------------
 
-bool8 editorSetView(const std::string& viewName)
-{
-  auto viewIt = editorInternalData.viewsMap.find(viewName);
-  if(viewIt == editorInternalData.viewsMap.end())
-  {
-    LOG_ERROR("View \"%s\" is not found!", viewName.c_str());
-    return FALSE;
-  }
-
-  if(editorInternalData.currentView != nullptr)
-  {
-    viewOnUnload(editorInternalData.currentView);
-  }
-  
-  editorInternalData.currentView = viewIt->second;
-  viewOnLoad(editorInternalData.currentView);
-  
-  return TRUE;
-}
-
-View* editorGetCurrentView()
-{
-  return editorInternalData.currentView;
-}
-
 // ----------------------------------------------------------------------------
 // Internal logic
 // ----------------------------------------------------------------------------
 
-static void update(Application* app, float64 delta)
+void updateEditor(Application* app, float64 delta)
 {
-  updateView(editorInternalData.currentView, delta);
+  
 }
 
-static void draw(Application* app, float64 delta)
+static void prepareDockingLayout(float2 screenSize)
+{
+  const char* dockingRootName = "DockingRoot";
+  ImGuiID dockingRootID = ImGui::GetID(dockingRootName);
+
+  // Prepare docked nodes only if we didn't it before (no node is attach to a dock builder)
+  if(ImGui::DockBuilderGetNode(dockingRootID) == nullptr)
+  {
+    ImGui::DockBuilderAddNode(dockingRootID, ImGuiDockNodeFlags_DockSpace);
+    ImGui::DockBuilderSetNodeSize(dockingRootID, ImVec2(screenSize.x, screenSize.y));
+
+    ImGuiID toolbarNodeID, dgroupNodeID;
+    ImGui::DockBuilderSplitNode(dockingRootID, ImGuiDir_Up, 0.1f, &toolbarNodeID, &dgroupNodeID);
+
+    ImGuiID lgroupNodeID, sceneHierarchyNodeID;
+    ImGui::DockBuilderSplitNode(dgroupNodeID, ImGuiDir_Left, 0.6f, &lgroupNodeID, &sceneHierarchyNodeID);
+  
+    ImGuiID viewNodeID, consoleNodeID;
+    ImGui::DockBuilderSplitNode(lgroupNodeID, ImGuiDir_Down, 0.33f, &consoleNodeID, &viewNodeID);
+
+    ImGui::DockBuilderDockWindow(toolbarWindowName, toolbarNodeID);
+    ImGui::DockBuilderDockWindow(viewWindowName, viewNodeID);
+    ImGui::DockBuilderDockWindow(sceneHierarchyWindowName, sceneHierarchyNodeID);
+    ImGui::DockBuilderDockWindow(consoleWindowName, consoleNodeID);
+  
+    ImGui::DockBuilderFinish(dockingRootID);      
+  }
+  
+  static const ImGuiWindowFlags dockWindowFlags =
+    ImGuiWindowFlags_NoTitleBar |
+    ImGuiWindowFlags_NoResize |
+    ImGuiWindowFlags_NoMove |
+    ImGuiWindowFlags_NoScrollbar |
+    ImGuiWindowFlags_NoCollapse |
+    ImGuiWindowFlags_NoBackground |
+    ImGuiWindowFlags_NoSavedSettings |
+    ImGuiWindowFlags_NoBringToFrontOnFocus |
+    ImGuiWindowFlags_NoDocking |
+    ImGuiWindowFlags_NoNavFocus;
+
+  ImGui::Begin(dockingRootName, nullptr, dockWindowFlags);
+    ImGui::DockSpace(dockingRootID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);  
+  ImGui::End();
+}
+
+void drawEditor(Application* app, float64 delta)
 {
   uint32 screenWidth = applicationGetScreenWidth(), screenHeight = applicationGetScreenHeight();
+  prepareDockingLayout(float2(screenWidth, screenHeight));
 
-  ImVec2 viewSize = ImVec2(screenWidth, screenHeight);
-  ImVec2 viewOffset = ImVec2(0, 0);
+  ImGui::Begin(consoleWindowName);
+  ImGui::End();
   
-  drawView(editorInternalData.currentView, viewOffset, viewSize, delta);
+  ImGui::Begin(toolbarWindowName);
+  ImGui::Button(ICON_KI_COMPUTER" Scenes");
+  ImGui::End();
+  
+  ImGui::Begin(viewWindowName);
+  ImGui::End();
+
+  ImGui::Begin(sceneHierarchyWindowName);
+  ImGui::End();
+  
+  ImGui::ShowDemoWindow();
+
+  for(Window* window: editorData.openedWindows)
+  {
+    drawWindow(window, delta);
+  }
+  
 }
 
-static void processInput(Application* app, const EventData& eventData, void* sender)
+void processInputEditor(Application* app, const EventData& eventData, void* sender)
 {
-  processInputView(editorInternalData.currentView, eventData, sender);
+  
 }
-
-// Editor GUI consists of many windows:
-//  - Scene window (Has mode: Debug/Simple/Beauty, Has type: Real-time/Generated)
-//  - Code preview window
-//  - Scene tree window
-//  - Settings window
-//  - Console window
-//
-// Windows are combined in Views. Views are collections of windows.
-// View is a state.
-// Each window is implemented as a distinct sub-system
-
-#endif

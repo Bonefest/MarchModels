@@ -2,9 +2,22 @@
 
 #include <string>
 
-#include "defines.h"
-#include "views/view.h"
+#include <scene.h>
+#include <application.h>
 
-void editorAddView(View* view);
-bool8 editorSetView(const std::string& viewName);
-View* editorGetCurrentView();
+#include "windows/window.h"
+
+bool8 initEditor(Application* app);
+void shutdownEditor(Application* app);
+
+void drawEditor(Application* app, float64 delta);
+void updateEditor(Application* app, float64 delta);
+void processInputEditor(Application* app, const EventData& eventData, void* sender);
+
+void editorSetScene(Scene* scene);
+Scene* editorGetCurrentScene();
+
+bool8 editorToggleWindow(Window* window);
+
+
+
