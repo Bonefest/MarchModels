@@ -19,7 +19,7 @@ struct WindowInterface
 bool8 allocateWindow(WindowInterface interface, const std::string& identifier, Window** outWindow);
 void freeWindow(Window* window);
 
-bool8 initializeWindow(Window* window);
+bool8 initWindow(Window* window);
 void updateWindow(Window* window, float64 delta);
 void drawWindow(Window* window, float64 delta);
 void processInputWindow(Window* window, const EventData& eventData, void* sender);

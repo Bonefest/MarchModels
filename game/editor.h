@@ -17,7 +17,8 @@ void processInputEditor(Application* app, const EventData& eventData, void* send
 void editorSetScene(Scene* scene);
 Scene* editorGetCurrentScene();
 
-bool8 editorToggleWindow(Window* window);
+bool8 editorCloseWindow(const std::string& windowId);
+bool8 editorOpenWindow(Window* window);
 
 
 

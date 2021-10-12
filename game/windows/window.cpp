@@ -33,7 +33,7 @@ void freeWindow(Window* window)
   engineFreeObject(window, MEMORY_TYPE_GENERAL);
 }
 
-bool8 initializeWindow(Window* window)
+bool8 initWindow(Window* window)
 {
   if(window->initialized == TRUE)
   {
