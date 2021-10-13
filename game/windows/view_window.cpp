@@ -53,6 +53,9 @@ static void drawViewWindow(Window* window, float64 delta)
   uint2 filmSize = filmGetSize(film);
 
   ImGui::Begin(windowGetIdentifier(window).c_str());
+
+    ImGuiStyle& style = ImGui::GetStyle();
+  
     ImVec2 windowSize = ImGui::GetWindowContentAreaSize();
     if(windowSize.x != filmSize.x || windowSize.y != filmSize.y)
     {
@@ -61,8 +64,37 @@ static void drawViewWindow(Window* window, float64 delta)
 
     if(currentScene != nullptr)
     {
+      ImVec2 initialCursorPos = ImGui::GetCursorPos();
+      
       ImGui::Image((void*)filmGetGLTexture(film),
                    ImVec2(filmSize.x, filmSize.y), ImVec2(1.0f, 1.0f), ImVec2(0.0f, 0.0f));
+
+      ImGui::SetCursorPos(initialCursorPos);
+
+      ImGui::Button(ICON_KI_PAUSE"##view");
+
+      char shortInfoBuf[255];
+      sprintf(shortInfoBuf, "Time: %.2f | FPS: %u", glfwGetTime(), 0);
+      float32 textWidth = ImGui::CalcTextSize(shortInfoBuf).x;
+      
+      ImGui::SameLine(windowSize.x - textWidth - style.FramePadding.x);
+      ImGui::Text(shortInfoBuf);
+      
+      ImGui::Button(ICON_KI_RELOAD_INVERSE"##view");
+      if(ImGui::Button(ICON_KI_COG"##view"))
+      {
+        ImGui::OpenPopup("view_settings_popup##view");
+      }
+
+      if(ImGui::BeginPopup("view_settings_popup##view"))
+      {
+        ImGui::Text("Time: %f", glfwGetTime());
+        ImGui::SameLine();
+        ImGui::Text("Max FPS: %f", data->maxFPS);
+        ImGui::Button("Open full settings");
+        
+        ImGui::EndPopup();
+      }
     }
     else
     {
