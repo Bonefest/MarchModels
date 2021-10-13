@@ -102,6 +102,7 @@ bool8 createViewWindow(const std::string& identifier,
 
   ImageIntegrator* imageIntegrator = nullptr;
   assert(createImageIntegrator(nullptr, sampler, rayIntegrator, film, camera, &imageIntegrator));
+  imageIntegratorSetPixelGap(imageIntegrator, uint2(23, 23));
   
   ViewWindowData* data = engineAllocObject<ViewWindowData>(MEMORY_TYPE_GENERAL);
   data->integrator = imageIntegrator;

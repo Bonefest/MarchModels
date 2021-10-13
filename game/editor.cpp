@@ -48,6 +48,26 @@ const char* consoleWindowName = "Console##EditorWindow";
 
 bool8 initEditor(Application* app)
 {
+  // TEMP
+  vector<string> params = {"radius"};
+  assert(declareScriptFunction(SCRIPT_FUNCTION_TYPE_SDF,
+                               "sphereSDF",
+                               "return float3.length(args[\"p\"]) - args[\"radius\"]",
+                               params));
+
+  ScriptFunction* sdf = nullptr;
+  assert(createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF, "sphereSDF", &sdf));
+  scriptFunctionSetArgValue(sdf, "radius", 3.0);
+  
+  Geometry* geometry = nullptr;
+  assert(createGeometry("sphere", &geometry));
+  geometrySetSDF(geometry, sdf);
+  geometrySetPosition(geometry, float3(0.0f, 0.0f, 10.0f));
+  
+  assert(createScene(&editorData.currentScene));
+  sceneAddGeometry(editorData.currentScene, geometry);
+  // END TEMP
+  
   assert(createConsoleWindow(consoleWindowName, &editorData.consoleWindow));
   editorData.openedWindows.push_back(editorData.consoleWindow);
 

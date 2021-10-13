@@ -76,7 +76,7 @@ ENGINE_API void geometrySetCombinationFunction(Geometry* geometry, CombinationFu
 ENGINE_API CombinationFunction geometryGetCombinationFunction(Geometry* geometry);
 
 // ----------------------------------------------------------------------------
-// Leaft geometry-related interface
+// Leaf geometry-related interface
 // ----------------------------------------------------------------------------
 
 ENGINE_API void geometrySetSDF(Geometry* geometry, ScriptFunction* sdf);

@@ -116,3 +116,6 @@ ImageIntegrator - Represents a single way of forming an image. It contains a fil
  * ImageIntegrator with step x = 13, y = 13, CenterSampler and RayIntegrator = Debug will evaluate each 13th pixel and shade it in some debug color returned by a ray integrator.
 
  * ImageIntegrator with step x = 1, y = 1, MonteCarloSampler, RayIntegrator = PBR will evaluate each pixel, calculate shading from light, shadowing, reflections, global illumination and so on.
+
+
+* ScriptFunction compression - If we can manage to "compress" each hierarchical description into one function - we can even attempt to integrate it in a GPU (though lua code in that case should be maximal closer to the glsl or even be glsl immediately)
