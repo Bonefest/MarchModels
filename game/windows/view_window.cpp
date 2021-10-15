@@ -11,6 +11,8 @@ struct ViewWindowData
   float32 maxFPS;
   float32 timePerFrame;
   float32 elapsedTime;
+
+
 };
 
 static bool8 initializeViewWindow(Window* window)

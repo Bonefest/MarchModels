@@ -2,12 +2,15 @@
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
 
+#include "stopwatch.h"
 #include "event_system.h"
 #include "memory_manager.h"
 #include "lua/lua_system.h"
 
 #include "application.h"
 #include "game_framework.h"
+
+using namespace march;
 
 struct Application
 {
@@ -315,13 +318,11 @@ static void drawApplication(float64 delta)
 static void startApplicationLoop()
 {
   glfwSetTime(0.0);
-  
-  float64 prevAbsoluteTime = 0.0;
+
+  Stopwatch mainLoopStopwatch;
   while(!glfwWindowShouldClose(application.window))
   {
-    float64 curAbsoluteTime = glfwGetTime();
-    float64 delta = curAbsoluteTime - prevAbsoluteTime;
-    prevAbsoluteTime = curAbsoluteTime;
+    float64 delta = mainLoopStopwatch.restart().asSecs();
 
     processInputApplication();
     updateApplication(delta);
