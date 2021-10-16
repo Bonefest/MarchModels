@@ -57,7 +57,9 @@ static void drawViewWindow(Window* window, float64 delta)
   Scene* currentScene = editorGetCurrentScene();
   imageIntegratorSetScene(data->integrator, currentScene);
   
-  if(data->refreshStopwatch.getElapsedTime() > data->refreshPeriod && currentScene != nullptr)
+  if(data->refreshStopwatch.isPaused() == FALSE &&
+     data->refreshStopwatch.getElapsedTime() > data->refreshPeriod &&
+     currentScene != nullptr)
   {
     imageIntegratorExecute(data->integrator, data->lifetimeStopwatch.getElapsedTime().asSecs());
     data->refreshStopwatch.restart();    
@@ -92,8 +94,23 @@ static void drawViewWindow(Window* window, float64 delta)
       ImGui::Button(ICON_KI_BACKWARD"##view");
 
       ImGui::SameLine();
-      
-      ImGui::Button(ICON_KI_PAUSE"##view");
+
+      if(data->lifetimeStopwatch.isPaused())
+      {
+        if(ImGui::Button(ICON_KI_CARET_RIGHT"##view"))
+        {
+          data->lifetimeStopwatch.unpause();
+          data->refreshStopwatch.unpause();
+        }
+      }
+      else
+      {
+        if(ImGui::Button(ICON_KI_PAUSE"##view"))
+        {
+          data->lifetimeStopwatch.pause();
+          data->refreshStopwatch.pause();
+        }
+      }
       
       ImGui::SameLine();      
 
@@ -111,7 +128,7 @@ static void drawViewWindow(Window* window, float64 delta)
       }
       
       char shortInfoBuf[255];
-      sprintf(shortInfoBuf, "Time: %.2f | FPS: %u", glfwGetTime(), 0);
+      sprintf(shortInfoBuf, "Time: %.2f | FPS: %u", data->lifetimeStopwatch.getElapsedTime().asSecs(), 0);
       float32 textWidth = ImGui::CalcTextSize(shortInfoBuf).x;
       
       ImGui::SameLine(windowSize.x - textWidth - cogButtonWidth - 2.0 * style.FramePadding.x);

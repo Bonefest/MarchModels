@@ -16,7 +16,7 @@ namespace march
   {
     m_timepoint = time;
   }  
-
+  
   void Stopwatch::pause()
   {
     m_pauseTimepoint = Time::current();
@@ -44,13 +44,12 @@ namespace march
   
   Time Stopwatch::getElapsedTime() const
   {
-    return Time::current() - m_timepoint - m_accumPauseTime;
+    return Time::current() - m_timepoint - m_accumPauseTime - getPausedTime();
   }
 
   Time Stopwatch::getPausedTime() const
   {
-    assert(m_paused == TRUE);
-    return Time::current() - m_pauseTimepoint;
+    return isPaused() == TRUE ? Time::current() - m_pauseTimepoint : Time();
   }
 
   bool8 Stopwatch::isPaused() const

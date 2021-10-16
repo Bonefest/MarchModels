@@ -11,6 +11,7 @@ namespace march
     Time restart();
 
     void setTimepoint(Time time);
+
     void pause();
     Time unpause();
 
