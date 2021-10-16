@@ -72,7 +72,7 @@ static void drawViewWindow(Window* window, float64 delta)
 
     ImGuiStyle& style = ImGui::GetStyle();
   
-    ImVec2 windowSize = ImGui::GetWindowContentAreaSize();
+    float2 windowSize = ImGui::GetWindowContentAreaSize();
     if(windowSize.x != filmSize.x || windowSize.y != filmSize.y)
     {
       updateViewWindowSize(window, uint2(windowSize.x, windowSize.y));
@@ -80,10 +80,10 @@ static void drawViewWindow(Window* window, float64 delta)
 
     if(currentScene != nullptr)
     {
-      ImVec2 initialCursorPos = ImGui::GetCursorPos();
+      float2 initialCursorPos = ImGui::GetCursorPos();
       
       ImGui::Image((void*)filmGetGLTexture(film),
-                   ImVec2(filmSize.x, filmSize.y), ImVec2(1.0f, 1.0f), ImVec2(0.0f, 0.0f));
+                   float2(filmSize.x, filmSize.y), float2(1.0f, 1.0f), float2(0.0f, 0.0f));
 
       ImGui::SetCursorPos(initialCursorPos);
 

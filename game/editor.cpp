@@ -115,7 +115,7 @@ void updateEditor(Application* app, float64 delta)
   }
 }
 
-static void prepareDockingLayout(ImVec2 screenSize, ImVec2 screenOffset)
+static void prepareDockingLayout(float2 screenSize, float2 screenOffset)
 {
   const char* dockingRootName = "DockingRoot";
   ImGuiID dockingRootID = ImGui::GetID(dockingRootName);
@@ -156,11 +156,11 @@ static void prepareDockingLayout(ImVec2 screenSize, ImVec2 screenOffset)
   ImGui::SetNextWindowSize(screenSize);
   
   ImGui::Begin(dockingRootName, nullptr, dockWindowFlags);
-    ImGui::DockSpace(dockingRootID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);  
+    ImGui::DockSpace(dockingRootID, float2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);  
   ImGui::End();
 }
 
-void drawMenu(ImVec2& outMenuSize)
+void drawMenu(float2& outMenuSize)
 {
   ImGui::BeginMainMenuBar();
     if(ImGui::BeginMenu(ICON_KI_COMPUTER" Scene"))
@@ -199,11 +199,11 @@ void drawEditor(Application* app, float64 delta)
 {
   uint32 screenWidth = applicationGetScreenWidth(), screenHeight = applicationGetScreenHeight();
 
-  ImVec2 menuSize;
+  float2 menuSize;
   drawMenu(menuSize);
   
-  prepareDockingLayout(ImVec2(screenWidth, screenHeight - menuSize.y),
-                       ImVec2(0.0f, menuSize.y));
+  prepareDockingLayout(float2(screenWidth, screenHeight - menuSize.y),
+                       float2(0.0f, menuSize.y));
 
   ImGui::Begin(sceneHierarchyWindowName);
   ImGui::End();

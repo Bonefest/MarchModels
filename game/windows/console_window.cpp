@@ -107,12 +107,12 @@ static void consoleWindowDraw(Window* window, float64 delta)
   ConsoleWindowData* data = (ConsoleWindowData*)windowGetInternalData(window);
   
   ImGui::Begin(windowGetIdentifier(window).c_str());
-    ImVec2 windowSize = ImGui::GetWindowSize();
+    float2 windowSize = ImGui::GetWindowSize();
     ImGuiStyle& style = ImGui::GetStyle();
 
     // Rendering helper elements
     float32 hItemSpace = 2;
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(hItemSpace, style.ItemSpacing.y));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, float2(hItemSpace, style.ItemSpacing.y));
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
     
       const char* items[] = {"error", "warning", "verbose", "info", "all"};
@@ -167,7 +167,7 @@ static void consoleWindowDraw(Window* window, float64 delta)
 
     // Rendering list of messages
     ImGui::PushStyleVar(ImGuiStyleVar_DisabledAlpha, 1.0f);
-    ImGui::PushStyleColor(ImGuiCol_Header, (ImVec4)ImColor(32, 32, 32));    
+    ImGui::PushStyleColor(ImGuiCol_Header, (float4)ImColor(32, 32, 32, 255));    
       uint32 messageIdx = 1;
       for(const LogMessage& message: data->messages)
       {
@@ -176,7 +176,7 @@ static void consoleWindowDraw(Window* window, float64 delta)
           continue;
         }
         
-        ImGui::PushStyleColor(ImGuiCol_Text, (ImVec4)message.color);
+        ImGui::PushStyleColor(ImGuiCol_Text, (float4)message.color);
           ImGui::Selectable(message.message.c_str(), messageIdx % 2, ImGuiSelectableFlags_Disabled);
         ImGui::PopStyleColor();
 

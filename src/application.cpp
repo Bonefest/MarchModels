@@ -155,7 +155,7 @@ static bool8 initImGUI()
   iconsFontConfig.GlyphMinAdvanceX = 13.0f; // Default font size is 13.0 pixels wide.
                                             // This guarantees that glyph will be at least 13 pixels wide
   
-  iconsFontConfig.GlyphOffset = ImVec2(0, 2);
+  iconsFontConfig.GlyphOffset = float2(0, 2);
   application.imguiIO->Fonts->AddFontFromFileTTF("assets/fonts/kenney-icon-font.ttf",
                                                  13.0f,
                                                  &iconsFontConfig,
@@ -164,7 +164,7 @@ static bool8 initImGUI()
   // TODO: Load this from a configuration?
   ImGuiStyle& style = ImGui::GetStyle();
   
-  style.WindowPadding = ImVec2(4.0f, 4.0f);
+  style.WindowPadding = float2(4.0f, 4.0f);
   style.WindowRounding = 12.0f;
   style.FrameRounding = 6.0f;
   style.TabRounding = 0.0f;
