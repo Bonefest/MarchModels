@@ -60,6 +60,36 @@ namespace march
     return rop * lop;
   }
 
+  bool Time::operator<(const Time& rop) const
+  {
+    return m_internalTime < rop.m_internalTime;
+  }
+  
+  bool Time::operator<=(const Time& rop) const
+  {
+    return m_internalTime <= rop.m_internalTime;
+  }
+  
+  bool Time::operator>(const Time& rop) const
+  {
+    return m_internalTime > rop.m_internalTime;
+  }
+  
+  bool Time::operator>=(const Time& rop) const
+  {
+    return m_internalTime >= rop.m_internalTime;
+  }
+  
+  bool Time::operator==(const Time& rop) const
+  {
+    return m_internalTime == rop.m_internalTime;
+  }
+  
+  bool Time::operator!=(const Time& rop) const
+  {
+    return m_internalTime != rop.m_internalTime;
+  }
+  
   Time Time::current()
   {
     return secs(glfwGetTime());

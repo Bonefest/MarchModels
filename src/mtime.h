@@ -21,10 +21,17 @@ namespace march
 
     Time operator-(const Time& rop) const;
     Time& operator-=(const Time& rop);
-
+    
     Time operator*(float64 rop) const;
     friend Time operator*(float64 lop, const Time& rop);
 
+    bool operator<(const Time& rop) const;
+    bool operator<=(const Time& rop) const;
+    bool operator>(const Time& rop) const;
+    bool operator>=(const Time& rop) const;
+    bool operator==(const Time& rop) const;
+    bool operator!=(const Time& rop) const;
+    
     static Time current();
     static Time secs(float64 seconds);
     static Time msecs(float64 milliseconds);

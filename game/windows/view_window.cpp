@@ -1,8 +1,11 @@
+#include <stopwatch.h>
 #include <imgui/imgui.h>
 #include <memory_manager.h>
 
 #include "editor.h"
 #include "view_window.h"
+
+using namespace march;
 
 struct ViewWindowData
 {
@@ -12,11 +15,20 @@ struct ViewWindowData
   float32 timePerFrame;
   float32 elapsedTime;
 
-
+  Stopwatch lifetimeStopwatch;
+  Stopwatch refreshStopwatch;
+  Time refreshPeriod;
+  
 };
 
 static bool8 initializeViewWindow(Window* window)
 {
+  ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);
+  
+  Time initTime = Time::current();
+  data->lifetimeStopwatch.setTimepoint(initTime);
+  data->refreshStopwatch.setTimepoint(initTime);
+  
   return TRUE;
 }
 
@@ -45,10 +57,10 @@ static void drawViewWindow(Window* window, float64 delta)
   Scene* currentScene = editorGetCurrentScene();
   imageIntegratorSetScene(data->integrator, currentScene);
   
-  if(data->elapsedTime > data->timePerFrame && currentScene != nullptr)
+  if(data->refreshStopwatch.getElapsedTime() > data->refreshPeriod && currentScene != nullptr)
   {
-    imageIntegratorExecute(data->integrator, glfwGetTime());
-    data->elapsedTime = 0.0f;
+    imageIntegratorExecute(data->integrator, data->lifetimeStopwatch.getElapsedTime().asSecs());
+    data->refreshStopwatch.restart();    
   }
 
   Film* film = imageIntegratorGetFilm(data->integrator);
@@ -107,7 +119,7 @@ static void drawViewWindow(Window* window, float64 delta)
 
       if(ImGui::BeginPopup("view_settings_popup##view"))
       {
-        ImGui::Text("Time: %f", glfwGetTime());
+        ImGui::Text("Time: %f", data->lifetimeStopwatch.getElapsedTime().asSecs());
         ImGui::SameLine();
         ImGui::Text("Max FPS: %f", data->maxFPS);
         ImGui::Button("Open full settings");
