@@ -87,11 +87,26 @@ static void drawViewWindow(Window* window, float64 delta)
 
       ImGui::SetCursorPos(initialCursorPos);
 
-      ImGui::Button(ICON_KI_RELOAD_INVERSE"##view");
+      if(ImGui::Button(ICON_KI_RELOAD_INVERSE"##view"))
+      {
+        data->lifetimeStopwatch.restart();
+        data->refreshStopwatch.restart();
+      }
 
       ImGui::SameLine();            
       
-      ImGui::Button(ICON_KI_BACKWARD"##view");
+      if(ImGui::Button(ICON_KI_BACKWARD"##view"))
+      {
+        float64 totalSecs = data->lifetimeStopwatch.getTimepoint().asSecs();
+        float64 currentSecs = Time::current().asSecs();
+
+        // NOTE: Determine how much time to add (we need to limit it, so that elapsed time is not
+        // overcome, i.e always greater than 0)
+        float64 addSecs = min(data->lifetimeStopwatch.getElapsedTime().asSecs(), 1.0f);
+
+        // NOTE: Shift timepoint 0.0-1.0 second(s) forward, so that total elapsed time is decreased.
+        data->lifetimeStopwatch.setTimepoint(Time::secs(min(totalSecs + addSecs, currentSecs)));
+      }
 
       ImGui::SameLine();
 
@@ -114,8 +129,14 @@ static void drawViewWindow(Window* window, float64 delta)
       
       ImGui::SameLine();      
 
-      ImGui::Button(ICON_KI_FORWARD"##view");
+      if(ImGui::Button(ICON_KI_FORWARD"##view"))
+      {
+        float64 totalSecs = data->lifetimeStopwatch.getTimepoint().asSecs();
 
+        // NOTE: Shift timepoint one second backward, so that total elapsed time is increased.
+        data->lifetimeStopwatch.setTimepoint(Time::secs(totalSecs - 1.0f));
+      }
+        
       static float32 cogButtonWidth = 10.0f;
       ImGui::SameLine(windowSize.x - cogButtonWidth - style.FramePadding.x);
 
