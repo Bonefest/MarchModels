@@ -19,6 +19,7 @@
 #include "editor.h"
 #include "windows/view_window.h"
 #include "windows/console_window.h"
+#include "windows/window_manager.h"
 
 using std::vector;
 using std::string;
@@ -33,7 +34,7 @@ struct EditorData
   Window* sceneHierarchyWindow = nullptr;
   Window* consoleWindow;
 
-  vector<Window*> openedWindows;
+  WindowManager* windowManager;
 };
 
 static EditorData editorData;
@@ -67,9 +68,11 @@ bool8 initEditor(Application* app)
   assert(createScene(&editorData.currentScene));
   sceneAddGeometry(editorData.currentScene, geometry);
   // END TEMP
+
+  assert(createWindowManager(&editorData.windowManager));
   
   assert(createConsoleWindow(consoleWindowName, &editorData.consoleWindow));
-  editorData.openedWindows.push_back(editorData.consoleWindow);
+  windowManagerAddWindow(editorData.windowManager, editorData.consoleWindow);
 
   Sampler* centerSampler = nullptr;
   assert(createCenterSampler(uint2(0, 0), &centerSampler));
@@ -81,22 +84,14 @@ bool8 initEditor(Application* app)
   assert(createPerspectiveCamera(1.0f, toRad(45.0f), 0.01f, 100.0f, &camera));
   
   assert(createViewWindow(viewWindowName, centerSampler, debugRayIntegrator, camera, &editorData.viewWindow));
-  editorData.openedWindows.push_back(editorData.viewWindow);
-  
-  for(Window* window: editorData.openedWindows)
-  {
-    initWindow(window);
-  }
+  windowManagerAddWindow(editorData.windowManager, editorData.viewWindow);
   
   return TRUE;
 }
 
 void shutdownEditor(Application* app)
 {
-  for(Window* window: editorData.openedWindows)
-  {
-    freeWindow(window);
-  }
+  destroyWindowManager(editorData.windowManager);
 }
 
 // ----------------------------------------------------------------------------
@@ -109,10 +104,7 @@ void shutdownEditor(Application* app)
 
 void updateEditor(Application* app, float64 delta)
 {
-  for(Window* window: editorData.openedWindows)
-  {
-    updateWindow(window, delta);
-  }
+  windowManagerUpdate(editorData.windowManager, delta);
 }
 
 static void prepareDockingLayout(float2 screenSize, float2 screenOffset)
@@ -210,19 +202,12 @@ void drawEditor(Application* app, float64 delta)
   
   ImGui::ShowDemoWindow();
 
-  for(Window* window: editorData.openedWindows)
-  {
-    drawWindow(window, delta);
-  }
-  
+  windowManagerDraw(editorData.windowManager, delta);
 }
 
 void processInputEditor(Application* app, const EventData& eventData, void* sender)
 {
-  for(Window* window: editorData.openedWindows)
-  {
-    processInputWindow(window, eventData, sender);
-  }
+  windowManagerProcessInput(editorData.windowManager, eventData, sender);
 }
 
 void editorSetScene(Scene* scene)

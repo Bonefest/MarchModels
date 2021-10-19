@@ -223,7 +223,6 @@ bool8 createViewWindow(const std::string& identifier,
   data->elapsedTime = 0.0f;
   
   windowSetInternalData(*outWindow, data);
-  
   viewWindowSetMaxFPS(*outWindow, 10.0f);
 
   return TRUE;

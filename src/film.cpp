@@ -82,13 +82,12 @@ bool8 filmResize(Film* film, uint2 newSize)
   }
 
   film->pixels = (float3*)engineAllocMem(calculateMemSize(newSize), MEMORY_TYPE_FILM);
-
+  film->size = newSize;
+  
   if(film->textureGLAllocated)
   {
     filmReallocateGLTexture(film);
   }
-
-  film->size = newSize;
   
   return TRUE;
 }
