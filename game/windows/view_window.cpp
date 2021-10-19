@@ -180,6 +180,19 @@ static void processInputViewWindow(Window* window,
   
 }
 
+void viewWindowSetMaxFPS(Window* window, float32 maxFPS)
+{
+  ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);
+  data->maxFPS = maxFPS;
+  data->timePerFrame = 1.0f / maxFPS;
+}
+
+float32 viewWindowGetMaxFPS(Window* window)
+{
+  ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);
+  return data->maxFPS;
+}
+
 bool8 createViewWindow(const std::string& identifier,
                        Sampler* sampler,
                        RayIntegrator* rayIntegrator,
@@ -216,16 +229,62 @@ bool8 createViewWindow(const std::string& identifier,
   return TRUE;
 }
 
+// ----------------------------------------------------------------------------
+// View settings window
+// ----------------------------------------------------------------------------
 
-void viewWindowSetMaxFPS(Window* window, float32 maxFPS)
+struct ViewSettingsWindowData
 {
-  ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);
-  data->maxFPS = maxFPS;
-  data->timePerFrame = 1.0f / maxFPS;
+  Window* viewWindow;
+};
+
+static bool8 initializeViewSettingsWindow(Window* window)
+{
+  return TRUE;
 }
 
-float32 viewWindowGetMaxFPS(Window* window)
+static void shutdownViewSettingsWindow(Window* window)
 {
-  ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);
-  return data->maxFPS;
+
+}
+
+static void updateViewSettingsWindow(Window* window, float64 delta)
+{
+
+}
+
+static void drawViewSettingsWindow(Window* window, float64 delta)
+{
+
+}
+
+static void processInputViewSettingsWindow(Window* window, const EventData& eventData, void* sender)
+{
+
+}
+
+bool8 createViewSettingsWindow(Window* viewWindow, Window** outWindow)
+{
+  assert(viewWindow != nullptr);
+
+  std::string identifier = windowGetIdentifier(viewWindow) + " settings";
+  
+  WindowInterface interface = {};
+  interface.initialize = initializeViewSettingsWindow;
+  interface.shutdown = shutdownViewSettingsWindow;
+  interface.update = updateViewSettingsWindow;
+  interface.draw = drawViewSettingsWindow;
+  interface.processInput = processInputViewSettingsWindow;
+
+  if(allocateWindow(interface, identifier, outWindow) == FALSE)
+  {
+    return FALSE;
+  }
+  
+  ViewSettingsWindowData* data = engineAllocObject<ViewSettingsWindowData>(MEMORY_TYPE_GENERAL);
+  data->viewWindow = viewWindow;
+
+  windowSetInternalData(*outWindow, data);
+
+  return TRUE;
 }

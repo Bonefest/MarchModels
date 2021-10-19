@@ -20,4 +20,4 @@ float32 viewWindowGetMaxFPS(Window* window);
 void viewWindowSetTime(Window* window, float32 time);
 void viewWindowPause(Window* window);
 
-
+bool8 createViewSettingsWindow(Window* viewWindow, Window** outWindow);
