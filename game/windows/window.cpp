@@ -12,6 +12,7 @@ struct Window
 
   float2 position;
   float2 size;
+  ImGuiWindowFlags flags;
   
   bool8 initialized;
   bool open;
@@ -24,7 +25,8 @@ bool8 allocateWindow(WindowInterface interface, const std::string& identifier, W
 {
   *outWindow = engineAllocObject<Window>(MEMORY_TYPE_GENERAL);
   (*outWindow)->interface = interface;
-  (*outWindow)->identifier = identifier;  
+  (*outWindow)->identifier = identifier;
+  (*outWindow)->flags = 0;
   (*outWindow)->initialized = FALSE;
   (*outWindow)->open = TRUE;
   (*outWindow)->paramsUpdated = TRUE;
@@ -72,7 +74,7 @@ void drawWindow(Window* window, float64 delta)
       window->paramsUpdated = TRUE;
     }
     
-    ImGui::Begin(window->identifier.c_str(), &window->open);
+    ImGui::Begin(window->identifier.c_str(), &window->open, window->flags);
 
     window->position = ImGui::GetWindowPos();
     window->size = ImGui::GetWindowSize();

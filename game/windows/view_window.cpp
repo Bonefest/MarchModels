@@ -14,12 +14,11 @@ struct ViewWindowData
   Window* settingsWindow;
   
   float32 maxFPS;
-  float32 timePerFrame;
-  float32 elapsedTime;
-
   Stopwatch lifetimeStopwatch;
   Stopwatch refreshStopwatch;
   Time refreshPeriod;
+
+  bool8 requestedRedrawImage;
 };
 
 static bool8 initializeViewWindow(Window* window)
@@ -41,8 +40,7 @@ static void shutdownViewWindow(Window* window)
 
 static void updateViewWindow(Window* window, float64 delta)
 {
-  ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);
-  data->elapsedTime += delta;
+
 }
 
 static void updateViewWindowSize(Window* window, uint2 size)
@@ -58,13 +56,16 @@ static void drawViewWindow(Window* window, float64 delta)
   
   Scene* currentScene = editorGetCurrentScene();
   imageIntegratorSetScene(data->integrator, currentScene);
+
+  bool8 newFrameTicked = data->refreshStopwatch.isPaused() == FALSE &&
+    data->refreshStopwatch.getElapsedTime() > data->refreshPeriod;
   
-  if(data->refreshStopwatch.isPaused() == FALSE &&
-     data->refreshStopwatch.getElapsedTime() > data->refreshPeriod &&
-     currentScene != nullptr)
+  if((data->requestedRedrawImage == TRUE || newFrameTicked == TRUE) && currentScene != nullptr)
   {
     imageIntegratorExecute(data->integrator, data->lifetimeStopwatch.getElapsedTime().asSecs());
-    data->refreshStopwatch.restart();    
+    data->refreshStopwatch.restart();
+
+    data->requestedRedrawImage = FALSE;
   }
 
   Film* film = imageIntegratorGetFilm(data->integrator);
@@ -135,6 +136,13 @@ static void drawViewWindow(Window* window, float64 delta)
       data->lifetimeStopwatch.setTimepoint(Time::secs(totalSecs - 1.0f));
     }
 
+    ImGui::SameLine();
+
+    if(ImGui::Button(ICON_KI_PENCIL"##view"))
+    {
+      data->requestedRedrawImage = TRUE;
+    }
+    
     static float32 cogButtonWidth = 10.0f;
     ImGui::SameLine(windowSize.x - cogButtonWidth - style.FramePadding.x);
 
@@ -174,11 +182,17 @@ static void viewWindowOnSettingsWindowShutdown(Window* window, Window* settingsW
   data->settingsWindow = nullptr;
 }
 
+static ImageIntegrator* viewWindowGetImageIntegrator(Window* window)
+{
+  ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);    
+  return data->integrator;
+}
+
 void viewWindowSetMaxFPS(Window* window, float32 maxFPS)
 {
   ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);
   data->maxFPS = maxFPS;
-  data->timePerFrame = 1.0f / maxFPS;
+  data->refreshPeriod = Time::secs(1.0f / maxFPS);
 }
 
 float32 viewWindowGetMaxFPS(Window* window)
@@ -215,7 +229,6 @@ bool8 createViewWindow(const std::string& identifier,
   ViewWindowData* data = engineAllocObject<ViewWindowData>(MEMORY_TYPE_GENERAL);
   data->integrator = imageIntegrator;
   data->settingsWindow = nullptr;  
-  data->elapsedTime = 0.0f;
   
   windowSetInternalData(*outWindow, data);
   viewWindowSetMaxFPS(*outWindow, 10.0f);
@@ -250,8 +263,30 @@ static void updateViewSettingsWindow(Window* window, float64 delta)
 
 static void drawViewSettingsWindow(Window* window, float64 delta)
 {
-  ViewSettingsWindowData* data = (ViewSettingsWindowData*)windowGetInternalData(window);  
-  ImGui::Button("Test button");
+  ViewSettingsWindowData* data = (ViewSettingsWindowData*)windowGetInternalData(window);
+  Window* viewWindow = data->viewWindow;
+  ImageIntegrator* integrator = viewWindowGetImageIntegrator(data->viewWindow);
+
+  ImGui::Text("View general settings");
+
+  float32 maxFPS = viewWindowGetMaxFPS(viewWindow);
+  ImGui::SliderFloat("Max FPS##ViewSettings", &maxFPS, 1.0f, 999.0f);
+
+  viewWindowSetMaxFPS(viewWindow, maxFPS);
+  
+  ImGui::Text("Image integrator general settings");
+  
+  uint2 pixelGap = imageIntegratorGetPixelGap(integrator);
+  uint2 pixelOffset = imageIntegratorGetInitialOffset(integrator);
+
+  uint minValue = 0, maxValue = windowGetSize(viewWindow).x;
+              
+  ImGui::SliderScalarN("Pixel gap##ViewSettings", ImGuiDataType_U32, &pixelGap, 2, &minValue, &maxValue);
+  ImGui::SliderScalarN("Pixel offset##ViewSettings", ImGuiDataType_U32, &pixelOffset, 2, &minValue, &maxValue);
+  
+  imageIntegratorSetPixelGap(integrator, pixelGap);
+  imageIntegratorSetInitialOffset(integrator, pixelOffset);
+  
 }
 
 static void processInputViewSettingsWindow(Window* window, const EventData& eventData, void* sender)
