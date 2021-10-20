@@ -1,9 +1,11 @@
+#include <vector>
 #include <unordered_map>
 
 #include <memory_manager.h>
 
 #include "window_manager.h"
 
+using std::vector;
 using std::string;
 using std::unordered_map;
 
@@ -129,9 +131,25 @@ void windowManagerDraw(WindowManager* manager, float64 delta)
 
 void windowManagerUpdate(WindowManager* manager, float64 delta)
 {
+  vector<Window*> windowsToRemove;
+  
   for(auto pair: manager->windowsMap)
   {
-    updateWindow(pair.second.window, delta);
+    Window* window = pair.second.window;
+    
+    if(windowIsOpen(window) == TRUE)
+    {
+      updateWindow(pair.second.window, delta);
+    }
+    else
+    {
+      windowsToRemove.push_back(window);
+    }
+  }
+
+  for(Window* window: windowsToRemove)
+  {
+    windowManagerRemoveWindow(manager, window);
   }
 }
 

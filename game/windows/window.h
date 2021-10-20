@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include <imgui/imgui.h>
+
 #include <defines.h>
 #include <event_system.h>
 #include <maths/common.h>
@@ -36,8 +38,8 @@ float2 windowGetPosition(Window* window);
 void windowSetOpen(Window* window, bool8 open);
 bool8 windowIsOpen(Window* window);
 
-// void windowSetFlags(Window* window, ImGuiWindowFlags flags);
-// ImGuiWindowFlags windowGetFlags(Window* window);
+void windowSetFlags(Window* window, ImGuiWindowFlags flags);
+ImGuiWindowFlags windowGetFlags(Window* window);
 
 const std::string& windowGetIdentifier(Window* window);
 

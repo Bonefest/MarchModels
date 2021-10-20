@@ -7,9 +7,11 @@
 
 using namespace march;
 
+struct ViewSettingsWindowData;
 struct ViewWindowData
 {
   ImageIntegrator* integrator;
+  Window* settingsWindow;
   
   float32 maxFPS;
   float32 timePerFrame;
@@ -18,7 +20,6 @@ struct ViewWindowData
   Stopwatch lifetimeStopwatch;
   Stopwatch refreshStopwatch;
   Time refreshPeriod;
-  
 };
 
 static bool8 initializeViewWindow(Window* window)
@@ -140,9 +141,10 @@ static void drawViewWindow(Window* window, float64 delta)
     bool8 cogPressed = ImGui::Button(ICON_KI_COG"##view");
     cogButtonWidth = ImGui::GetItemRectSize().x;
 
-    if(cogPressed == TRUE)
+    if(cogPressed == TRUE && data->settingsWindow == nullptr)
     {
-      ImGui::OpenPopup("view_settings_popup##view");
+      assert(createViewSettingsWindow(window, &data->settingsWindow));
+      windowManagerAddWindow(editorGetWindowManager(), data->settingsWindow);
     }
 
     char shortInfoBuf[255];
@@ -151,16 +153,6 @@ static void drawViewWindow(Window* window, float64 delta)
 
     ImGui::SameLine(windowSize.x - textWidth - cogButtonWidth - 2.0 * style.FramePadding.x);
     ImGui::Text(shortInfoBuf);
-
-    if(ImGui::BeginPopup("view_settings_popup##view"))
-    {
-      ImGui::Text("Time: %f", data->lifetimeStopwatch.getElapsedTime().asSecs());
-      ImGui::SameLine();
-      ImGui::Text("Max FPS: %f", data->maxFPS);
-      ImGui::Button("Open full settings");
-
-      ImGui::EndPopup();
-    }
   }
   else
   {
@@ -174,6 +166,12 @@ static void processInputViewWindow(Window* window,
                                    void* sender)
 {
   
+}
+
+static void viewWindowOnSettingsWindowShutdown(Window* window, Window* settingsWindow)
+{
+  ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);  
+  data->settingsWindow = nullptr;
 }
 
 void viewWindowSetMaxFPS(Window* window, float32 maxFPS)
@@ -216,6 +214,7 @@ bool8 createViewWindow(const std::string& identifier,
   
   ViewWindowData* data = engineAllocObject<ViewWindowData>(MEMORY_TYPE_GENERAL);
   data->integrator = imageIntegrator;
+  data->settingsWindow = nullptr;  
   data->elapsedTime = 0.0f;
   
   windowSetInternalData(*outWindow, data);
@@ -231,7 +230,6 @@ bool8 createViewWindow(const std::string& identifier,
 struct ViewSettingsWindowData
 {
   Window* viewWindow;
-  bool open;
 };
 
 static bool8 initializeViewSettingsWindow(Window* window)
@@ -241,7 +239,8 @@ static bool8 initializeViewSettingsWindow(Window* window)
 
 static void shutdownViewSettingsWindow(Window* window)
 {
-
+  ViewSettingsWindowData* data = (ViewSettingsWindowData*)windowGetInternalData(window);    
+  viewWindowOnSettingsWindowShutdown(data->viewWindow, window);
 }
 
 static void updateViewSettingsWindow(Window* window, float64 delta)
@@ -252,16 +251,7 @@ static void updateViewSettingsWindow(Window* window, float64 delta)
 static void drawViewSettingsWindow(Window* window, float64 delta)
 {
   ViewSettingsWindowData* data = (ViewSettingsWindowData*)windowGetInternalData(window);  
-  ImGui::Begin(windowGetIdentifier(window).c_str(), &data->open);
-
-  ImGui::End();
-
-  // NOTE: Auto-remove itself in case if it's closed
-  if(!data->open)
-  {
-    WindowManager* windowManager = editorGetWindowManager();
-   
-  }
+  ImGui::Button("Test button");
 }
 
 static void processInputViewSettingsWindow(Window* window, const EventData& eventData, void* sender)
@@ -289,7 +279,6 @@ bool8 createViewSettingsWindow(Window* viewWindow, Window** outWindow)
   
   ViewSettingsWindowData* data = engineAllocObject<ViewSettingsWindowData>(MEMORY_TYPE_GENERAL);
   data->viewWindow = viewWindow;
-  data->open = TRUE;
 
   windowSetInternalData(*outWindow, data);
 
