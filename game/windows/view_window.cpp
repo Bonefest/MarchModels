@@ -53,6 +53,7 @@ static void updateViewWindowSize(Window* window, uint2 size)
 static void drawViewWindow(Window* window, float64 delta)
 {
   ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);
+  ImGuiStyle& style = ImGui::GetStyle();
   
   Scene* currentScene = editorGetCurrentScene();
   imageIntegratorSetScene(data->integrator, currentScene);
@@ -68,108 +69,103 @@ static void drawViewWindow(Window* window, float64 delta)
   Film* film = imageIntegratorGetFilm(data->integrator);
   uint2 filmSize = filmGetSize(film);
 
-  ImGui::Begin(windowGetIdentifier(window).c_str());
+  float2 windowSize = ImGui::GetWindowContentAreaSize();
+  if(windowSize.x != filmSize.x || windowSize.y != filmSize.y)
+  {
+    updateViewWindowSize(window, uint2(windowSize.x, windowSize.y));
+  }
 
-    ImGuiStyle& style = ImGui::GetStyle();
-  
-    float2 windowSize = ImGui::GetWindowContentAreaSize();
-    if(windowSize.x != filmSize.x || windowSize.y != filmSize.y)
+  if(currentScene != nullptr)
+  {
+    float2 initialCursorPos = ImGui::GetCursorPos();
+
+    ImGui::Image((void*)filmGetGLTexture(film),
+                 float2(filmSize.x, filmSize.y), float2(1.0f, 1.0f), float2(0.0f, 0.0f));
+
+    ImGui::SetCursorPos(initialCursorPos);
+
+    if(ImGui::Button(ICON_KI_RELOAD_INVERSE"##view"))
     {
-      updateViewWindowSize(window, uint2(windowSize.x, windowSize.y));
+      data->lifetimeStopwatch.restart();
+      data->refreshStopwatch.restart();
     }
 
-    if(currentScene != nullptr)
+    ImGui::SameLine();            
+
+    if(ImGui::Button(ICON_KI_BACKWARD"##view"))
     {
-      float2 initialCursorPos = ImGui::GetCursorPos();
-      
-      ImGui::Image((void*)filmGetGLTexture(film),
-                   float2(filmSize.x, filmSize.y), float2(1.0f, 1.0f), float2(0.0f, 0.0f));
+      float64 totalSecs = data->lifetimeStopwatch.getTimepoint().asSecs();
+      float64 currentSecs = Time::current().asSecs();
 
-      ImGui::SetCursorPos(initialCursorPos);
+      // NOTE: Determine how much time to add (we need to limit it, so that elapsed time is not
+      // overcome, i.e always greater than 0)
+      float64 addSecs = min(data->lifetimeStopwatch.getElapsedTime().asSecs(), 1.0f);
 
-      if(ImGui::Button(ICON_KI_RELOAD_INVERSE"##view"))
+      // NOTE: Shift timepoint 0.0-1.0 second(s) forward, so that total elapsed time is decreased.
+      data->lifetimeStopwatch.setTimepoint(Time::secs(min(totalSecs + addSecs, currentSecs)));
+    }
+
+    ImGui::SameLine();
+
+    if(data->lifetimeStopwatch.isPaused())
+    {
+      if(ImGui::Button(ICON_KI_CARET_RIGHT"##view"))
       {
-        data->lifetimeStopwatch.restart();
-        data->refreshStopwatch.restart();
-      }
-
-      ImGui::SameLine();            
-      
-      if(ImGui::Button(ICON_KI_BACKWARD"##view"))
-      {
-        float64 totalSecs = data->lifetimeStopwatch.getTimepoint().asSecs();
-        float64 currentSecs = Time::current().asSecs();
-
-        // NOTE: Determine how much time to add (we need to limit it, so that elapsed time is not
-        // overcome, i.e always greater than 0)
-        float64 addSecs = min(data->lifetimeStopwatch.getElapsedTime().asSecs(), 1.0f);
-
-        // NOTE: Shift timepoint 0.0-1.0 second(s) forward, so that total elapsed time is decreased.
-        data->lifetimeStopwatch.setTimepoint(Time::secs(min(totalSecs + addSecs, currentSecs)));
-      }
-
-      ImGui::SameLine();
-
-      if(data->lifetimeStopwatch.isPaused())
-      {
-        if(ImGui::Button(ICON_KI_CARET_RIGHT"##view"))
-        {
-          data->lifetimeStopwatch.unpause();
-          data->refreshStopwatch.unpause();
-        }
-      }
-      else
-      {
-        if(ImGui::Button(ICON_KI_PAUSE"##view"))
-        {
-          data->lifetimeStopwatch.pause();
-          data->refreshStopwatch.pause();
-        }
-      }
-      
-      ImGui::SameLine();      
-
-      if(ImGui::Button(ICON_KI_FORWARD"##view"))
-      {
-        float64 totalSecs = data->lifetimeStopwatch.getTimepoint().asSecs();
-
-        // NOTE: Shift timepoint one second backward, so that total elapsed time is increased.
-        data->lifetimeStopwatch.setTimepoint(Time::secs(totalSecs - 1.0f));
-      }
-        
-      static float32 cogButtonWidth = 10.0f;
-      ImGui::SameLine(windowSize.x - cogButtonWidth - style.FramePadding.x);
-
-      bool8 cogPressed = ImGui::Button(ICON_KI_COG"##view");
-      cogButtonWidth = ImGui::GetItemRectSize().x;
-
-      if(cogPressed == TRUE)
-      {
-        ImGui::OpenPopup("view_settings_popup##view");
-      }
-      
-      char shortInfoBuf[255];
-      sprintf(shortInfoBuf, "Time: %.2f | FPS: %u", data->lifetimeStopwatch.getElapsedTime().asSecs(), 0);
-      float32 textWidth = ImGui::CalcTextSize(shortInfoBuf).x;
-      
-      ImGui::SameLine(windowSize.x - textWidth - cogButtonWidth - 2.0 * style.FramePadding.x);
-      ImGui::Text(shortInfoBuf);
-
-      if(ImGui::BeginPopup("view_settings_popup##view"))
-      {
-        ImGui::Text("Time: %f", data->lifetimeStopwatch.getElapsedTime().asSecs());
-        ImGui::SameLine();
-        ImGui::Text("Max FPS: %f", data->maxFPS);
-        ImGui::Button("Open full settings");
-        
-        ImGui::EndPopup();
+        data->lifetimeStopwatch.unpause();
+        data->refreshStopwatch.unpause();
       }
     }
     else
     {
-      ImGui::Text("Nothing to view: scene is not selected!");
+      if(ImGui::Button(ICON_KI_PAUSE"##view"))
+      {
+        data->lifetimeStopwatch.pause();
+        data->refreshStopwatch.pause();
+      }
     }
-  ImGui::End();
+
+    ImGui::SameLine();      
+
+    if(ImGui::Button(ICON_KI_FORWARD"##view"))
+    {
+      float64 totalSecs = data->lifetimeStopwatch.getTimepoint().asSecs();
+
+      // NOTE: Shift timepoint one second backward, so that total elapsed time is increased.
+      data->lifetimeStopwatch.setTimepoint(Time::secs(totalSecs - 1.0f));
+    }
+
+    static float32 cogButtonWidth = 10.0f;
+    ImGui::SameLine(windowSize.x - cogButtonWidth - style.FramePadding.x);
+
+    bool8 cogPressed = ImGui::Button(ICON_KI_COG"##view");
+    cogButtonWidth = ImGui::GetItemRectSize().x;
+
+    if(cogPressed == TRUE)
+    {
+      ImGui::OpenPopup("view_settings_popup##view");
+    }
+
+    char shortInfoBuf[255];
+    sprintf(shortInfoBuf, "Time: %.2f | FPS: %u", data->lifetimeStopwatch.getElapsedTime().asSecs(), 0);
+    float32 textWidth = ImGui::CalcTextSize(shortInfoBuf).x;
+
+    ImGui::SameLine(windowSize.x - textWidth - cogButtonWidth - 2.0 * style.FramePadding.x);
+    ImGui::Text(shortInfoBuf);
+
+    if(ImGui::BeginPopup("view_settings_popup##view"))
+    {
+      ImGui::Text("Time: %f", data->lifetimeStopwatch.getElapsedTime().asSecs());
+      ImGui::SameLine();
+      ImGui::Text("Max FPS: %f", data->maxFPS);
+      ImGui::Button("Open full settings");
+
+      ImGui::EndPopup();
+    }
+  }
+  else
+  {
+    ImGui::Text("Nothing to view: scene is not selected!");
+  }
 
 }
 
@@ -235,6 +231,7 @@ bool8 createViewWindow(const std::string& identifier,
 struct ViewSettingsWindowData
 {
   Window* viewWindow;
+  bool open;
 };
 
 static bool8 initializeViewSettingsWindow(Window* window)
@@ -254,7 +251,17 @@ static void updateViewSettingsWindow(Window* window, float64 delta)
 
 static void drawViewSettingsWindow(Window* window, float64 delta)
 {
+  ViewSettingsWindowData* data = (ViewSettingsWindowData*)windowGetInternalData(window);  
+  ImGui::Begin(windowGetIdentifier(window).c_str(), &data->open);
 
+  ImGui::End();
+
+  // NOTE: Auto-remove itself in case if it's closed
+  if(!data->open)
+  {
+    WindowManager* windowManager = editorGetWindowManager();
+   
+  }
 }
 
 static void processInputViewSettingsWindow(Window* window, const EventData& eventData, void* sender)
@@ -282,6 +289,7 @@ bool8 createViewSettingsWindow(Window* viewWindow, Window** outWindow)
   
   ViewSettingsWindowData* data = engineAllocObject<ViewSettingsWindowData>(MEMORY_TYPE_GENERAL);
   data->viewWindow = viewWindow;
+  data->open = TRUE;
 
   windowSetInternalData(*outWindow, data);
 

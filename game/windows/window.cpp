@@ -1,14 +1,22 @@
 #include <logging.h>
 #include <memory_manager.h>
 
+#include <imgui/imgui.h>
+
 #include "window.h"
 
 struct Window
 {
   WindowInterface interface;
   std::string identifier;
+
+  float2 position;
+  float2 size;
   
   bool8 initialized;
+  bool open;
+  bool8 paramsUpdated;
+  
   void* internalData;
 };
 
@@ -18,6 +26,8 @@ bool8 allocateWindow(WindowInterface interface, const std::string& identifier, W
   (*outWindow)->interface = interface;
   (*outWindow)->identifier = identifier;  
   (*outWindow)->initialized = FALSE;
+  (*outWindow)->open = TRUE;
+  (*outWindow)->paramsUpdated = TRUE;
   (*outWindow)->internalData = nullptr;
   
   return TRUE;
@@ -52,12 +62,63 @@ void updateWindow(Window* window, float64 delta)
 
 void drawWindow(Window* window, float64 delta)
 {
+  if(window->interface.usesCustomDrawPipeline == FALSE)
+  {
+    if(window->paramsUpdated == FALSE)
+    {
+      ImGui::SetNextWindowPos(window->position);
+      ImGui::SetNextWindowSize(window->size);
+      
+      window->paramsUpdated = TRUE;
+    }
+    
+    ImGui::Begin(window->identifier.c_str(), &window->open);
+
+    window->position = ImGui::GetWindowPos();
+    window->size = ImGui::GetWindowSize();
+  }
+  
   window->interface.draw(window, delta);
+    
+  if(window->interface.usesCustomDrawPipeline == FALSE)
+  {
+    ImGui::End();    
+  }
 }
 
 void processInputWindow(Window* window, const EventData& eventData, void* sender)
 {
   window->interface.processInput(window, eventData, sender);
+}
+
+void windowSetSize(Window* window, float2 size)
+{
+  window->size = size;
+}
+
+float2 windowGetSize(Window* window)
+{
+  return window->size;
+}
+
+void windowSetPosition(Window* window, float2 position)
+{
+  window->position = position;
+}
+
+float2 windowGetPosition(Window* window)
+{
+  return window->position;
+}
+
+void windowSetOpen(Window* window, bool8 open)
+{
+  window->open = (open == TRUE ? true : false);
+}
+
+bool8 windowIsOpen(Window* window)
+{
+  return window->open ? TRUE : FALSE;
 }
 
 const std::string& windowGetIdentifier(Window* window)

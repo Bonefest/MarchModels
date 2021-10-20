@@ -220,3 +220,8 @@ Scene* editorGetCurrentScene()
 {
   return editorData.currentScene;
 }
+
+WindowManager* editorGetWindowManager()
+{
+  return editorData.windowManager;
+}

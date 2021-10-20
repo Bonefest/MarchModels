@@ -6,6 +6,7 @@
 #include <application.h>
 
 #include "windows/window.h"
+#include "windows/window_manager.h"
 
 bool8 initEditor(Application* app);
 void shutdownEditor(Application* app);
@@ -17,3 +18,4 @@ void processInputEditor(Application* app, const EventData& eventData, void* send
 void editorSetScene(Scene* scene);
 Scene* editorGetCurrentScene();
 
+WindowManager* editorGetWindowManager();

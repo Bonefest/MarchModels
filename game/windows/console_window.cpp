@@ -105,87 +105,84 @@ static void consoleWindowUpdate(Window* window, float64 delta)
 static void consoleWindowDraw(Window* window, float64 delta)
 {
   ConsoleWindowData* data = (ConsoleWindowData*)windowGetInternalData(window);
-  
-  ImGui::Begin(windowGetIdentifier(window).c_str());
-    float2 windowSize = ImGui::GetWindowSize();
-    ImGuiStyle& style = ImGui::GetStyle();
 
-    // Rendering helper elements
-    float32 hItemSpace = 2;
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, float2(hItemSpace, style.ItemSpacing.y));
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
-    
-      const char* items[] = {"error", "warning", "verbose", "info", "all"};
-      if(ImGui::BeginCombo("##Console_filter_combo", "", ImGuiComboFlags_NoPreview))
+  float2 windowSize = ImGui::GetWindowSize();
+  ImGuiStyle& style = ImGui::GetStyle();
+
+  // Rendering helper elements
+  float32 hItemSpace = 2;
+  ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, float2(hItemSpace, style.ItemSpacing.y));
+  ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+
+    const char* items[] = {"error", "warning", "verbose", "info", "all"};
+    if(ImGui::BeginCombo("##Console_filter_combo", "", ImGuiComboFlags_NoPreview))
+    {
+      for(uint32 i = 0; i <= (uint32)LOG_MESSAGE_TYPE_COUNT; i++)
       {
-        for(uint32 i = 0; i <= (uint32)LOG_MESSAGE_TYPE_COUNT; i++)
+        if(ImGui::Selectable(items[i], data->filterType == i))
         {
-          if(ImGui::Selectable(items[i], data->filterType == i))
-          {
-            data->filterType = i;
-          }
-        }
-
-        ImGui::EndCombo();
-      }
-
-      float32 comboWidth = ImGui::GetItemRectSize().x;
-      
-      ImGui::SameLine();
-
-      float32 inputTextWidth = windowSize.x - comboWidth - hItemSpace * 2 - style.ScrollbarSize - style.WindowPadding.x;
-
-      ImGui::SetNextItemWidth(inputTextWidth);
-      const ImGuiInputTextFlags inputTextFlags = ImGuiInputTextFlags_EnterReturnsTrue |
-        ImGuiInputTextFlags_CallbackHistory;
-      if(ImGui::InputText("##Console_search_text",
-                          data->textBuffer,
-                          MAX_BUF_SIZE,
-                          inputTextFlags,
-                          inputTextCallback,
-                          window))
-      {
-        EventData eventData = {};
-        eventData.u32[0] = strlen(data->textBuffer);
-        eventData.ptr[0] = data->textBuffer;
-
-        if(eventData.u32[0] > 0)
-        {
-          triggerEvent(EVENT_TYPE_CONSOLE_MESSAGE, eventData, window);
-          LOG_INFO(data->textBuffer);
-
-          // TODO: In future we may want to add only successful messages
-          // TODO: insert is too costly operation!
-          data->history.insert(data->history.begin(), data->textBuffer);
-          data->historyIdx = 0;
-          
-          data->textBuffer[0] = '\0';
+          data->filterType = i;
         }
       }
 
-    ImGui::PopStyleVar(2);
+      ImGui::EndCombo();
+    }
 
-    // Rendering list of messages
-    ImGui::PushStyleVar(ImGuiStyleVar_DisabledAlpha, 1.0f);
-    ImGui::PushStyleColor(ImGuiCol_Header, (float4)ImColor(32, 32, 32, 255));    
-      uint32 messageIdx = 1;
-      for(const LogMessage& message: data->messages)
+    float32 comboWidth = ImGui::GetItemRectSize().x;
+
+    ImGui::SameLine();
+
+    float32 inputTextWidth = windowSize.x - comboWidth - hItemSpace * 2 - style.ScrollbarSize - style.WindowPadding.x;
+
+    ImGui::SetNextItemWidth(inputTextWidth);
+    const ImGuiInputTextFlags inputTextFlags = ImGuiInputTextFlags_EnterReturnsTrue |
+      ImGuiInputTextFlags_CallbackHistory;
+    if(ImGui::InputText("##Console_search_text",
+                        data->textBuffer,
+                        MAX_BUF_SIZE,
+                        inputTextFlags,
+                        inputTextCallback,
+                        window))
+    {
+      EventData eventData = {};
+      eventData.u32[0] = strlen(data->textBuffer);
+      eventData.ptr[0] = data->textBuffer;
+
+      if(eventData.u32[0] > 0)
       {
-        if((uint32)message.type != data->filterType && data->filterType != (uint32)LOG_MESSAGE_TYPE_COUNT)
-        {
-          continue;
-        }
-        
-        ImGui::PushStyleColor(ImGuiCol_Text, (float4)message.color);
-          ImGui::Selectable(message.message.c_str(), messageIdx % 2, ImGuiSelectableFlags_Disabled);
-        ImGui::PopStyleColor();
+        triggerEvent(EVENT_TYPE_CONSOLE_MESSAGE, eventData, window);
+        LOG_INFO(data->textBuffer);
 
-        messageIdx++;
+        // TODO: In future we may want to add only successful messages
+        // TODO: insert is too costly operation!
+        data->history.insert(data->history.begin(), data->textBuffer);
+        data->historyIdx = 0;
+
+        data->textBuffer[0] = '\0';
       }
-    ImGui::PopStyleColor();      
-    ImGui::PopStyleVar();
-    
-  ImGui::End();
+    }
+
+  ImGui::PopStyleVar(2);
+
+  // Rendering list of messages
+  ImGui::PushStyleVar(ImGuiStyleVar_DisabledAlpha, 1.0f);
+  ImGui::PushStyleColor(ImGuiCol_Header, (float4)ImColor(32, 32, 32, 255));    
+    uint32 messageIdx = 1;
+    for(const LogMessage& message: data->messages)
+    {
+      if((uint32)message.type != data->filterType && data->filterType != (uint32)LOG_MESSAGE_TYPE_COUNT)
+      {
+        continue;
+      }
+
+      ImGui::PushStyleColor(ImGuiCol_Text, (float4)message.color);
+        ImGui::Selectable(message.message.c_str(), messageIdx % 2, ImGuiSelectableFlags_Disabled);
+      ImGui::PopStyleColor();
+
+      messageIdx++;
+    }
+  ImGui::PopStyleColor();      
+  ImGui::PopStyleVar();
 }
 
 static void consoleProcessInput(Window* window, const EventData& eventData, void* sender)
