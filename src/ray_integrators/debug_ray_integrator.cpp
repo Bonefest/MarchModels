@@ -1,3 +1,5 @@
+#include <imgui/imgui.h>
+
 #include "memory_manager.h"
 
 #include "debug_ray_integrator.h"
@@ -5,6 +7,13 @@
 struct DebugRayIntegratorData
 {
   DebugRayIntegratorMode mode;
+};
+
+const char* modeLabels[] =
+{
+  "One color",
+  "Normal color",
+  "Fast lambert"
 };
 
 static void destroyDebugRayIntegrator(RayIntegrator* integrator)
@@ -57,6 +66,12 @@ DebugRayIntegratorMode debugRayIntegratorGetMode(RayIntegrator* integrator)
 
 void debugRayIntegratorDrawInputView(RayIntegrator* integrator)
 {
-  // TODO
+  DebugRayIntegratorData* data = (DebugRayIntegratorData*)rayIntegratorGetInternalData(integrator);
+  int mode = (int)data->mode;
+
+  if(ImGui::Combo("Integration mode", &mode, modeLabels, DEBUG_RAY_INTEGRATOR_MODE_COUNT))
+  {
+    data->mode = (DebugRayIntegratorMode)mode;
+  }
 }
 

@@ -8,7 +8,6 @@ void drawSampleInputView(Sampler* sampler)
   switch(type)
   {
     case SAMPLER_TYPE_CENTER_SAMPLER: centerSamplerDrawInputView(sampler); break;
+    default: LOG_ERROR("Sampler's type '%d'('%s') doesn't have a view?", type, samplerTypeToString(type).c_str());
   }
-
-  LOG_ERROR("Sampler's type '%d'('%s') doesn't have a view?", type, samplerTypeToString(type).c_str());
 }

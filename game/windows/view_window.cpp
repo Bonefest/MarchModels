@@ -1,6 +1,8 @@
+#include <utils.h>
 #include <stopwatch.h>
 #include <imgui/imgui.h>
 #include <memory_manager.h>
+#include <ray_integrators/debug_ray_integrator.h>
 
 #include "editor.h"
 #include "view_window.h"
@@ -267,13 +269,15 @@ static void drawViewSettingsWindow(Window* window, float64 delta)
   Window* viewWindow = data->viewWindow;
   ImageIntegrator* integrator = viewWindowGetImageIntegrator(data->viewWindow);
 
+  // General settings
   ImGui::Text("View general settings");
 
   float32 maxFPS = viewWindowGetMaxFPS(viewWindow);
   ImGui::SliderFloat("Max FPS##ViewSettings", &maxFPS, 1.0f, 999.0f);
 
   viewWindowSetMaxFPS(viewWindow, maxFPS);
-  
+
+  // Image integrator general settings
   ImGui::Text("Image integrator general settings");
   
   uint2 pixelGap = imageIntegratorGetPixelGap(integrator);
@@ -286,13 +290,45 @@ static void drawViewSettingsWindow(Window* window, float64 delta)
   
   imageIntegratorSetPixelGap(integrator, pixelGap);
   imageIntegratorSetInitialOffset(integrator, pixelOffset);
-
-  // Fps
-  // Gap
-  // Offset
-  // Camera's properties
+  
+  // Camera's settings
+  
   // Sampler's properties (+ ability to choose sampler type)
+  
   // Ray integrator's properties (+ ability to choose ray integrator type)
+  const static RayIntegratorType rayIntgTypes[] =
+  {
+    RAY_INTEGRATOR_TYPE_DEBUG
+  };
+  
+  const static char* rayIntgTypesLabels[] =
+  {
+    "Debug integrator"
+  };
+
+  RayIntegrator* rayIntegrator = imageIntegratorGetRayIntegrator(integrator);
+  RayIntegratorType rayIntgType = rayIntegratorGetType(rayIntegrator);
+  int rayIntgItemIdx = 0;
+  for(int i = 0; i < ARRAY_SIZE(rayIntgTypes); i++)
+  {
+    if(rayIntgTypes[i] == rayIntgType)
+    {
+      rayIntgItemIdx = i;
+      break;
+    }
+  }
+
+  if(ImGui::Combo("Ray integrator type", &rayIntgItemIdx, rayIntgTypesLabels, ARRAY_SIZE(rayIntgTypes)))
+  {
+    rayIntgType = rayIntgTypes[rayIntgItemIdx];
+    
+    destroyRayIntegrator(rayIntegrator);
+    assert(rayIntegratorCreate(rayIntgType, &rayIntegrator));
+    
+    imageIntegratorSetRayIntegrator(integrator, rayIntegrator);
+  }
+
+  rayIntegratorDrawInputView(rayIntegrator);
 }
 
 static void processInputViewSettingsWindow(Window* window, const EventData& eventData, void* sender)

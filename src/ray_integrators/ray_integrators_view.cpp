@@ -8,7 +8,9 @@ void rayIntegratorDrawInputView(RayIntegrator* rayIntegrator)
   switch(type)
   {
     case RAY_INTEGRATOR_TYPE_DEBUG: debugRayIntegratorDrawInputView(rayIntegrator); break;
+    default: LOG_ERROR("Sampler's type '%d'('%s') doesn't have a view?",
+                       type,
+                       rayIntegratorTypeToString(type).c_str());
   }
 
-  LOG_ERROR("Sampler's type '%d'('%s') doesn't have a view?", type, rayIntegratorTypeToString(type).c_str());
 }
