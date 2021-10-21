@@ -286,7 +286,13 @@ static void drawViewSettingsWindow(Window* window, float64 delta)
   
   imageIntegratorSetPixelGap(integrator, pixelGap);
   imageIntegratorSetInitialOffset(integrator, pixelOffset);
-  
+
+  // Fps
+  // Gap
+  // Offset
+  // Camera's properties
+  // Sampler's properties (+ ability to choose sampler type)
+  // Ray integrator's properties (+ ability to choose ray integrator type)
 }
 
 static void processInputViewSettingsWindow(Window* window, const EventData& eventData, void* sender)

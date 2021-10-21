@@ -38,6 +38,12 @@ float2 windowGetPosition(Window* window);
 void windowSetOpen(Window* window, bool8 open);
 bool8 windowIsOpen(Window* window);
 
+void windowSetFocused(Window* window, bool8 focused);
+bool8 windowIsFocused(Window* window);
+
+void windowSetCollapsed(Window* window, bool8 collapsed);
+bool8 windowIsCollapsed(Window* window);
+
 void windowSetFlags(Window* window, ImGuiWindowFlags flags);
 ImGuiWindowFlags windowGetFlags(Window* window);
 

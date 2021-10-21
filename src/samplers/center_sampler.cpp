@@ -43,6 +43,7 @@ bool8 createCenterSampler(uint2 sampleAreaSize, Sampler** outSampler)
   interface.destroy = destroyCenterSampler;
   interface.startSamplingPixel = startSamplingPixel;
   interface.generateSample = generateSample;
+  interface.type = SAMPLER_TYPE_CENTER_SAMPLER;
   
   allocateSampler(interface, sampleAreaSize, outSampler);
 
@@ -52,4 +53,9 @@ bool8 createCenterSampler(uint2 sampleAreaSize, Sampler** outSampler)
   samplerSetInternalData(*outSampler, data);
 
   return TRUE;
+}
+
+void centerSamplerGenerateInputView(Sampler* sampler)
+{
+  // NOTE: Nothing to input
 }

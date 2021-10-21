@@ -51,6 +51,11 @@ uint2 samplerGetSampleAreaSize(Sampler* sampler)
   return sampler->areaSize;
 }
 
+SamplerType samplerGetType(Sampler* sampler)
+{
+  return sampler->interface.type;
+}
+
 float2 samplerConvertLocationToNDC(Sampler* sampler, int2 location)
 {
   return samplerConvertLocationToNDC(sampler, float2(location.x, location.y));
