@@ -55,7 +55,7 @@ bool8 createCenterSampler(uint2 sampleAreaSize, Sampler** outSampler)
   return TRUE;
 }
 
-void centerSamplerGenerateInputView(Sampler* sampler)
+void centerSamplerDrawInputView(Sampler* sampler)
 {
   // NOTE: Nothing to input
 }

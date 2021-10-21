@@ -13,7 +13,7 @@
 #include <memory_manager.h>
 #include <game_framework.h>
 #include <script_function.h>
-#include <debug_ray_integrator.h>
+#include <ray_integrators/debug_ray_integrator.h>
 #include <samplers/center_sampler.h>
 
 #include "editor.h"

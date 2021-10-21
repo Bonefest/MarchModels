@@ -3,8 +3,8 @@
 #include "film.h"
 #include "scene.h"
 #include "camera.h"
-#include "ray_integrator.h"
 #include "samplers/sampler.h"
+#include "ray_integrators/ray_integrator.h"
 
 struct ImageIntegrator;
 

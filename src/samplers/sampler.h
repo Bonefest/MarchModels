@@ -66,4 +66,4 @@ ENGINE_API SamplerType samplerStringToType(const std::string& type);
 // TODO: We may want to pass some additional information to the view, e.g orientation
 // of the screen, position of the window, window's size or even window itself.
 // This will allow the view to adapt correspondingly.
-ENGINE_API void generateSampleInputView(Sampler* sampler);
+ENGINE_API void drawSampleInputView(Sampler* sampler);
