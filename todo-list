@@ -1,2 +1,4 @@
 1. CVar system
 2. Global configurations system
+3. Dynamic resolution for image integrator
+4. Label at the bottom "FPS, frame took x ms"
