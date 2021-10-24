@@ -2,7 +2,7 @@
 #include "sampler.h"
 #include "center_sampler.h"
 
-void drawSampleInputView(Sampler* sampler)
+void samplerDrawInputView(Sampler* sampler)
 {
   SamplerType type = samplerGetType(sampler);
   switch(type)
