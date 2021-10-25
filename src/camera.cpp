@@ -109,6 +109,28 @@ quat cameraGetOrientation(Camera* camera)
   return camera->orientation;
 }
 
+void cameraSetOrientation(Camera* camera, float32 yaw, float32 pitch, float32 roll)
+{
+  quat eulerRotation = qmul(//rotation_quat(float3(0.0f, 0.0f, 1.0f), roll),
+                            rotation_quat(float3(1.0f, 0.0f, 0.0f), pitch),
+                            rotation_quat(float3(0.0f, 1.0f, 0.0f), yaw));
+  
+  camera->dirty = TRUE;
+  camera->orientation = eulerRotation;
+}
+
+float3 cameraGetEulerAngles(Camera* camera)
+{
+  cameraRecalculateTransforms(camera);
+  
+  float3 axis = qrot(camera->orientation, float3(0.0f, 0.0f, 1.0f));
+
+  float32 pitch = asin(axis.y);
+  float32 yaw = atan2(axis.x, axis.z);
+
+  return float3(yaw, pitch, 0.0f);
+}
+
 void cameraPose(Camera* camera, quat orientation, float3 position)
 {
   camera->dirty = TRUE;

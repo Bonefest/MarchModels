@@ -42,6 +42,7 @@
             1.1.7 Built-in parameters
                 1.1.7.1 Current time
                 1.1.7.2 Sound tone
+                1.1.7.3 Pixel gap
             1.1.7 Custom parameters (makred with $_PARAM1, $_PARAM2, ...)
             
         1.2 Camera

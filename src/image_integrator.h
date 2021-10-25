@@ -29,6 +29,7 @@ ENGINE_API RayIntegrator* imageIntegratorGetRayIntegrator(ImageIntegrator* integ
 ENGINE_API void imageIntegratorSetFilm(ImageIntegrator* integrator, Film* film);
 ENGINE_API Film* imageIntegratorGetFilm(ImageIntegrator* integrator);
 ENGINE_API void imageIntegratorSetCamera(ImageIntegrator* integrator, Camera* camera);
+ENGINE_API Camera* imageIntegratorGetCamera(ImageIntegrator* integrator);
 
 /**
  * @param gap Indicates how much empty pixels there are between two filled.

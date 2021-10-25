@@ -23,8 +23,16 @@ ENGINE_API void destroyCamera(Camera* camera);
 
 ENGINE_API void cameraSetPosition(Camera* camera, float3 position);
 ENGINE_API float3 cameraGetPosition(Camera* camera);
+
+ENGINE_API void cameraSetOrientation(Camera* camera, float3 axis, float32 angle);
+
 ENGINE_API void cameraSetOrientation(Camera* camera, quat orientation);
 ENGINE_API quat cameraGetOrientation(Camera* camera);
+
+ENGINE_API void cameraSetOrientation(Camera* camera, float32 yaw, float32 pitch, float32 roll);
+
+// WARNING: It doesn't calculate roll now
+ENGINE_API float3 cameraGetEulerAngles(Camera* camera);
 
 ENGINE_API void cameraPose(Camera* camera, quat orientation, float3 position);
 ENGINE_API void cameraLookAt(Camera* camera, float3 position, float3 target, float3 up = float3(0.0f, 1.0f, 0.0f));

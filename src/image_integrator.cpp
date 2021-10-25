@@ -146,6 +146,11 @@ void imageIntegratorSetCamera(ImageIntegrator* integrator, Camera* camera)
   integrator->camera = camera;
 }
 
+Camera* imageIntegratorGetCamera(ImageIntegrator* integrator)
+{
+  return integrator->camera;
+}
+
 void imageIntegratorSetPixelGap(ImageIntegrator* integrator, uint2 gap)
 {
   integrator->pixelGap = gap + uint2(1, 1);
