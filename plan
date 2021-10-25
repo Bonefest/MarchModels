@@ -1,3 +1,33 @@
+    0. Engine
+        0.1 Event system
+[DONE]      0.1.1 Ability to subscribe/unsubscribe
+[DONE]      0.1.2 Ability to trigger
+[DONE]      0.1.3 Ability to pull
+            0.1.4 Double queue
+            
+        0.2 Memory manager
+            0.1.1 Allocators API-based manager
+            0.1.2 New allocators registration
+            0.1.3 Get allocated memory statistics in general/for a specific memory type
+[DONE]      0.1.4 All basic operations (free, alloc, copy)
+
+[DONE]  0.3 Logging
+        0.4 Asynchronus files loading
+        0.5 Configuration system
+        0.6 CVar system
+        0.7 GLSL shadercode builder
+            0.7.1 Set version of the new shader
+            0.7.2 Set uniforms
+            0.7.3 Set files to include
+            0.7.4 Declare a structure
+            0.7.5 Set custom code
+            0.7.6 Set uniform/storage block/variable
+            0.7.7 Set input/output
+
+        0.8 SDF/IDF/ODF scripts collapser
+            0.8.1 Given a geometry produces a single glsl shader (with metainfo such as what uniforms are used,
+            what uniforms accept what params, what operation apply to pixels that have values (union, intersection, diff))
+
     1. Main mechanics
         1.1 SDF, IDF, ODF
             1.1.1 Creation through an editor
@@ -12,7 +42,7 @@
             1.1.7 Built-in parameters
                 1.1.7.1 Current time
                 1.1.7.2 Sound tone
-            1.1.7 Custom parameters
+            1.1.7 Custom parameters (makred with $_PARAM1, $_PARAM2, ...)
             
         1.2 Camera
 [DONE]      1.2.1 All basic transformations
@@ -90,9 +120,70 @@
             1.12.7 Film grain
             1.12.8 Gamma correction
 
-        1.13 Configuration
-        1.14 CVar system
+        1.13 Triangulator / Transformator to a set of points
 
     2. Editor
+        2.1 Window system
+[DONE]      2.1.1 Windows API
+[75% ]      2.1.2 Windows manager
+            
+        2.2 View window
+[DONE]      2.2.1 Time buttons
+            2.2.2 Image save button
+            2.2.3 Settings
+            2.2.4 FPS, elapsed frame time overlay
+            2.2.5 Overlining selected geometry from hierarchy
+            2.2.6 AABB rendering
+            2.2.7 Billboards rendering for lights
+            
+        2.3 View settings window
+[50% ]      2.3.1 Ability to setup each part of the image integrator
+            2.3.2 Ability to enable/disable/reorder postprocessing effects
+            2.3.3 Ability to show partial channels (in case of a DBuffer)
 
+        2.4 Scene hierarchy window
+            2.4.1 Display of loaded geometry in the hierarchy
+            2.4.2 Ability to show/hide attached materials, SDFs, IDFs, ODFs
+            2.4.3 Remove/Choose/Create/Edit buttons (edit is overloaded: edit for SDF != edit for geometry in general != editr for scene in general)
+            2.4.4 Geometry renaming
+            2.4.5 Geometry settings button
+            2.4.6 Save button (each geometry can be saved, save button near the scene saves all geometry)
+            2.4.7 Ability to select a geometry - Other windows can use currently selected geometry
+            2.4.8 Marking wrong/unused parts of the geometry in some way (e.g with a gray color)
+            2.4.9 Search textfield
+            2.4.10 Scene settings button
+
+        2.5 Console window
+[DONE]      2.5.1 Logging messages handling
+[50% ]      2.5.2 Messages filter - Ability to enable only specific messages
+            2.5.3 Search textfield
+            2.5.4 Custom background rendering
+            2.5.5 Time/date displaying
+           
+        2.6 Code editor window
+            2.6.1 Loading/saving from file
+            2.6.2 Save button
+            2.6.3 Compile button
+
+        2.7 Geometry settings
+            2.7.1 Ability to set position, orientation
+            2.7.2 Ability to set uniform scale
+            2.7.3 AABB size text preview
+            2.7.4 Metainfo (creation time)
+
+        2.8 SDF/ODF/IDF editor window
+            2.8.1 Creating custom parameters
+            2.8.2 Renaming
+            2.8.3 Loading/saving from file
+            2.8.4 Code edit button
+            2.8.5 Geometry preview button (loads a scene with a single geometry and attaches the SDF to it)
+            2.8.6 Code preview
+            2.8.7 Statistics (difficulty based on time of finding an intersection, lines of code, num of params, AABB's sizes)
+            2.8.8 Metainfo (creation time)
+        
+        2.9 Scene settings
+            2.9.1 Save/load from file button
+            2.9.2 List of active scenes (with ability to switch to another scene)
+            2.9.3 Renaming
+            2.9.4 Metainfo (creation time)
         
