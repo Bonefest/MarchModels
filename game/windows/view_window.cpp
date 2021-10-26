@@ -309,11 +309,11 @@ static void drawViewSettingsWindow(Window* window, float64 delta)
     float32 pitch = ori.y;
 
     ImGui::SliderFloat3("Position##Camera", &pos.x, -10.0f, 10.0f);
-    ImGui::SliderAngle("Yaw##Camera", &yaw, 0.0f, 360.0f);
-    ImGui::SliderAngle("Pitch##Camera", &pitch, 0.0f, 360.0f);
+    ImGui::SliderAngle("Yaw##Camera", &yaw, -180.0f, 180.0f);
+    ImGui::SliderAngle("Pitch##Camera", &pitch, -90.0f, 90.0f);
 
     cameraSetPosition(camera, pos);
-    cameraSetOrientation(camera, yaw, pitch, 0.0f);
+    cameraSetOrientation(camera, yaw, pitch);
     
     ImGui::TreePop();
   }

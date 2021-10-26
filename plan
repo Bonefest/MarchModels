@@ -130,7 +130,7 @@
             
         2.2 View window
 [DONE]      2.2.1 Time buttons
-            2.2.2 Image save button
+[TODO]      2.2.2 Image save button (implement Film saving function)
             2.2.3 Settings
             2.2.4 FPS, elapsed frame time overlay
             2.2.5 Overlining selected geometry from hierarchy
