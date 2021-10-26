@@ -42,6 +42,11 @@ bool8 sceneRemoveGeometry(Scene* scene, Geometry* geometry)
   return TRUE;
 }
 
+const std::vector<Geometry*>& sceneGetGeometry(Scene* scene)
+{
+  return scene->geometryArray;
+}
+
 const vector<Geometry*>& sceneGetGeometrys(Scene* scene)
 {
   return scene->geometryArray;

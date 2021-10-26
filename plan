@@ -136,6 +136,7 @@
             2.2.5 Overlining selected geometry from hierarchy
             2.2.6 AABB rendering
             2.2.7 Billboards rendering for lights
+            2.2.8 Button for opening the viewport in fullscreen
             
         2.3 View settings window
 [50% ]      2.3.1 Ability to setup each part of the image integrator
@@ -144,15 +145,17 @@
 
         2.4 Scene hierarchy window
 [TODO]      2.4.1 Display of loaded geometry in the hierarchy
-            2.4.2 Ability to show/hide attached materials, SDFs, IDFs, ODFs
-            2.4.3 Remove/Choose/Create/Edit buttons (edit is overloaded: edit for SDF != edit for geometry in general != editr for scene in general)
-            2.4.4 Geometry renaming
-            2.4.5 Geometry settings button
-            2.4.6 Save button (each geometry can be saved, save button near the scene saves all geometry)
-            2.4.7 Ability to select a geometry - Other windows can use currently selected geometry
-            2.4.8 Marking wrong/unused parts of the geometry in some way (e.g with a gray color)
-            2.4.9 Search textfield
-            2.4.10 Scene settings button
+            2.4.2 Display of lights sources
+[50% ]      2.4.3 Ability to show/hide attached materials, SDFs, IDFs, ODFs
+            2.4.4 Ability to enable/disable geometry
+            2.4.5 Remove/Choose/Create/Edit buttons (edit is overloaded: edit for SDF != edit for geometry in general != editr for scene in general)
+            2.4.6 Geometry renaming
+            2.4.7 Geometry settings button
+            2.4.8 Save button (each geometry can be saved, save button near the scene saves all geometry)
+            2.4.9 Ability to select a geometry - Other windows can use currently selected geometry
+            2.4.10 Marking wrong/unused parts of the geometry in some way (e.g with a gray color)
+            2.4.11 Search textfield
+            2.4.12 Scene settings button
 
         2.5 Console window
 [DONE]      2.5.1 Logging messages handling
@@ -160,6 +163,7 @@
             2.5.3 Search textfield
             2.5.4 Custom background rendering
             2.5.5 Time/date displaying
+            2.5.6 Text completion (open ImGuiPopup window when entering text)
            
         2.6 Code editor window
             2.6.1 Loading/saving from file
