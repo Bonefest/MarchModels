@@ -20,6 +20,7 @@
 #include "windows/view_window.h"
 #include "windows/console_window.h"
 #include "windows/window_manager.h"
+#include "windows/scene_hierarchy_window.h"
 
 using std::vector;
 using std::string;
@@ -85,6 +86,9 @@ bool8 initEditor(Application* app)
   
   assert(createViewWindow(viewWindowName, centerSampler, debugRayIntegrator, camera, &editorData.viewWindow));
   windowManagerAddWindow(editorData.windowManager, editorData.viewWindow);
+
+  assert(createSceneHierarchyWindow(sceneHierarchyWindowName, &editorData.sceneHierarchyWindow));
+  windowManagerAddWindow(editorData.windowManager, editorData.sceneHierarchyWindow);
   
   return TRUE;
 }
@@ -197,9 +201,6 @@ void drawEditor(Application* app, float64 delta)
   prepareDockingLayout(float2(screenWidth, screenHeight - menuSize.y),
                        float2(0.0f, menuSize.y));
 
-  ImGui::Begin(sceneHierarchyWindowName);
-  ImGui::End();
-  
   ImGui::ShowDemoWindow();
 
   windowManagerDraw(editorData.windowManager, delta);
