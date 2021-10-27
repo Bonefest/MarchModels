@@ -175,6 +175,7 @@
             2.7.2 Ability to set uniform scale
             2.7.3 AABB size text preview
             2.7.4 Metainfo (creation time)
+            2.7.5 ImGizmo for visual rotations
 
         2.8 SDF/ODF/IDF editor window
             2.8.1 Creating custom parameters

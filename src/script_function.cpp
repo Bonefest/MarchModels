@@ -127,6 +127,11 @@ ScriptFunctionType scriptFunctionGetType(ScriptFunction* function)
   return function->type;
 }
 
+std::string scriptFunctionGetName(ScriptFunction* function)
+{
+  return function->name;
+}
+
 float3 executeIDF(ScriptFunction* idf, float3 p)
 {
   assert(idf->type == SCRIPT_FUNCTION_TYPE_IDF);

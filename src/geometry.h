@@ -81,3 +81,4 @@ ENGINE_API CombinationFunction geometryGetCombinationFunction(Geometry* geometry
 
 ENGINE_API void geometrySetSDF(Geometry* geometry, ScriptFunction* sdf);
 ENGINE_API ScriptFunction* geometryGetSDF(Geometry* geometry);
+ENGINE_API bool8 geometryHasSDF(Geometry* geometry);

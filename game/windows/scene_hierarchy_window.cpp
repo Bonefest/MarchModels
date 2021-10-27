@@ -10,10 +10,24 @@ struct SceneHierarchyData
   bool listGeometryIDF = true;
   bool listGeometryODF = true;
   bool listGeometryMaterial = true;
+  bool listGeometryMeta = true;
   
   bool listLights = true;
   
 };
+
+static void pushCommonButtonsStyle()
+{
+  ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, float2(0.0f, 0.0f));
+  ImGui::PushStyleColor(ImGuiCol_Button, (float4)ImColor(0, 0, 0, 0));
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (float4)ImColor(0, 0, 0, 0));  
+}
+
+static void popCommonButtonsStyle()
+{
+  ImGui::PopStyleColor(2);
+  ImGui::PopStyleVar();
+}
 
 static bool8 sceneHierarchyInitialize(Window* window)
 {
@@ -30,34 +44,86 @@ static void sceneHierarchyUpdate(Window* window, float64 delta)
 
 }
 
-static void sceneHierarchyDrawGeometryList(Window* window, Geometry* geometry)
+static void sceneHierarchyDrawGeometryList(Window* window, Geometry* geometry, SceneHierarchyData* data)
 {
   bool treeOpen = ImGui::TreeNode(geometryGetName(geometry).c_str());
-
   ImGui::SameLine();
 
-  ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, float2(0.0f, 0.0f));
-  ImGui::PushStyleColor(ImGuiCol_Button, (float4)ImColor(0, 0, 0, 0));
-  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (float4)ImColor(0, 0, 0, 0));  
+  // Geometry header rendering
+  pushCommonButtonsStyle();
+
+    ImGui::SmallButton(ICON_KI_PENCIL"##GeometryChangeName");
+    ImGui::SameLine();
   
-    ImGui::SmallButton(ICON_KI_TRASH"##GeometryRemove");
+    ImGui::SmallButton(ICON_KI_GRID"##GeometryChoose");
     ImGui::SameLine();
     
     ImGui::SmallButton(ICON_KI_COG"##GeometryEdit");
     ImGui::SameLine();
-    
-    ImGui::SmallButton(ICON_KI_GRID"##GeometryChoose");
-    ImGui::SameLine();
-    
-    ImGui::SmallButton(ICON_KI_PLUS_CIRCLE"##GeometryCreate"); // TODO: Is not suitable here, should be on the main tab (allows us to add new geometry)
-    
-  ImGui::PopStyleColor(2);
-  ImGui::PopStyleVar();
 
+    ImGui::PushStyleColor(ImGuiCol_Text, (float4)ImColor(160, 0, 0, 255));
+      ImGui::SmallButton(ICON_KI_TRASH"##GeometryRemove");
+    ImGui::PopStyleColor();
+    
+    // ImGui::SmallButton(ICON_KI_PLUS_CIRCLE"##GeometryCreate"); // TODO: Is not suitable here, should be on the main tab (allows us to add new geometry)
+    
   if(treeOpen)
   {
+    ImGui::PushStyleColor(ImGuiCol_Text, (float4)ImColor(127, 127, 160, 255));
+
+      if(geometryIsLeaf(geometry) == TRUE && geometryHasSDF(geometry) == FALSE)
+      {
+        ImGui::SmallButton("[New SDF]");
+        ImGui::SameLine();
+      }
+
+      ImGui::SmallButton("[New IDF]");
+      ImGui::SameLine();
+      ImGui::SmallButton("[New ODF]");
+      ImGui::SameLine();
+      ImGui::SmallButton("[New child]");
+      
+    ImGui::PopStyleColor();
+
+    
+    
+    if(data->listGeometrySDF)
+    {
+      ScriptFunction* sdf = geometryGetSDF(geometry);
+
+      // TODO: Show meta info (e.g "Not a leaf" in case it doesn't have an sdf and has the geometry has a
+      // a parent, otherwise show "attach new sdf")
+      if(sdf != nullptr)
+      {
+        ImGui::Text("-- [SDF] '%s'", scriptFunctionGetName(sdf).c_str());
+        ImGui::SameLine();
+        ImGui::SmallButton(ICON_KI_GRID);
+
+        ImGui::SameLine();
+        ImGui::SmallButton(ICON_KI_GRID);
+
+        ImGui::SameLine();        
+        ImGui::SmallButton(ICON_KI_GRID);        
+      }
+
+    }
+
+    if(data->listGeometryIDF)
+    {
+      const std::vector<ScriptFunction*> idfs = geometryGetIDFs(geometry);
+
+      for(ScriptFunction* idf: idfs)
+      {
+        ImGui::Text(" -- [IDF] '%s'", scriptFunctionGetName(idf).c_str());
+      }
+
+
+    }
+
     ImGui::TreePop();
   }
+
+  popCommonButtonsStyle();  
 }
 
 static void sceneHierarchyDraw(Window* window, float64 delta)
@@ -104,7 +170,7 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
     const std::vector<Geometry*> geometryArray = sceneGetGeometry(currentScene);
     for(Geometry* geometry: geometryArray)
     {
-      sceneHierarchyDrawGeometryList(window, geometry);
+      sceneHierarchyDrawGeometryList(window, geometry, data);
     }
   }
 }

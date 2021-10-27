@@ -62,6 +62,7 @@ ENGINE_API void scriptFunctionSetArgValue(ScriptFunction* function, const string
 ENGINE_API float32 scriptFunctionGetArgValue(ScriptFunction* function, const string& argName);
 ENGINE_API ScriptFunctionArgs& scriptFunctionGetArgs(ScriptFunction* function);
 ENGINE_API ScriptFunctionType scriptFunctionGetType(ScriptFunction* function);
+ENGINE_API std::string scriptFunctionGetName(ScriptFunction* function);
 
 ENGINE_API float3 executeIDF(ScriptFunction* idf, float3 p);
 ENGINE_API float32 executeSDF(ScriptFunction* sdf, float3 p);

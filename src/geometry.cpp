@@ -435,3 +435,7 @@ ScriptFunction* geometryGetSDF(Geometry* geometry)
   return geometry->sdf;
 }
 
+bool8 geometryHasSDF(Geometry* geometry)
+{
+  return geometry->sdf != nullptr;
+}
