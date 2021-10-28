@@ -1,7 +1,8 @@
 #include <memory_manager.h>
 
 #include "editor.h"
-#include "imgui_utils.h"
+#include "ui_utils.h"
+#include "ui_styles.h"
 #include "scene_hierarchy_window.h"
 
 struct SceneHierarchyData
@@ -47,33 +48,32 @@ static void sceneHierarchyUpdate(Window* window, float64 delta)
 
 static void sceneHierarchyDrawGeometryList(Window* window, Geometry* geometry, SceneHierarchyData* data)
 {
-  static char newName[128];
+  const uint32 maxNameSize = 128;
+  static char newName[maxNameSize];
   const char* geometryName = geometryGetName(geometry).c_str();
+  ImGuiStyle& style = ImGui::GetStyle();  
   
   ImGui::PushID(geometry);
-  
+
   bool treeOpen = ImGui::TreeNode(geometryName);
   ImGui::SameLine();
-
-  ImGuiStyle& style = ImGui::GetStyle();  
-  // Geometry header rendering
   pushCommonButtonsStyle();
 
+    // Geometry-related action buttons ----------------------------------------
     if(ImGui::SmallButton(ICON_KI_PENCIL"##GeometryChangeName"))
     {
-      ImGui::OpenPopup("Enter a new name");
+      ImGui::OpenPopup("Change geometry name");
       strcpy(newName, geometryName);
     }
 
-  popCommonButtonsStyle();
+    popCommonButtonsStyle();
+      if(textInputPopup("Change geometry name", "Enter a new name", newName, maxNameSize) == TRUE)
+      {
+        geometrySetName(geometry, newName);
+      }
+    pushCommonButtonsStyle();
+    
 
-
-  if(textInputPopup("Enter a new name", "Enter a new name", newName, 128) == TRUE)
-  {
-    geometrySetName(geometry, newName);
-  }
-
-  pushCommonButtonsStyle();
     ImGui::SameLine();       
     ImGui::SmallButton(ICON_KI_GRID"##GeometryChoose");
     
@@ -81,65 +81,102 @@ static void sceneHierarchyDrawGeometryList(Window* window, Geometry* geometry, S
     ImGui::SmallButton(ICON_KI_COG"##GeometryEdit");
     
     ImGui::SameLine();
-    ImGui::PushStyleColor(ImGuiCol_Text, (float4)ImColor(160, 0, 0, 255));
+    ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
       ImGui::SmallButton(ICON_KI_TRASH"##GeometryRemove");
     ImGui::PopStyleColor();
-    
-  if(treeOpen)
-  {
-    ImGui::PushStyleColor(ImGuiCol_Text, (float4)ImColor(127, 127, 160, 255));
 
-      if(geometryIsLeaf(geometry) == TRUE && geometryHasSDF(geometry) == FALSE)
-      {
-        ImGui::SmallButton("[New SDF]");
+    // Geometry content -------------------------------------------------------
+    if(treeOpen)
+    {
+
+      // Creation buttons -----------------------------------------------------
+      ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
+
+        if(geometryIsLeaf(geometry) == TRUE && geometryHasSDF(geometry) == FALSE)
+        {
+          ImGui::SmallButton("[New SDF]");
+          ImGui::SameLine();
+        }
+
+        if(ImGui::SmallButton("[New IDF]"))
+        {
+          ScriptFunction* newEmptyIDF;
+          createScriptFunction(SCRIPT_FUNCTION_TYPE_IDF, "emptyIDF", &newEmptyIDF);
+          geometryAddIDF(geometry, newEmptyIDF);
+        }
+        
         ImGui::SameLine();
+        if(ImGui::SmallButton("[New ODF]"))
+        {
+          ScriptFunction* newEmptyODF;
+          createScriptFunction(SCRIPT_FUNCTION_TYPE_ODF, "emptyODF", &newEmptyODF);
+          geometryAddODF(geometry, newEmptyODF);
+        }
+        
+        ImGui::SameLine();
+        ImGui::SmallButton("[New child]");
+
+      ImGui::PopStyleColor();
+
+      // SDF attachment -------------------------------------------------------
+      if(data->listGeometrySDF)
+      {
+        ScriptFunction* sdf = geometryGetSDF(geometry);
+
+        // TODO: Show meta info (e.g "Not a leaf" in case it doesn't have an sdf and has the geometry has a
+        // a parent, otherwise show "attach new sdf")
+        if(sdf != nullptr)
+        {
+          ImGui::Text("-- [SDF] '%s'", scriptFunctionGetName(sdf).c_str());
+          ImGui::SameLine();
+          
+          ImGui::SameLine();
+          ImGui::SmallButton(ICON_KI_GRID);
+
+          ImGui::SameLine();
+          ImGui::SmallButton(ICON_KI_COG);
+
+          ImGui::SameLine();
+          ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
+            ImGui::SmallButton(ICON_KI_TRASH);
+          ImGui::PopStyleColor();
+        }
+
       }
 
-      ImGui::SmallButton("[New IDF]");
-      ImGui::SameLine();
-      ImGui::SmallButton("[New ODF]");
-      ImGui::SameLine();
-      ImGui::SmallButton("[New child]");
+      // IDF attachments ------------------------------------------------------
+      if(data->listGeometryIDF)
+      {
+        std::vector<ScriptFunction*>& idfs = geometryGetIDFs(geometry);
+
+        for(auto idfIt = idfs.begin(); idfIt != idfs.end(); idfIt++)
+        {
+          ImGui::PushID(*idfIt);
+            ImGui::Text("-- [IDF] '%s'", scriptFunctionGetName(*idfIt).c_str());
+          ImGui::PopID();
+        }
+
+      }
+
+      // ODF attachments ------------------------------------------------------
+      if(data->listGeometryODF)
+      {
+        std::vector<ScriptFunction*>& odfs = geometryGetODFs(geometry);
+
+        for(auto odfIt = odfs.begin(); odfIt != odfs.end(); odfIt++)
+        {
+          ImGui::PushID(*odfIt);
+            ImGui::Text("-- [ODF] '%s'", scriptFunctionGetName(*odfIt).c_str());
+          ImGui::PopID();
+        }
+
+      }
+
       
-    ImGui::PopStyleColor();
+      // Children geometry ----------------------------------------------------
 
-    
-    
-    if(data->listGeometrySDF)
-    {
-      ScriptFunction* sdf = geometryGetSDF(geometry);
-
-      // TODO: Show meta info (e.g "Not a leaf" in case it doesn't have an sdf and has the geometry has a
-      // a parent, otherwise show "attach new sdf")
-      if(sdf != nullptr)
-      {
-        ImGui::Text("-- [SDF] '%s'", scriptFunctionGetName(sdf).c_str());
-        ImGui::SameLine();
-        ImGui::SmallButton(ICON_KI_GRID);
-
-        ImGui::SameLine();
-        ImGui::SmallButton(ICON_KI_GRID);
-
-        ImGui::SameLine();        
-        ImGui::SmallButton(ICON_KI_GRID);        
-      }
-
+      ImGui::TreePop();
     }
-
-    if(data->listGeometryIDF)
-    {
-      const std::vector<ScriptFunction*> idfs = geometryGetIDFs(geometry);
-
-      for(ScriptFunction* idf: idfs)
-      {
-        ImGui::Text(" -- [IDF] '%s'", scriptFunctionGetName(idf).c_str());
-      }
-
-
-    }
-
-    ImGui::TreePop();
-  }
 
   popCommonButtonsStyle();
 
@@ -185,6 +222,28 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
     ImGui::EndPopup();
   }
 
+  pushCommonButtonsStyle();
+  ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
+    if(ImGui::SmallButton("[New geometry]"))
+    {
+      ScriptFunction* sphereSDF;
+      assert(createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF, "sphereSDF", &sphereSDF));
+      scriptFunctionSetArgValue(sphereSDF, "radius", 1.0);
+
+      Geometry* newGeometry;
+      assert(createGeometry("sphere", &newGeometry));
+      geometrySetSDF(newGeometry, sphereSDF);
+
+      sceneAddGeometry(currentScene, newGeometry);
+    }
+    
+    ImGui::SameLine();
+    ImGui::SmallButton("[New light]");  
+  ImGui::PopStyleColor();
+  popCommonButtonsStyle();
+
+  ImGui::Separator();
+  
   if(data->listGeometry)
   {
     const std::vector<Geometry*> geometryArray = sceneGetGeometry(currentScene);

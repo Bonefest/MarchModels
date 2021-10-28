@@ -145,7 +145,7 @@ float3 executeIDF(ScriptFunction* idf, float3 p)
 
   lua["args"]["p"] = convertFloat3ToLua(p);
   
-  return lua[idf->name]();
+  return p; //lua[idf->name]();
 }
 
 float32 executeSDF(ScriptFunction* sdf, float3 p)
@@ -177,5 +177,5 @@ float32 executeODF(ScriptFunction* odf, float32 distance)
 
   lua["args"]["distance"] = distance;
   
-  return lua[odf->name]();
+  return distance; //lua[odf->name]();
 }

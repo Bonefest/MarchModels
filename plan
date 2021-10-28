@@ -43,6 +43,7 @@
                 1.1.7.1 Current time
                 1.1.7.2 Sound tone
                 1.1.7.3 Pixel gap
+                1.7.7.4 Camera data
             1.1.7 Custom parameters (makred with $_PARAM1, $_PARAM2, ...)
             
         1.2 Camera
@@ -137,6 +138,7 @@
             2.2.6 AABB rendering
             2.2.7 Billboards rendering for lights
             2.2.8 Button for opening the viewport in fullscreen
+            2.2.9 Camera movement on focusing
             
         2.3 View settings window
 [50% ]      2.3.1 Ability to setup each part of the image integrator
@@ -186,10 +188,12 @@
             2.8.6 Code preview
             2.8.7 Statistics (difficulty based on time of finding an intersection, lines of code, num of params, AABB's sizes)
             2.8.8 Metainfo (creation time)
-        
+
         2.9 Scene settings
             2.9.1 Save/load from file button
             2.9.2 List of active scenes (with ability to switch to another scene)
             2.9.3 Renaming
             2.9.4 Metainfo (creation time)
         
+        2.10 Engine data window
+            2.10.1 Allocated memory statistics tab

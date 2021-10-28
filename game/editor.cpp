@@ -48,28 +48,31 @@ const char* consoleWindowName = "Console##EditorWindow";
 // Initialization-related functions
 // ----------------------------------------------------------------------------
 
-bool8 initEditor(Application* app)
+static void declareDefaultScriptFunctions()
 {
-  // TEMP
-  vector<string> params = {"radius"};
+  vector<string> sphereSDFParams = {"radius"}, emptyDFParams = {};
   assert(declareScriptFunction(SCRIPT_FUNCTION_TYPE_SDF,
                                "sphereSDF",
                                "return float3.length(args[\"p\"]) - args[\"radius\"]",
-                               params));
+                               sphereSDFParams));
 
-  ScriptFunction* sdf = nullptr;
-  assert(createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF, "sphereSDF", &sdf));
-  scriptFunctionSetArgValue(sdf, "radius", 3.0);
+  assert(declareScriptFunction(SCRIPT_FUNCTION_TYPE_IDF,
+                               "emptyIDF",
+                               "return float3.new(args[\"p\"])",
+                               emptyDFParams));
   
-  Geometry* geometry = nullptr;
-  assert(createGeometry("sphere", &geometry));
-  geometrySetSDF(geometry, sdf);
-  geometrySetPosition(geometry, float3(0.0f, 0.0f, 10.0f));
-  
+  assert(declareScriptFunction(SCRIPT_FUNCTION_TYPE_ODF,
+                               "emptyODF",
+                               "return args[\"distance\"]",
+                               emptyDFParams));
+
+}
+
+bool8 initEditor(Application* app)
+{
+  declareDefaultScriptFunctions();
+
   assert(createScene(&editorData.currentScene));
-  sceneAddGeometry(editorData.currentScene, geometry);
-  // END TEMP
-
   assert(createWindowManager(&editorData.windowManager));
   
   assert(createConsoleWindow(consoleWindowName, &editorData.consoleWindow));
