@@ -1,6 +1,7 @@
 #include <memory_manager.h>
 
 #include "editor.h"
+#include "imgui_utils.h"
 #include "scene_hierarchy_window.h"
 
 struct SceneHierarchyData
@@ -46,26 +47,43 @@ static void sceneHierarchyUpdate(Window* window, float64 delta)
 
 static void sceneHierarchyDrawGeometryList(Window* window, Geometry* geometry, SceneHierarchyData* data)
 {
-  bool treeOpen = ImGui::TreeNode(geometryGetName(geometry).c_str());
+  static char newName[128];
+  const char* geometryName = geometryGetName(geometry).c_str();
+  
+  ImGui::PushID(geometry);
+  
+  bool treeOpen = ImGui::TreeNode(geometryName);
   ImGui::SameLine();
 
+  ImGuiStyle& style = ImGui::GetStyle();  
   // Geometry header rendering
   pushCommonButtonsStyle();
 
-    ImGui::SmallButton(ICON_KI_PENCIL"##GeometryChangeName");
-    ImGui::SameLine();
-  
-    ImGui::SmallButton(ICON_KI_GRID"##GeometryChoose");
-    ImGui::SameLine();
-    
-    ImGui::SmallButton(ICON_KI_COG"##GeometryEdit");
-    ImGui::SameLine();
+    if(ImGui::SmallButton(ICON_KI_PENCIL"##GeometryChangeName"))
+    {
+      ImGui::OpenPopup("Enter a new name");
+      strcpy(newName, geometryName);
+    }
 
+  popCommonButtonsStyle();
+
+
+  if(textInputPopup("Enter a new name", "Enter a new name", newName, 128) == TRUE)
+  {
+    geometrySetName(geometry, newName);
+  }
+
+  pushCommonButtonsStyle();
+    ImGui::SameLine();       
+    ImGui::SmallButton(ICON_KI_GRID"##GeometryChoose");
+    
+    ImGui::SameLine();
+    ImGui::SmallButton(ICON_KI_COG"##GeometryEdit");
+    
+    ImGui::SameLine();
     ImGui::PushStyleColor(ImGuiCol_Text, (float4)ImColor(160, 0, 0, 255));
       ImGui::SmallButton(ICON_KI_TRASH"##GeometryRemove");
     ImGui::PopStyleColor();
-    
-    // ImGui::SmallButton(ICON_KI_PLUS_CIRCLE"##GeometryCreate"); // TODO: Is not suitable here, should be on the main tab (allows us to add new geometry)
     
   if(treeOpen)
   {
@@ -123,7 +141,9 @@ static void sceneHierarchyDrawGeometryList(Window* window, Geometry* geometry, S
     ImGui::TreePop();
   }
 
-  popCommonButtonsStyle();  
+  popCommonButtonsStyle();
+
+  ImGui::PopID();
 }
 
 static void sceneHierarchyDraw(Window* window, float64 delta)
