@@ -27,6 +27,7 @@
         0.8 SDF/IDF/ODF scripts collapser
             0.8.1 Given a geometry produces a single glsl shader (with metainfo such as what uniforms are used,
             what uniforms accept what params, what operation apply to pixels that have values (union, intersection, diff))
+        0.9 Multicolor text (with tags)
 
     1. Main mechanics
         1.1 SDF, IDF, ODF

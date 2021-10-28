@@ -75,7 +75,7 @@ static void sceneHierarchyDrawGeometryList(Window* window, Geometry* geometry, S
     
 
     ImGui::SameLine();       
-    ImGui::SmallButton(ICON_KI_GRID"##GeometryChoose");
+    ImGui::SmallButton(ICON_KI_LIST"##GeometryChoose");
     
     ImGui::SameLine();
     ImGui::SmallButton(ICON_KI_COG"##GeometryEdit");
@@ -94,7 +94,12 @@ static void sceneHierarchyDrawGeometryList(Window* window, Geometry* geometry, S
 
         if(geometryIsLeaf(geometry) == TRUE && geometryHasSDF(geometry) == FALSE)
         {
-          ImGui::SmallButton("[New SDF]");
+          if(ImGui::SmallButton("[New SDF]"))
+          {
+            ScriptFunction* newSphereSDF;
+            createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF, "sphereSDF", &newSphereSDF);
+            geometrySetSDF(geometry, newSphereSDF);
+          }
           ImGui::SameLine();
         }
 
@@ -127,11 +132,11 @@ static void sceneHierarchyDrawGeometryList(Window* window, Geometry* geometry, S
         // a parent, otherwise show "attach new sdf")
         if(sdf != nullptr)
         {
-          ImGui::Text("-- [SDF] '%s'", scriptFunctionGetName(sdf).c_str());
+          ImGui::Text("[SDF] '%s'", scriptFunctionGetName(sdf).c_str());
           ImGui::SameLine();
           
           ImGui::SameLine();
-          ImGui::SmallButton(ICON_KI_GRID);
+          ImGui::SmallButton(ICON_KI_LIST);
 
           ImGui::SameLine();
           ImGui::SmallButton(ICON_KI_COG);
@@ -152,7 +157,7 @@ static void sceneHierarchyDrawGeometryList(Window* window, Geometry* geometry, S
         for(auto idfIt = idfs.begin(); idfIt != idfs.end(); idfIt++)
         {
           ImGui::PushID(*idfIt);
-            ImGui::Text("-- [IDF] '%s'", scriptFunctionGetName(*idfIt).c_str());
+            ImGui::Text("[IDF] '%s'", scriptFunctionGetName(*idfIt).c_str());
           ImGui::PopID();
         }
 
@@ -166,7 +171,7 @@ static void sceneHierarchyDrawGeometryList(Window* window, Geometry* geometry, S
         for(auto odfIt = odfs.begin(); odfIt != odfs.end(); odfIt++)
         {
           ImGui::PushID(*odfIt);
-            ImGui::Text("-- [ODF] '%s'", scriptFunctionGetName(*odfIt).c_str());
+            ImGui::Text("[ODF] '%s'", scriptFunctionGetName(*odfIt).c_str());
           ImGui::PopID();
         }
 
