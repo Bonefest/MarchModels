@@ -70,7 +70,7 @@ ENGINE_API float3 geometryCalculateNormal(Geometry* geometry, float3 p);
 
 ENGINE_API void geometryAddChild(Geometry* geometry, Geometry* child);
 ENGINE_API bool8 geometryRemoveChild(Geometry* geometry, Geometry* child);
-ENGINE_API std::vector<Geometry*> geometryGetChildren(Geometry* geometry);
+ENGINE_API std::vector<Geometry*>& geometryGetChildren(Geometry* geometry);
 
 ENGINE_API void geometrySetCombinationFunction(Geometry* geometry, CombinationFunction function);
 ENGINE_API CombinationFunction geometryGetCombinationFunction(Geometry* geometry);

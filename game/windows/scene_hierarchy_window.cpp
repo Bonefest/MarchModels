@@ -46,7 +46,20 @@ static void sceneHierarchyUpdate(Window* window, float64 delta)
 
 }
 
-static void sceneHierarchyDrawGeometryList(Window* window, Geometry* geometry, SceneHierarchyData* data)
+static Geometry* createNewGeometry()
+{
+  ScriptFunction* sphereSDF;
+  assert(createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF, "sphereSDF", &sphereSDF));
+  scriptFunctionSetArgValue(sphereSDF, "radius", 1.0);
+
+  Geometry* newGeometry;
+  assert(createGeometry("sphere", &newGeometry));
+  geometrySetSDF(newGeometry, sphereSDF);
+
+  return newGeometry;
+}
+
+static void sceneHierarchyDrawGeometryData(Window* window, Geometry* geometry, SceneHierarchyData* data)
 {
   const uint32 maxNameSize = 128;
   static char newName[maxNameSize];
@@ -119,7 +132,10 @@ static void sceneHierarchyDrawGeometryList(Window* window, Geometry* geometry, S
         }
         
         ImGui::SameLine();
-        ImGui::SmallButton("[New child]");
+        if(ImGui::SmallButton("[New child]"))
+        {
+          geometryAddChild(geometry, createNewGeometry());
+        }
 
       ImGui::PopStyleColor();
 
@@ -179,7 +195,12 @@ static void sceneHierarchyDrawGeometryList(Window* window, Geometry* geometry, S
 
       
       // Children geometry ----------------------------------------------------
-
+      std::vector<Geometry*> children = geometryGetChildren(geometry);
+      for(Geometry* child: children)
+      {
+        sceneHierarchyDrawGeometryData(window, child, data);
+      }
+      
       ImGui::TreePop();
     }
 
@@ -231,15 +252,7 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
   ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
     if(ImGui::SmallButton("[New geometry]"))
     {
-      ScriptFunction* sphereSDF;
-      assert(createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF, "sphereSDF", &sphereSDF));
-      scriptFunctionSetArgValue(sphereSDF, "radius", 1.0);
-
-      Geometry* newGeometry;
-      assert(createGeometry("sphere", &newGeometry));
-      geometrySetSDF(newGeometry, sphereSDF);
-
-      sceneAddGeometry(currentScene, newGeometry);
+      sceneAddGeometry(currentScene, createNewGeometry());
     }
     
     ImGui::SameLine();
@@ -254,7 +267,7 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
     const std::vector<Geometry*> geometryArray = sceneGetGeometry(currentScene);
     for(Geometry* geometry: geometryArray)
     {
-      sceneHierarchyDrawGeometryList(window, geometry, data);
+      sceneHierarchyDrawGeometryData(window, geometry, data);
     }
   }
 }

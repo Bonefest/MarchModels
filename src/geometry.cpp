@@ -411,6 +411,11 @@ bool8 geometryRemoveChild(Geometry* geometry, Geometry* child)
   return TRUE;
 }
 
+std::vector<Geometry*>& geometryGetChildren(Geometry* geometry)
+{
+  return geometry->children;
+}
+
 void geometrySetCombinationFunction(Geometry* geometry, CombinationFunction function)
 {
   geometry->combinationFunction = function;

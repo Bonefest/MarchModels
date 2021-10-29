@@ -194,12 +194,21 @@ Ray cameraGenerateCameraRay(Camera* camera, float2 ndc)
 {
   cameraRecalculateTransforms(camera);
 
-  float4 fullNDC = float4(ndc.x, ndc.y, 0.0f, 1.0f);
-  float4 localDir = mul(camera->transformNDCToCamera, fullNDC);
-  localDir /= localDir.w;
-  localDir = normalize(localDir);
+  // NDC point on near plane  
+  float4 fullNNDC = float4(ndc.x, ndc.y, 0.0f, 1.0f);
 
-  float3 normalizedDir = normalize(swizzle<0, 1, 2>(localDir));  
+  // NDC point on far plane
+  float4 fullFNDC = float4(ndc.x, ndc.y, 1.0f, 1.0f);
+
+  // Transform near ndc point back to camera frustum
+  float4 frustumNPoint = mul(camera->transformNDCToCamera, fullNNDC);
+  frustumNPoint /= frustumNPoint.w;
+
+  // Transform far ndc point back to camera frustum
+  float4 frustumFPoint = mul(camera->transformNDCToCamera, fullFNDC);
+  frustumFPoint /= frustumFPoint.w;
+  
+  float3 normalizedDir = normalize(swizzle<0, 1, 2>(frustumFPoint) - swizzle<0, 1, 2>(frustumNPoint));
 
   return Ray(float3(), normalizedDir);
 }
@@ -208,11 +217,16 @@ Ray cameraGenerateWorldRay(Camera* camera, float2 ndc)
 {
   cameraRecalculateTransforms(camera);
 
-  float4 fullNDC = float4(ndc.x, ndc.y, 0.0f, 1.0f);
-  float4 globalDir = mul(camera->transformNDCToWorld, fullNDC);
-  globalDir /= globalDir.w;
+  float4 fullNNDC = float4(ndc.x, ndc.y, 0.0f, 1.0f);
+  float4 fullFNDC = float4(ndc.x, ndc.y, 1.0f, 1.0f);
+  
+  float4 frustumNPoint = mul(camera->transformNDCToWorld, fullNNDC);
+  frustumNPoint /= frustumNPoint.w;
 
-  float3 normalizedDir = normalize(swizzle<0, 1, 2>(globalDir));
+  float4 frustumFPoint = mul(camera->transformNDCToWorld, fullFNDC);
+  frustumFPoint /= frustumFPoint.w;
+  
+  float3 normalizedDir = normalize(swizzle<0, 1, 2>(frustumFPoint) - swizzle<0, 1, 2>(frustumNPoint));
 
   return Ray(camera->position, normalizedDir);
 }
