@@ -144,12 +144,9 @@ static void sceneHierarchyDrawGeometryData(Window* window, Geometry* geometry, S
       {
         ScriptFunction* sdf = geometryGetSDF(geometry);
 
-        // TODO: Show meta info (e.g "Not a leaf" in case it doesn't have an sdf and has the geometry has a
-        // a parent, otherwise show "attach new sdf")
         if(sdf != nullptr)
         {
           ImGui::Text("[SDF] '%s'", scriptFunctionGetName(sdf).c_str());
-          ImGui::SameLine();
           
           ImGui::SameLine();
           ImGui::SmallButton(ICON_KI_LIST);
@@ -159,7 +156,11 @@ static void sceneHierarchyDrawGeometryData(Window* window, Geometry* geometry, S
 
           ImGui::SameLine();
           ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
-            ImGui::SmallButton(ICON_KI_TRASH);
+            if(ImGui::SmallButton(ICON_KI_TRASH))
+            {
+              destroyScriptFunction(sdf);
+              geometrySetSDF(geometry, nullptr);
+            }
           ImGui::PopStyleColor();
         }
 
@@ -170,11 +171,35 @@ static void sceneHierarchyDrawGeometryData(Window* window, Geometry* geometry, S
       {
         std::vector<ScriptFunction*>& idfs = geometryGetIDFs(geometry);
 
-        for(auto idfIt = idfs.begin(); idfIt != idfs.end(); idfIt++)
+        for(auto idfIt = idfs.begin(); idfIt != idfs.end();)
         {
+          bool8 erased = FALSE;
+          
           ImGui::PushID(*idfIt);
             ImGui::Text("[IDF] '%s'", scriptFunctionGetName(*idfIt).c_str());
+            ImGui::SameLine();
+            
+            ImGui::SmallButton(ICON_KI_LIST);
+            ImGui::SameLine();
+
+            ImGui::SmallButton(ICON_KI_COG);
+            ImGui::SameLine();
+          
+            ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
+              if(ImGui::SmallButton(ICON_KI_TRASH))
+              {
+                destroyScriptFunction(*idfIt);
+                idfIt = idfs.erase(idfIt);
+                erased = TRUE;
+              }
+            ImGui::PopStyleColor();
+            
           ImGui::PopID();
+
+          if(erased == FALSE)
+          {
+            idfIt++;
+          }
         }
 
       }
@@ -184,11 +209,35 @@ static void sceneHierarchyDrawGeometryData(Window* window, Geometry* geometry, S
       {
         std::vector<ScriptFunction*>& odfs = geometryGetODFs(geometry);
 
-        for(auto odfIt = odfs.begin(); odfIt != odfs.end(); odfIt++)
+        for(auto odfIt = odfs.begin(); odfIt != odfs.end();)
         {
+          bool8 erased = FALSE;
+          
           ImGui::PushID(*odfIt);
             ImGui::Text("[ODF] '%s'", scriptFunctionGetName(*odfIt).c_str());
+            ImGui::SameLine();
+            
+            ImGui::SmallButton(ICON_KI_LIST);
+            ImGui::SameLine();
+
+            ImGui::SmallButton(ICON_KI_COG);
+            ImGui::SameLine();
+          
+            ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
+              if(ImGui::SmallButton(ICON_KI_TRASH))
+              {
+                destroyScriptFunction(*odfIt);
+                odfIt = odfs.erase(odfIt);
+                erased = TRUE;
+              }
+            ImGui::PopStyleColor();
+            
           ImGui::PopID();
+
+          if(erased == FALSE)
+          {
+            odfIt++;
+          }
         }
 
       }

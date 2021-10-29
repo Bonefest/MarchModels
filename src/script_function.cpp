@@ -1,3 +1,5 @@
+#include <limits>
+
 #include "logging.h"
 #include "memory_manager.h"
 #include "lua/lua_system.h"
@@ -134,6 +136,11 @@ std::string scriptFunctionGetName(ScriptFunction* function)
 
 float3 executeIDF(ScriptFunction* idf, float3 p)
 {
+  if(idf == nullptr)
+  {
+    return p;
+  }
+  
   assert(idf->type == SCRIPT_FUNCTION_TYPE_IDF);
   
   sol::state& lua = luaGetMainState();
@@ -150,6 +157,11 @@ float3 executeIDF(ScriptFunction* idf, float3 p)
 
 float32 executeSDF(ScriptFunction* sdf, float3 p)
 {
+  if(sdf == nullptr)
+  {
+    return std::numeric_limits<float32>::max();
+  }
+  
   assert(sdf->type == SCRIPT_FUNCTION_TYPE_SDF);
   
   sol::state& lua = luaGetMainState();
@@ -166,6 +178,11 @@ float32 executeSDF(ScriptFunction* sdf, float3 p)
 
 float32 executeODF(ScriptFunction* odf, float32 distance)
 {
+  if(odf == nullptr)
+  {
+    return distance;
+  }
+  
   assert(odf->type == SCRIPT_FUNCTION_TYPE_ODF);
   
   sol::state& lua = luaGetMainState();
