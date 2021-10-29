@@ -7,12 +7,13 @@
 
 struct SceneHierarchyData
 {
+  bool showMetaInfo = true;
+  
   bool listGeometry = true;
   bool listGeometrySDF = true;
   bool listGeometryIDF = true;
   bool listGeometryODF = true;
   bool listGeometryMaterial = true;
-  bool listGeometryMeta = true;
   
   bool listLights = true;
   
@@ -103,42 +104,45 @@ static void sceneHierarchyDrawGeometryData(Window* window, Geometry* geometry, S
     {
 
       // Creation buttons -----------------------------------------------------
-      ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
+      if(data->showMetaInfo == TRUE)
+      {
+        ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
 
-        if(geometryIsLeaf(geometry) == TRUE && geometryHasSDF(geometry) == FALSE)
-        {
-          if(ImGui::SmallButton("[New SDF]"))
+          if(geometryIsLeaf(geometry) == TRUE && geometryHasSDF(geometry) == FALSE)
           {
-            ScriptFunction* newSphereSDF;
-            createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF, "sphereSDF", &newSphereSDF);
-            geometrySetSDF(geometry, newSphereSDF);
+            if(ImGui::SmallButton("[New SDF]"))
+            {
+              ScriptFunction* newSphereSDF;
+              createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF, "sphereSDF", &newSphereSDF);
+              geometrySetSDF(geometry, newSphereSDF);
+            }
+            ImGui::SameLine();
           }
+
+          if(ImGui::SmallButton("[New IDF]"))
+          {
+            ScriptFunction* newEmptyIDF;
+            createScriptFunction(SCRIPT_FUNCTION_TYPE_IDF, "emptyIDF", &newEmptyIDF);
+            geometryAddIDF(geometry, newEmptyIDF);
+          }
+
           ImGui::SameLine();
-        }
+          if(ImGui::SmallButton("[New ODF]"))
+          {
+            ScriptFunction* newEmptyODF;
+            createScriptFunction(SCRIPT_FUNCTION_TYPE_ODF, "emptyODF", &newEmptyODF);
+            geometryAddODF(geometry, newEmptyODF);
+          }
 
-        if(ImGui::SmallButton("[New IDF]"))
-        {
-          ScriptFunction* newEmptyIDF;
-          createScriptFunction(SCRIPT_FUNCTION_TYPE_IDF, "emptyIDF", &newEmptyIDF);
-          geometryAddIDF(geometry, newEmptyIDF);
-        }
-        
-        ImGui::SameLine();
-        if(ImGui::SmallButton("[New ODF]"))
-        {
-          ScriptFunction* newEmptyODF;
-          createScriptFunction(SCRIPT_FUNCTION_TYPE_ODF, "emptyODF", &newEmptyODF);
-          geometryAddODF(geometry, newEmptyODF);
-        }
-        
-        ImGui::SameLine();
-        if(ImGui::SmallButton("[New child]"))
-        {
-          geometryAddChild(geometry, createNewGeometry());
-        }
+          ImGui::SameLine();
+          if(ImGui::SmallButton("[New child]"))
+          {
+            geometryAddChild(geometry, createNewGeometry());
+          }
 
-      ImGui::PopStyleColor();
-
+        ImGui::PopStyleColor();
+      }
+      
       // SDF attachment -------------------------------------------------------
       if(data->listGeometrySDF)
       {
@@ -146,7 +150,7 @@ static void sceneHierarchyDrawGeometryData(Window* window, Geometry* geometry, S
 
         if(sdf != nullptr)
         {
-          ImGui::Text("[SDF] '%s'", scriptFunctionGetName(sdf).c_str());
+          ImGui::Text("SDF  '%s'", scriptFunctionGetName(sdf).c_str());
           
           ImGui::SameLine();
           ImGui::SmallButton(ICON_KI_LIST);
@@ -176,7 +180,7 @@ static void sceneHierarchyDrawGeometryData(Window* window, Geometry* geometry, S
           bool8 erased = FALSE;
           
           ImGui::PushID(*idfIt);
-            ImGui::Text("[IDF] '%s'", scriptFunctionGetName(*idfIt).c_str());
+            ImGui::Text("IDF  '%s'", scriptFunctionGetName(*idfIt).c_str());
             ImGui::SameLine();
             
             ImGui::SmallButton(ICON_KI_LIST);
@@ -214,7 +218,7 @@ static void sceneHierarchyDrawGeometryData(Window* window, Geometry* geometry, S
           bool8 erased = FALSE;
           
           ImGui::PushID(*odfIt);
-            ImGui::Text("[ODF] '%s'", scriptFunctionGetName(*odfIt).c_str());
+            ImGui::Text("ODF  '%s'", scriptFunctionGetName(*odfIt).c_str());
             ImGui::SameLine();
             
             ImGui::SmallButton(ICON_KI_LIST);
@@ -244,12 +248,13 @@ static void sceneHierarchyDrawGeometryData(Window* window, Geometry* geometry, S
 
       
       // Children geometry ----------------------------------------------------
-      std::vector<Geometry*> children = geometryGetChildren(geometry);
-      for(Geometry* child: children)
-      {
-        sceneHierarchyDrawGeometryData(window, child, data);
-      }
-      
+      popCommonButtonsStyle();
+        std::vector<Geometry*> children = geometryGetChildren(geometry);
+        for(Geometry* child: children)
+        {
+          sceneHierarchyDrawGeometryData(window, child, data);
+        }
+      pushCommonButtonsStyle();
       ImGui::TreePop();
     }
 
@@ -287,29 +292,33 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
       ImGui::Checkbox("List SDFs", &data->listGeometrySDF);
       ImGui::Checkbox("List IDFs", &data->listGeometryIDF);
       ImGui::Checkbox("List ODFs", &data->listGeometryODF);
-      ImGui::Checkbox("List materials", &data->listGeometryMaterial);      
+      ImGui::Checkbox("List materials", &data->listGeometryMaterial);
 
       ImGui::Unindent();
     }
 
     ImGui::Checkbox("List lights", &data->listLights);
+    ImGui::Checkbox("Show metainfo", &data->showMetaInfo);    
 
     ImGui::EndPopup();
   }
 
-  pushCommonButtonsStyle();
-  ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
-    if(ImGui::SmallButton("[New geometry]"))
-    {
-      sceneAddGeometry(currentScene, createNewGeometry());
-    }
-    
-    ImGui::SameLine();
-    ImGui::SmallButton("[New light]");  
-  ImGui::PopStyleColor();
-  popCommonButtonsStyle();
+  if(data->showMetaInfo == TRUE)
+  {
+    pushCommonButtonsStyle();
+    ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
+      if(ImGui::SmallButton("[New geometry]"))
+      {
+        sceneAddGeometry(currentScene, createNewGeometry());
+      }
 
-  ImGui::Separator();
+      ImGui::SameLine();
+      ImGui::SmallButton("[New light]");  
+    ImGui::PopStyleColor();
+    popCommonButtonsStyle();
+
+    ImGui::Separator();    
+  }
   
   if(data->listGeometry)
   {
