@@ -60,7 +60,10 @@ static Geometry* createNewGeometry()
   return newGeometry;
 }
 
-static void sceneHierarchyDrawGeometryData(Window* window, Geometry* geometry, SceneHierarchyData* data)
+static void sceneHierarchyDrawGeometryData(Window* window,
+                                           Geometry* geometry,
+                                           SceneHierarchyData* data,
+                                           Scene* scene)
 {
   const uint32 maxNameSize = 128;
   static char newName[maxNameSize];
@@ -96,7 +99,20 @@ static void sceneHierarchyDrawGeometryData(Window* window, Geometry* geometry, S
     
     ImGui::SameLine();
     ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
-      ImGui::SmallButton(ICON_KI_TRASH"##GeometryRemove");
+      if(ImGui::SmallButton(ICON_KI_TRASH"##GeometryRemove"))
+      {
+        if(geometryIsRoot(geometry) == TRUE)
+        {
+          sceneRemoveGeometry(scene, geometry);
+        }
+        else
+        {
+          geometryRemoveChild(geometryGetParent(geometry), geometry);
+        }
+
+        destroyGeometry(geometry);
+        return;
+      }
     ImGui::PopStyleColor();
 
     // Geometry content -------------------------------------------------------
@@ -180,7 +196,7 @@ static void sceneHierarchyDrawGeometryData(Window* window, Geometry* geometry, S
           bool8 erased = FALSE;
           
           ImGui::PushID(*idfIt);
-            ImGui::Text("IDF  '%s'", scriptFunctionGetName(*idfIt).c_str());
+            ImGui::TextColored("$$_color{0x889988FF}IDF  '%s'", scriptFunctionGetName(*idfIt).c_str());
             ImGui::SameLine();
             
             ImGui::SmallButton(ICON_KI_LIST);
@@ -252,7 +268,7 @@ static void sceneHierarchyDrawGeometryData(Window* window, Geometry* geometry, S
         std::vector<Geometry*> children = geometryGetChildren(geometry);
         for(Geometry* child: children)
         {
-          sceneHierarchyDrawGeometryData(window, child, data);
+          sceneHierarchyDrawGeometryData(window, child, data, scene);
         }
       pushCommonButtonsStyle();
       ImGui::TreePop();
@@ -325,7 +341,7 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
     const std::vector<Geometry*> geometryArray = sceneGetGeometry(currentScene);
     for(Geometry* geometry: geometryArray)
     {
-      sceneHierarchyDrawGeometryData(window, geometry, data);
+      sceneHierarchyDrawGeometryData(window, geometry, data, currentScene);
     }
   }
 }

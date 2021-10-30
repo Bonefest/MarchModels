@@ -278,6 +278,68 @@ void ImGui::TextV(const char* fmt, va_list args)
     TextEx(g.TempBuffer, text_end, ImGuiTextFlags_NoWidthForLargeClippedText);
 }
 
+// BEGIN CUSTOM_PATCH
+void ImGui::TextColored(const char* fmt, ...)
+{
+  va_list args;
+  va_start(args, fmt);
+  TextColoredV(fmt, args);
+  va_end(args);
+}
+
+void ImGui::TextColoredV(const char* fmt, va_list args)
+{
+  ImGuiContext& g = *GImGui;
+  const char* text_start = g.TempBuffer;
+  const char* text_end = g.TempBuffer + ImFormatStringV(g.TempBuffer, IM_ARRAYSIZE(g.TempBuffer), fmt, args);
+
+  ImColor text_color(255, 255, 255, 255);
+  const char* text_head = text_start;
+
+  auto draw_text = [](const char* from, const char* to, ImColor color)
+  {
+    PushStyleColor(ImGuiCol_Text, (ImVec4)color);
+    TextEx(from, to, ImGuiTextFlags_NoWidthForLargeClippedText);
+    PopStyleColor();
+  };
+
+  PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+  while(text_head != text_end)
+  {
+    // If color pattern is found - draw previously read characters with previous color,
+    // then read a new color and move on
+    if(text_head + 1 != text_end && text_head[0] == '$' && text_head[1] == '$')
+    {
+      draw_text(text_start, text_head, text_color);
+      
+      ImU32 scanned_length = 0, hex_color;
+      IM_ASSERT(sscanf(text_head, "$$_color{%x}%n", &hex_color, &scanned_length) == 1);
+      text_color = ImColor(hex_color);
+
+      text_start = text_head = text_head + scanned_length;
+
+      // If after scanning it appears that there's a text after the color - do not move cursor
+      if(text_start != text_end)
+      {
+        ImGui::SameLine(0.0f);
+      }
+    }
+    else
+    {
+      text_head++;
+    }
+  }
+
+  if(text_start != text_head)
+  {
+    draw_text(text_start, text_end, text_color);
+  }
+  PopStyleVar();
+}
+
+// END CUSTOM_PATCH
+
+
 void ImGui::TextColored(const ImVec4& col, const char* fmt, ...)
 {
     va_list args;
