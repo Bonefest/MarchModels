@@ -86,7 +86,7 @@ bool8 initEditor(Application* app)
 
   Camera* camera = nullptr;
   assert(createPerspectiveCamera(1.0f, toRad(45.0f), 0.01f, 100.0f, &camera));
-  cameraLookAt(camera, float3(0.0f, 0.0f, -5.0f), float3(), float3(0.0f, 1.0f, 0.0f));
+  cameraLookAt(camera, float3(0.0f, 0.0f, -3.0f), float3(), float3(0.0f, 1.0f, 0.0f));
   
   assert(createViewWindow(viewWindowName, centerSampler, debugRayIntegrator, camera, &editorData.viewWindow));
   windowManagerAddWindow(editorData.windowManager, editorData.viewWindow);
