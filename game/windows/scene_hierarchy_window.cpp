@@ -166,7 +166,7 @@ static void sceneHierarchyDrawGeometryData(Window* window,
 
         if(sdf != nullptr)
         {
-          ImGui::Text("SDF  '%s'", scriptFunctionGetName(sdf).c_str());
+          ImGui::TextColored("_<C>0x4bcc4bff</C>_[SDF] _<C>0x1</C>_'%s'", scriptFunctionGetName(sdf).c_str());
           
           ImGui::SameLine();
           ImGui::SmallButton(ICON_KI_LIST);
@@ -196,7 +196,7 @@ static void sceneHierarchyDrawGeometryData(Window* window,
           bool8 erased = FALSE;
           
           ImGui::PushID(*idfIt);
-            ImGui::TextColored("$$_color{0x889988FF}IDF  '%s'", scriptFunctionGetName(*idfIt).c_str());
+            ImGui::TextColored("_<C>0x4bcc4bff</C>_[IDF] _<C>0x1</C>_'%s'", scriptFunctionGetName(*idfIt).c_str());
             ImGui::SameLine();
             
             ImGui::SmallButton(ICON_KI_LIST);
@@ -234,7 +234,7 @@ static void sceneHierarchyDrawGeometryData(Window* window,
           bool8 erased = FALSE;
           
           ImGui::PushID(*odfIt);
-            ImGui::Text("ODF  '%s'", scriptFunctionGetName(*odfIt).c_str());
+            ImGui::TextColored("_<C>0x4bcc4bff</C>_[ODF] _<C>0x1</C>_'%s'", scriptFunctionGetName(*odfIt).c_str());
             ImGui::SameLine();
             
             ImGui::SmallButton(ICON_KI_LIST);

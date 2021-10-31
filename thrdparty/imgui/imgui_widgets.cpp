@@ -308,13 +308,25 @@ void ImGui::TextColoredV(const char* fmt, va_list args)
   {
     // If color pattern is found - draw previously read characters with previous color,
     // then read a new color and move on
-    if(text_head + 1 != text_end && text_head[0] == '$' && text_head[1] == '$')
+    if(text_head + 3 < text_end && strncmp(text_head, "_<C>", 3) == 0)
     {
       draw_text(text_start, text_head, text_color);
       
       ImU32 scanned_length = 0, hex_color;
-      IM_ASSERT(sscanf(text_head, "$$_color{%x}%n", &hex_color, &scanned_length) == 1);
-      text_color = ImColor(hex_color);
+      IM_ASSERT(sscanf(text_head, "_<C>%x</C>_%n", &hex_color, &scanned_length) == 1);
+      if(hex_color == 1)
+      {
+        hex_color = 0xFFFFFFFF;
+      }
+      else
+      {
+        hex_color = (hex_color & 0x000000FF) << 24 |
+          (hex_color & 0x0000FF00) << 8 |
+          (hex_color & 0x00FF0000) >> 8 |
+          (hex_color & 0xFF000000) >> 24;
+      }
+
+      text_color = ImColor(hex_color);      
 
       text_start = text_head = text_head + scanned_length;
 
