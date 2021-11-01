@@ -42,12 +42,7 @@ bool8 sceneRemoveGeometry(Scene* scene, Geometry* geometry)
   return TRUE;
 }
 
-const std::vector<Geometry*>& sceneGetGeometry(Scene* scene)
-{
-  return scene->geometryArray;
-}
-
-const vector<Geometry*>& sceneGetGeometrys(Scene* scene)
+std::vector<Geometry*>& sceneGetGeometry(Scene* scene)
 {
   return scene->geometryArray;
 }
@@ -62,7 +57,7 @@ void sceneRemoveLightSource(Scene* scene, LightSource* lightSource)
 
 }
 
-const std::vector<LightSource*>& sceneGetLightSources(Scene* scene)
+std::vector<LightSource*>& sceneGetLightSources(Scene* scene)
 {
   return scene->lightSourceArray;
 }

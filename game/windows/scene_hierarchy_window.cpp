@@ -19,18 +19,13 @@ struct SceneHierarchyData
   
 };
 
-static void pushCommonButtonsStyle()
-{
-  ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, float2(0.0f, 0.0f));
-  ImGui::PushStyleColor(ImGuiCol_Button, (float4)ImColor(0, 0, 0, 0));
-  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (float4)ImColor(0, 0, 0, 0));  
-}
+static void sceneHierarchyProcessGeometryArray(Window* window,
+                                               std::vector<Geometry*>& array,
+                                               SceneHierarchyData* data,
+                                               Scene* currentScene);
 
-static void popCommonButtonsStyle()
-{
-  ImGui::PopStyleColor(2);
-  ImGui::PopStyleVar();
-}
+static void pushCommonButtonsStyle();
+static void popCommonButtonsStyle();
 
 static bool8 sceneHierarchyInitialize(Window* window)
 {
@@ -60,10 +55,11 @@ static Geometry* createNewGeometry()
   return newGeometry;
 }
 
-static void sceneHierarchyDrawGeometryData(Window* window,
+
+static bool8 sceneHierarchyDrawGeometryData(Window* window,
                                            Geometry* geometry,
                                            SceneHierarchyData* data,
-                                           Scene* scene)
+                                           Scene* currentScene)
 {
   const uint32 maxNameSize = 128;
   static char newName[maxNameSize];
@@ -73,6 +69,8 @@ static void sceneHierarchyDrawGeometryData(Window* window,
   ImGui::PushID(geometry);
 
   bool treeOpen = ImGui::TreeNode(geometryName);
+  bool8 processedNormally = TRUE;
+  
   ImGui::SameLine();
   pushCommonButtonsStyle();
 
@@ -101,17 +99,7 @@ static void sceneHierarchyDrawGeometryData(Window* window,
     ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
       if(ImGui::SmallButton(ICON_KI_TRASH"##GeometryRemove"))
       {
-        if(geometryIsRoot(geometry) == TRUE)
-        {
-          sceneRemoveGeometry(scene, geometry);
-        }
-        else
-        {
-          geometryRemoveChild(geometryGetParent(geometry), geometry);
-        }
-
-        destroyGeometry(geometry);
-        return;
+        processedNormally = FALSE;
       }
     ImGui::PopStyleColor();
 
@@ -265,11 +253,8 @@ static void sceneHierarchyDrawGeometryData(Window* window,
       
       // Children geometry ----------------------------------------------------
       popCommonButtonsStyle();
-        std::vector<Geometry*> children = geometryGetChildren(geometry);
-        for(Geometry* child: children)
-        {
-          sceneHierarchyDrawGeometryData(window, child, data, scene);
-        }
+        std::vector<Geometry*>& children = geometryGetChildren(geometry);
+        sceneHierarchyProcessGeometryArray(window, children, data, currentScene);
       pushCommonButtonsStyle();
       ImGui::TreePop();
     }
@@ -277,6 +262,8 @@ static void sceneHierarchyDrawGeometryData(Window* window,
   popCommonButtonsStyle();
 
   ImGui::PopID();
+
+  return processedNormally;
 }
 
 static void sceneHierarchyDraw(Window* window, float64 delta)
@@ -338,11 +325,8 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
   
   if(data->listGeometry)
   {
-    const std::vector<Geometry*> geometryArray = sceneGetGeometry(currentScene);
-    for(Geometry* geometry: geometryArray)
-    {
-      sceneHierarchyDrawGeometryData(window, geometry, data, currentScene);
-    }
+    std::vector<Geometry*>& geometryArray = sceneGetGeometry(currentScene);
+    sceneHierarchyProcessGeometryArray(window, geometryArray, data, currentScene);
   }
 }
 
@@ -369,4 +353,38 @@ bool8 createSceneHierarchyWindow(const std::string& identifier, Window** outWind
   windowSetInternalData(*outWindow, data);
   
   return TRUE;
+}
+
+void sceneHierarchyProcessGeometryArray(Window* window,
+                                        std::vector<Geometry*>& array,
+                                        SceneHierarchyData* data,
+                                        Scene* currentScene)
+{
+  for(auto geometryIt = array.begin(); geometryIt != array.end();)
+  {
+    // If after processing a geometry it has returned false, then a removing command was requested -
+    // destroy the geometry and remove it from the array
+    if(sceneHierarchyDrawGeometryData(window, *geometryIt, data, currentScene) == FALSE)
+    {
+      destroyGeometry(*geometryIt);
+      geometryIt = array.erase(geometryIt);
+    }
+    else
+    {
+      geometryIt++;
+    }
+  }  
+}
+
+void pushCommonButtonsStyle()
+{
+  ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, float2(0.0f, 0.0f));
+  ImGui::PushStyleColor(ImGuiCol_Button, (float4)ImColor(0, 0, 0, 0));
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (float4)ImColor(0, 0, 0, 0));  
+}
+
+void popCommonButtonsStyle()
+{
+  ImGui::PopStyleColor(2);
+  ImGui::PopStyleVar();
 }
