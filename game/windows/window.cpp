@@ -17,6 +17,7 @@ struct Window
   bool8 initialized;
   bool open;
   bool8 paramsUpdated;
+  bool8 visible;
   
   void* internalData;
 };
@@ -30,6 +31,7 @@ bool8 allocateWindow(WindowInterface interface, const std::string& identifier, W
   (*outWindow)->initialized = FALSE;
   (*outWindow)->open = TRUE;
   (*outWindow)->paramsUpdated = TRUE;
+  (*outWindow)->visible = TRUE;
   (*outWindow)->internalData = nullptr;
 
   EventData createEvent = {};
@@ -133,6 +135,16 @@ void windowSetOpen(Window* window, bool8 open)
 bool8 windowIsOpen(Window* window)
 {
   return window->open ? TRUE : FALSE;
+}
+
+void windowSetVisible(Window* window, bool8 visible)
+{
+  window->visible = visible;
+}
+
+bool8 windowIsVisible(Window* window)
+{
+  return window->visible;
 }
 
 const std::string& windowGetIdentifier(Window* window)

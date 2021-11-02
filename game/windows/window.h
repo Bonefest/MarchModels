@@ -38,6 +38,9 @@ float2 windowGetPosition(Window* window);
 void windowSetOpen(Window* window, bool8 open);
 bool8 windowIsOpen(Window* window);
 
+void windowSetVisible(Window* window, bool8 visible);
+bool8 windowIsVisible(Window* window);
+
 void windowSetFocused(Window* window, bool8 focused);
 bool8 windowIsFocused(Window* window);
 

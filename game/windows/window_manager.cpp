@@ -9,15 +9,9 @@ using std::vector;
 using std::string;
 using std::unordered_map;
 
-struct WindowData
-{
-  Window* window;
-  bool8 visible;
-};
-
 struct WindowManager
 {
-  unordered_map<string, WindowData> windowsMap;
+  unordered_map<string, Window*> windowsMap;
 };
 
 bool8 createWindowManager(WindowManager** outWindowManager)
@@ -31,7 +25,7 @@ void destroyWindowManager(WindowManager* manager)
 {
   for(auto pair: manager->windowsMap)
   {
-    freeWindow(pair.second.window);
+    freeWindow(pair.second);
   }
 
   manager->windowsMap.clear();
@@ -41,7 +35,7 @@ void windowManagerAddWindow(WindowManager* manager, Window* window, bool8 initia
 {
   string windowID = windowGetIdentifier(window);
   assert(manager->windowsMap.find(windowID) == manager->windowsMap.end() && "Same window cannot be added twice!");
-  manager->windowsMap[windowID] = {window, TRUE};
+  manager->windowsMap[windowID] = window;
 
   if(initialize == TRUE)
   {
@@ -64,7 +58,7 @@ bool8 windowManagerRemoveWindow(WindowManager* manager, const std::string& ident
 
   if(free == TRUE)
   {
-    freeWindow(windowIt->second.window);
+    freeWindow(windowIt->second);
   }
   
   manager->windowsMap.erase(windowIt);
@@ -84,48 +78,18 @@ Window* windowManagerGetWindow(WindowManager* manager, const std::string& identi
     return nullptr;
   }
 
-  return windowIt->second.window;
+  return windowIt->second;
 }
 
 // TODO: std::vector<Window*> windowManagerGetWindows(WindowManager* manager);
-
-void windowManagerToggleWindow(WindowManager* manager, Window* window)
-{
-  windowManagerToggleWindow(manager, windowGetIdentifier(window));
-}
-
-void windowManagerToggleWindow(WindowManager* manager, const std::string& identifier)
-{
-  auto windowIt = manager->windowsMap.find(identifier);
-  if(windowIt != manager->windowsMap.end())
-  {
-    windowIt->second.visible = !windowIt->second.visible;
-  }
-}
-
-bool8 windowManagerIsWindowVisible(WindowManager* manager, Window* window)
-{
-  return windowManagerIsWindowVisible(manager, windowGetIdentifier(window));
-}
-
-bool8 windowManagerIsWindowVisible(WindowManager* manager, const std::string& identifier)
-{
-  auto windowIt = manager->windowsMap.find(identifier);
-  if(windowIt == manager->windowsMap.end())
-  {
-    return FALSE;
-  }
-
-  return windowIt->second.visible;
-}
 
 void windowManagerDraw(WindowManager* manager, float64 delta)
 {
   for(auto pair: manager->windowsMap)
   {
-    if(pair.second.visible == TRUE)
+    if(windowIsVisible(pair.second))
     {
-      drawWindow(pair.second.window, delta);
+      drawWindow(pair.second, delta);
     }
   }
 }
@@ -136,11 +100,11 @@ void windowManagerUpdate(WindowManager* manager, float64 delta)
   
   for(auto pair: manager->windowsMap)
   {
-    Window* window = pair.second.window;
+    Window* window = pair.second;
     
     if(windowIsOpen(window) == TRUE)
     {
-      updateWindow(pair.second.window, delta);
+      updateWindow(pair.second, delta);
     }
     else
     {
@@ -158,6 +122,6 @@ void windowManagerProcessInput(WindowManager* manager, const EventData& eventDat
 {
   for(auto pair: manager->windowsMap)
   {
-    processInputWindow(pair.second.window, eventData, sender);
+    processInputWindow(pair.second, eventData, sender);
   }
 }
