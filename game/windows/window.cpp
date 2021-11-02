@@ -31,6 +31,12 @@ bool8 allocateWindow(WindowInterface interface, const std::string& identifier, W
   (*outWindow)->open = TRUE;
   (*outWindow)->paramsUpdated = TRUE;
   (*outWindow)->internalData = nullptr;
+
+  EventData createEvent = {};
+  createEvent.type = EVENT_TYPE_WINDOW_CREATED;
+  createEvent.ptr[0] = *outWindow;
+
+  pushEvent(createEvent);
   
   return TRUE;
 }
@@ -43,6 +49,12 @@ void freeWindow(Window* window)
   }
 
   engineFreeObject(window, MEMORY_TYPE_GENERAL);
+
+  EventData destroyEvent = {};
+  destroyEvent.type = EVENT_TYPE_WINDOW_DESTROYED;
+  destroyEvent.ptr[0] = window;
+  
+  pushEvent(destroyEvent);
 }
 
 bool8 initWindow(Window* window)

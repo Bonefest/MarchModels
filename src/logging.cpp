@@ -71,7 +71,7 @@ void log(LogMessageType type, const char* format, ...)
   logData.u32[1] = msgSize;
   logData.ptr[0] = buf + prefixSize;
 
-  triggerEvent(EVENT_TYPE_LOG_MESSAGE, logData);
+  triggerEvent(logData);
   
   // Save uncolored message to the file
   if(systemData.logFile != NULL)

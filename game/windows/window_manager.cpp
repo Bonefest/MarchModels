@@ -23,6 +23,7 @@ struct WindowManager
 bool8 createWindowManager(WindowManager** outWindowManager)
 {
   *outWindowManager = engineAllocObject<WindowManager>(MEMORY_TYPE_GENERAL);
+  
   return TRUE;
 }
 
@@ -160,4 +161,3 @@ void windowManagerProcessInput(WindowManager* manager, const EventData& eventDat
     processInputWindow(pair.second.window, eventData, sender);
   }
 }
-

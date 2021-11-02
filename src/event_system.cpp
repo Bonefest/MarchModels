@@ -71,13 +71,11 @@ bool8 unregisterListener(EventType eventType, void* listener)
   return FALSE;
 }
 
-void triggerEvent(EventType eventType, EventData eventData, void* sender)
+void triggerEvent(EventData eventData, void* sender)
 {
-  assert((uint32)eventType < EVENT_TYPE_MAX);
+  assert((uint32)eventData.type < EVENT_TYPE_MAX);
 
-  eventData.type = eventType;
-  
-  for(Listener& listener: listeners[eventType])
+  for(Listener& listener: listeners[eventData.type])
   {
     if(listener.callback(eventData, sender, listener.plistener) == TRUE)
     {
@@ -86,12 +84,21 @@ void triggerEvent(EventType eventType, EventData eventData, void* sender)
   }
 }
 
-void pushEvent(EventType eventType, EventData eventData, void* sender)
+void triggerEvent(EventType eventType, void* sender)
 {
-  assert((uint32)eventType < EVENT_TYPE_MAX);
+  triggerEvent(EventData{eventType}, sender);
+}
+
+void pushEvent(EventData eventData, void* sender)
+{
+  assert((uint32)eventData.type < EVENT_TYPE_MAX);
   
-  eventData.type = eventType;
   polledEvents.push(PollEventData{eventData, sender});
+}
+
+void pushEvent(EventType eventType, void* sender)
+{
+  pushEvent(EventData{eventType}, sender);
 }
 
 bool8 pollEvent(EventData* outEventData, void** outSender)

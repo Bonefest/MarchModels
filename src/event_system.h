@@ -62,6 +62,19 @@ enum EventType
    * @warning: message should be copied!
    */
   EVENT_TYPE_CONSOLE_MESSAGE,
+
+  /**
+   * ptr[0] = window
+   */
+  EVENT_TYPE_WINDOW_CREATED,
+
+  /**
+   * ptr[0] = window
+   *
+   * @warning: given window is already destroyed, it should be used
+   * only in case if it was stored somewhere else
+   */
+  EVENT_TYPE_WINDOW_DESTROYED,
   
   EVENT_TYPE_COUNT,
 
@@ -90,6 +103,10 @@ struct EventData
   };
 };
 
+/**
+ * @return TRUE if message was processed and it should not be passed to other listeners,
+ * FALSE if message was processed but it can be passed to other listeners too
+ */
 typedef bool8(*fpListenerCallback)(EventData eventData, void* sender, void* listener);
 
 bool8 initEventSystem();
@@ -99,14 +116,20 @@ ENGINE_API bool8 registerListener(EventType eventType, void* listener, fpListene
 ENGINE_API bool8 unregisterListener(EventType eventType, void* listener);
 
 /** Notifies all registered listeners immediately. It's not a recommended way of communication */
-ENGINE_API void triggerEvent(EventType eventType, EventData eventData, void* sender = nullptr);
+ENGINE_API void triggerEvent(EventData eventData, void* sender = nullptr);
+ENGINE_API void triggerEvent(EventType eventType, void* sender = nullptr);
 
 /** 
  * Pushes events on the queue. Events then can be processed through pollEvent().
  * 
  * @note Current implementation executes pollEvent() automatically.
  */
-ENGINE_API void pushEvent(EventType eventType, EventData eventData, void* sender = nullptr);
+ENGINE_API void pushEvent(EventData eventData, void* sender = nullptr);
+
+/**
+ * Same as previous pushEvent(...) function but for events that do not have attached data
+ */
+ENGINE_API void pushEvent(EventType eventType, void* sender = nullptr);
 ENGINE_API bool8 pollEvent(EventData* outEventData, void** outSender = nullptr);
 
 

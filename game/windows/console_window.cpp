@@ -150,7 +150,7 @@ static void consoleWindowDraw(Window* window, float64 delta)
 
       if(eventData.u32[0] > 0)
       {
-        triggerEvent(EVENT_TYPE_CONSOLE_MESSAGE, eventData, window);
+        triggerEvent(eventData, window);
         LOG_INFO(data->textBuffer);
 
         // TODO: In future we may want to add only successful messages

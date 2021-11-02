@@ -46,8 +46,8 @@ static void gkeyCallback(GLFWwindow* window, int key, int scancode, int action, 
   eventData.i32[2] = action;
   eventData.i32[3] = mods;
 
-  triggerEvent(eventData.type, eventData);
-  pushEvent(eventData.type, eventData);    
+  triggerEvent(eventData);
+  pushEvent(eventData);    
 }
 
 static void gcursorPosCallback(GLFWwindow* window, float64 xpos, float64 ypos)
@@ -57,8 +57,8 @@ static void gcursorPosCallback(GLFWwindow* window, float64 xpos, float64 ypos)
   eventData.f32[0] = (float32)xpos;
   eventData.f32[1] = (float32)ypos;
 
-  triggerEvent(eventData.type, eventData);
-  pushEvent(eventData.type, eventData);
+  triggerEvent(eventData);
+  pushEvent(eventData);
 }
 
 static void gmouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
@@ -75,8 +75,8 @@ static void gmouseButtonCallback(GLFWwindow* window, int button, int action, int
   eventData.i32[1] = action;
   eventData.i32[2] = mods;
 
-  triggerEvent(eventData.type, eventData);
-  pushEvent(eventData.type, eventData);  
+  triggerEvent(eventData);
+  pushEvent(eventData);  
 }
 
 static void gwindowResizedCallback(GLFWwindow* window, int width, int height)
@@ -89,8 +89,8 @@ static void gwindowResizedCallback(GLFWwindow* window, int width, int height)
   eventData.i32[0] = width;
   eventData.i32[1] = height;
 
-  triggerEvent(eventData.type, eventData);
-  pushEvent(eventData.type, eventData);  
+  triggerEvent(eventData);
+  pushEvent(eventData);  
 }
 
 static bool8 initGLFW()

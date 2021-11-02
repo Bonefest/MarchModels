@@ -226,6 +226,11 @@ Scene* editorGetCurrentScene()
   return editorData.currentScene;
 }
 
+void editorAddWindow(Window* window, bool8 initialize)
+{
+  windowManagerAddWindow(editorData.windowManager, window, initialize);
+}
+
 WindowManager* editorGetWindowManager()
 {
   return editorData.windowManager;

@@ -18,4 +18,5 @@ void processInputEditor(Application* app, const EventData& eventData, void* send
 void editorSetScene(Scene* scene);
 Scene* editorGetCurrentScene();
 
+void editorAddWindow(Window* window, bool8 initialize = TRUE);
 WindowManager* editorGetWindowManager();

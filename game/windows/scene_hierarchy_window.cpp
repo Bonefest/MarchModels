@@ -4,6 +4,7 @@
 #include "ui_utils.h"
 #include "ui_styles.h"
 #include "scene_hierarchy_window.h"
+#include "script_function_settings_window.h"
 
 struct SceneHierarchyData
 {
@@ -160,7 +161,12 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
           ImGui::SmallButton(ICON_KI_LIST);
 
           ImGui::SameLine();
-          ImGui::SmallButton(ICON_KI_COG);
+          if(ImGui::SmallButton(ICON_KI_COG))
+          {
+            Window* scriptFunctionSettingsWindow = nullptr;
+            assert(createScriptFunctionSettingsWindow(sdf, &scriptFunctionSettingsWindow));
+            editorAddWindow(scriptFunctionSettingsWindow);
+          }
 
           ImGui::SameLine();
           ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
