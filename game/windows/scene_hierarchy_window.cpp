@@ -119,6 +119,8 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
             {
               ScriptFunction* newSphereSDF;
               createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF, "sphereSDF", &newSphereSDF);
+              scriptFunctionSetArgValue(newSphereSDF, "radius", 1.0);
+              
               geometrySetSDF(geometry, newSphereSDF);
             }
             ImGui::SameLine();
@@ -148,114 +150,71 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
         ImGui::PopStyleColor();
       }
       
-      // SDF attachment -------------------------------------------------------
-      if(data->listGeometrySDF)
-      {
-        ScriptFunction* sdf = geometryGetSDF(geometry);
+      // Script functions -----------------------------------------------------
 
-        if(sdf != nullptr)
-        {
-          ImGui::TextColored("_<C>0x4bcc4bff</C>_[SDF] _<C>0x1</C>_'%s'", scriptFunctionGetName(sdf).c_str());
-          
+      std::vector<ScriptFunction*> functions = geometryGetScriptFunctions(geometry);
+
+      for(ScriptFunction* function: functions)
+      {
+        ImGui::PushID(function);
+        
+          ScriptFunctionType type = scriptFunctionGetType(function);
+          const char* functionTypeLabel;
+
+          if(type == SCRIPT_FUNCTION_TYPE_SDF)
+          {
+            if(!data->listGeometrySDF)
+            {
+              continue;
+            }
+
+            functionTypeLabel = "SDF";
+          }
+          else if(type == SCRIPT_FUNCTION_TYPE_IDF)
+          {
+            if(!data->listGeometryIDF)
+            {
+              continue;
+            }
+
+            functionTypeLabel = "IDF";
+          }
+          else if(type == SCRIPT_FUNCTION_TYPE_ODF)
+          {
+            if(!data->listGeometryODF)
+            {
+              continue;
+            }
+
+            functionTypeLabel = "ODF";
+          }
+
+          ImGui::TextColored("_<C>0x4bcc4bff</C>_[%s] _<C>0x1</C>_'%s'",
+                             functionTypeLabel,
+                             scriptFunctionGetName(function).c_str());
+
           ImGui::SameLine();
           ImGui::SmallButton(ICON_KI_LIST);
 
-          ImGui::SameLine();
+          ImGui::SameLine();        
           if(ImGui::SmallButton(ICON_KI_COG))
           {
-            Window* scriptFunctionSettingsWindow = nullptr;
-            assert(createScriptFunctionSettingsWindow(sdf, &scriptFunctionSettingsWindow));
-            editorAddWindow(scriptFunctionSettingsWindow);
+              Window* scriptFunctionSettingsWindow = nullptr;
+              assert(createScriptFunctionSettingsWindow(function, &scriptFunctionSettingsWindow));
+              editorAddWindow(scriptFunctionSettingsWindow);
           }
 
           ImGui::SameLine();
           ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
             if(ImGui::SmallButton(ICON_KI_TRASH))
             {
-              destroyScriptFunction(sdf);
-              geometrySetSDF(geometry, nullptr);
+              geometryRemoveFunction(geometry, function);            
+              destroyScriptFunction(function);
             }
           ImGui::PopStyleColor();
-        }
 
+        ImGui::PopID();
       }
-
-      // IDF attachments ------------------------------------------------------
-      if(data->listGeometryIDF)
-      {
-        std::vector<ScriptFunction*>& idfs = geometryGetIDFs(geometry);
-
-        for(auto idfIt = idfs.begin(); idfIt != idfs.end();)
-        {
-          bool8 erased = FALSE;
-          
-          ImGui::PushID(*idfIt);
-            ImGui::TextColored("_<C>0x4bcc4bff</C>_[IDF] _<C>0x1</C>_'%s'", scriptFunctionGetName(*idfIt).c_str());
-            ImGui::SameLine();
-            
-            ImGui::SmallButton(ICON_KI_LIST);
-            ImGui::SameLine();
-
-            ImGui::SmallButton(ICON_KI_COG);
-            ImGui::SameLine();
-          
-            ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
-              if(ImGui::SmallButton(ICON_KI_TRASH))
-              {
-                destroyScriptFunction(*idfIt);
-                idfIt = idfs.erase(idfIt);
-                erased = TRUE;
-              }
-            ImGui::PopStyleColor();
-            
-          ImGui::PopID();
-
-          if(erased == FALSE)
-          {
-            idfIt++;
-          }
-        }
-
-      }
-
-      // ODF attachments ------------------------------------------------------
-      if(data->listGeometryODF)
-      {
-        std::vector<ScriptFunction*>& odfs = geometryGetODFs(geometry);
-
-        for(auto odfIt = odfs.begin(); odfIt != odfs.end();)
-        {
-          bool8 erased = FALSE;
-          
-          ImGui::PushID(*odfIt);
-            ImGui::TextColored("_<C>0x4bcc4bff</C>_[ODF] _<C>0x1</C>_'%s'", scriptFunctionGetName(*odfIt).c_str());
-            ImGui::SameLine();
-            
-            ImGui::SmallButton(ICON_KI_LIST);
-            ImGui::SameLine();
-
-            ImGui::SmallButton(ICON_KI_COG);
-            ImGui::SameLine();
-          
-            ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
-              if(ImGui::SmallButton(ICON_KI_TRASH))
-              {
-                destroyScriptFunction(*odfIt);
-                odfIt = odfs.erase(odfIt);
-                erased = TRUE;
-              }
-            ImGui::PopStyleColor();
-            
-          ImGui::PopID();
-
-          if(erased == FALSE)
-          {
-            odfIt++;
-          }
-        }
-
-      }
-
       
       // Children geometry ----------------------------------------------------
       popCommonButtonsStyle();

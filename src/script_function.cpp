@@ -140,7 +140,7 @@ float3 executeIDF(ScriptFunction* idf, float3 p)
   {
     return p;
   }
-  
+
   assert(idf->type == SCRIPT_FUNCTION_TYPE_IDF);
   
   sol::state& lua = luaGetMainState();

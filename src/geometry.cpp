@@ -199,6 +199,45 @@ quat geometryGetOrientation(Geometry* geometry)
   return geometry->orientation;
 }
 
+bool8 geometryRemoveFunction(Geometry* geometry, ScriptFunction* function)
+{
+  ScriptFunctionType type = scriptFunctionGetType(function);
+  if(type == SCRIPT_FUNCTION_TYPE_SDF)
+  {
+    if(geometry->sdf != nullptr)
+    {
+      geometry->sdf = nullptr;
+      return TRUE;
+    }
+
+    return FALSE;
+  }
+  else if(type == SCRIPT_FUNCTION_TYPE_IDF)
+  {
+    auto idfIt = std::find(geometry->idfs.begin(), geometry->idfs.end(), function);
+    if(idfIt != geometry->idfs.end())
+    {
+      geometry->idfs.erase(idfIt);
+      return TRUE;
+    }
+
+    return FALSE;
+  }
+  else if(type == SCRIPT_FUNCTION_TYPE_ODF)
+  {
+    auto odfIt = std::find(geometry->odfs.begin(), geometry->odfs.end(), function);
+    if(odfIt != geometry->odfs.end())
+    {
+      geometry->odfs.erase(odfIt);
+      return TRUE;
+    }
+
+    return FALSE;
+  }
+
+  return FALSE;
+}
+
 void geometryAddIDF(Geometry* geometry, ScriptFunction* idf)
 {
   geometry->idfs.push_back(idf);
@@ -218,6 +257,24 @@ std::vector<ScriptFunction*>& geometryGetODFs(Geometry* geometry)
 {
   return geometry->odfs;
 }
+
+std::vector<ScriptFunction*> geometryGetScriptFunctions(Geometry* geometry)
+{
+  std::vector<ScriptFunction*> functions;
+  functions.reserve(1 + geometry->idfs.size() + geometry->odfs.size());
+
+  if(geometry->sdf != nullptr)
+  {
+    functions.push_back(geometry->sdf);
+  }
+
+  functions.insert(functions.end(), geometry->idfs.begin(), geometry->idfs.end());
+  functions.insert(functions.end(), geometry->odfs.begin(), geometry->odfs.end());  
+
+  return functions;
+}
+
+
 
 void geometrySetName(Geometry* geometry, const std::string& name)
 {

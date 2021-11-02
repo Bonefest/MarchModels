@@ -32,11 +32,16 @@ ENGINE_API float3 geometryGetPosition(Geometry* geometry);
 ENGINE_API void geometrySetOrientation(Geometry* geometry, quat orientation);
 ENGINE_API quat geometryGetOrientation(Geometry* geometry);
 
+ENGINE_API bool8 geometryRemoveFunction(Geometry* geometry, ScriptFunction* function);
+
 ENGINE_API void geometryAddIDF(Geometry* geometry, ScriptFunction* idf);
 ENGINE_API std::vector<ScriptFunction*>& geometryGetIDFs(Geometry* geometry);
 
 ENGINE_API void geometryAddODF(Geometry* geometry, ScriptFunction* odf);
 ENGINE_API std::vector<ScriptFunction*>& geometryGetODFs(Geometry* geometry);
+
+// Get SDF, IDFs and ODFs as a single array
+ENGINE_API std::vector<ScriptFunction*> geometryGetScriptFunctions(Geometry* geometry);
 
 ENGINE_API void geometrySetName(Geometry* geometry, const std::string& name);
 ENGINE_API const std::string& geometryGetName(Geometry* geometry);
