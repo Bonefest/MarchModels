@@ -1,10 +1,7 @@
 /**
- * WindowManager system is responsible for storing current opened windows. It has global knowledge
- * about windows. It also is responsible for freeing closed windows.
- *
- * @note Editor has a global window manager.
- * @note __It's highly advicable to add just created windows to the main window manager of
- * the editor because it moves responsibility of freeing resources from a user to the system.__
+ * WindowManager system is responsible for controlling, displaying, updating and informing windows.
+ * It controls resources of the given objects and is responsible for freeing them whenever windows is closed.
+ * Each created Window should be added to this system manually, otherwise it won't be considered and controlled.
  */ 
 
 #pragma once
@@ -16,16 +13,16 @@
 
 struct WindowManager;
 
-bool8 createWindowManager(WindowManager** outWindowManager);
-void destroyWindowManager(WindowManager* manager);
+bool8 initWindowManager();
+void shutdownWindowManager();
 
-void windowManagerAddWindow(WindowManager* manager, Window* window, bool8 initialize = TRUE);
-bool8 windowManagerRemoveWindow(WindowManager* manager, Window* window, bool8 free = TRUE);
-bool8 windowManagerRemoveWindow(WindowManager* manager, const std::string& identifier, bool8 free = TRUE);
-bool8 windowManagerHasWindow(WindowManager* manager, const std::string& identifier);
-Window* windowManagerGetWindow(WindowManager* manager, const std::string& identifier);
-std::vector<Window*> windowManagerGetWindows(WindowManager* manager);
+void windowManagerAddWindow(Window* window, bool8 initialize = TRUE);
+bool8 windowManagerRemoveWindow(Window* window, bool8 free = TRUE);
+bool8 windowManagerRemoveWindow(const std::string& identifier, bool8 free = TRUE);
+bool8 windowManagerHasWindow(const std::string& identifier);
+Window* windowManagerGetWindow(const std::string& identifier);
+std::vector<Window*> windowManagerGetWindows();
 
-void windowManagerDraw(WindowManager* manager, float64 delta);
-void windowManagerUpdate(WindowManager* manager, float64 delta);
-void windowManagerProcessInput(WindowManager* manager, const EventData& eventData, void* sender);
+void windowManagerDraw(float64 delta);
+void windowManagerUpdate(float64 delta);
+void windowManagerProcessInput(const EventData& eventData, void* sender);

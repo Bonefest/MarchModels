@@ -34,8 +34,6 @@ struct EditorData
   Window* viewWindow;
   Window* sceneHierarchyWindow = nullptr;
   Window* consoleWindow;
-
-  WindowManager* windowManager;
 };
 
 static EditorData editorData;
@@ -73,10 +71,10 @@ bool8 initEditor(Application* app)
   declareDefaultScriptFunctions();
 
   assert(createScene(&editorData.currentScene));
-  assert(createWindowManager(&editorData.windowManager));
+  assert(initWindowManager());
   
   assert(createConsoleWindow(consoleWindowName, &editorData.consoleWindow));
-  windowManagerAddWindow(editorData.windowManager, editorData.consoleWindow);
+  windowManagerAddWindow(editorData.consoleWindow);
 
   Sampler* centerSampler = nullptr;
   assert(createCenterSampler(uint2(0, 0), &centerSampler));
@@ -89,17 +87,17 @@ bool8 initEditor(Application* app)
   cameraLookAt(camera, float3(0.0f, 0.0f, -10.0f), float3(), float3(0.0f, 1.0f, 0.0f));
   
   assert(createViewWindow(viewWindowName, centerSampler, debugRayIntegrator, camera, &editorData.viewWindow));
-  windowManagerAddWindow(editorData.windowManager, editorData.viewWindow);
+  windowManagerAddWindow(editorData.viewWindow);
 
   assert(createSceneHierarchyWindow(sceneHierarchyWindowName, &editorData.sceneHierarchyWindow));
-  windowManagerAddWindow(editorData.windowManager, editorData.sceneHierarchyWindow);
+  windowManagerAddWindow(editorData.sceneHierarchyWindow);
   
   return TRUE;
 }
 
 void shutdownEditor(Application* app)
 {
-  destroyWindowManager(editorData.windowManager);
+  shutdownWindowManager();
 }
 
 // ----------------------------------------------------------------------------
@@ -110,9 +108,9 @@ void shutdownEditor(Application* app)
 // Internal logic
 // ----------------------------------------------------------------------------
 
-void updateEditor(Application* app, float64 delta)
+void editorUpdate(Application* app, float64 delta)
 {
-  windowManagerUpdate(editorData.windowManager, delta);
+  windowManagerUpdate(delta);
 }
 
 static void prepareDockingLayout(float2 screenSize, float2 screenOffset)
@@ -195,7 +193,7 @@ void drawMenu(float2& outMenuSize)
   ImGui::EndMainMenuBar();
 }
 
-void drawEditor(Application* app, float64 delta)
+void editorDraw(Application* app, float64 delta)
 {
   uint32 screenWidth = applicationGetScreenWidth(), screenHeight = applicationGetScreenHeight();
 
@@ -207,12 +205,12 @@ void drawEditor(Application* app, float64 delta)
 
   ImGui::ShowDemoWindow();
 
-  windowManagerDraw(editorData.windowManager, delta);
+  windowManagerDraw(delta);
 }
 
-void processInputEditor(Application* app, const EventData& eventData, void* sender)
+void editorProcessInput(Application* app, const EventData& eventData, void* sender)
 {
-  windowManagerProcessInput(editorData.windowManager, eventData, sender);
+  windowManagerProcessInput(eventData, sender);
 }
 
 void editorSetScene(Scene* scene)
@@ -224,14 +222,4 @@ void editorSetScene(Scene* scene)
 Scene* editorGetCurrentScene()
 {
   return editorData.currentScene;
-}
-
-void editorAddWindow(Window* window, bool8 initialize)
-{
-  windowManagerAddWindow(editorData.windowManager, window, initialize);
-}
-
-WindowManager* editorGetWindowManager()
-{
-  return editorData.windowManager;
 }

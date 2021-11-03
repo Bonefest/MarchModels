@@ -11,12 +11,9 @@
 bool8 initEditor(Application* app);
 void shutdownEditor(Application* app);
 
-void drawEditor(Application* app, float64 delta);
-void updateEditor(Application* app, float64 delta);
-void processInputEditor(Application* app, const EventData& eventData, void* sender);
+void editorDraw(Application* app, float64 delta);
+void editorUpdate(Application* app, float64 delta);
+void editorProcessInput(Application* app, const EventData& eventData, void* sender);
 
 void editorSetScene(Scene* scene);
 Scene* editorGetCurrentScene();
-
-void editorAddWindow(Window* window, bool8 initialize = TRUE);
-WindowManager* editorGetWindowManager();

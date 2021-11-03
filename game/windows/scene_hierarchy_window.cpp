@@ -203,7 +203,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
           {
               Window* scriptFunctionSettingsWindow = nullptr;
               assert(createScriptFunctionSettingsWindow(function, &scriptFunctionSettingsWindow));
-              editorAddWindow(scriptFunctionSettingsWindow);
+              windowManagerAddWindow(scriptFunctionSettingsWindow);
           }
 
           ImGui::SameLine();

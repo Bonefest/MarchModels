@@ -9,33 +9,39 @@ using std::vector;
 using std::string;
 using std::unordered_map;
 
-struct WindowManager
+struct WindowManagerData
 {
+  bool8 initialized;
   unordered_map<string, Window*> windowsMap;
 };
 
-bool8 createWindowManager(WindowManager** outWindowManager)
+static WindowManagerData data;
+
+bool8 initWindowManager()
 {
-  *outWindowManager = engineAllocObject<WindowManager>(MEMORY_TYPE_GENERAL);
+  assert(data.initialized == FALSE);
   
+  data.initialized = TRUE;
   return TRUE;
 }
 
-void destroyWindowManager(WindowManager* manager)
+void shutdownWindowManager()
 {
-  for(auto pair: manager->windowsMap)
+  assert(data.initialized == TRUE);
+  
+  for(auto pair: data.windowsMap)
   {
     freeWindow(pair.second);
   }
 
-  manager->windowsMap.clear();
+  data.windowsMap.clear();
 }
 
-void windowManagerAddWindow(WindowManager* manager, Window* window, bool8 initialize)
+void windowManagerAddWindow(Window* window, bool8 initialize)
 {
   string windowID = windowGetIdentifier(window);
-  assert(manager->windowsMap.find(windowID) == manager->windowsMap.end() && "Same window cannot be added twice!");
-  manager->windowsMap[windowID] = window;
+  assert(data.windowsMap.find(windowID) == data.windowsMap.end() && "Same window cannot be added twice!");
+  data.windowsMap[windowID] = window;
 
   if(initialize == TRUE)
   {
@@ -43,15 +49,15 @@ void windowManagerAddWindow(WindowManager* manager, Window* window, bool8 initia
   }
 }
 
-bool8 windowManagerRemoveWindow(WindowManager* manager, Window* window, bool8 free)
+bool8 windowManagerRemoveWindow(Window* window, bool8 free)
 {
-  return windowManagerRemoveWindow(manager, windowGetIdentifier(window), free);
+  return windowManagerRemoveWindow(windowGetIdentifier(window), free);
 }
 
-bool8 windowManagerRemoveWindow(WindowManager* manager, const std::string& identifier, bool8 free)
+bool8 windowManagerRemoveWindow(const std::string& identifier, bool8 free)
 {
-  auto windowIt = manager->windowsMap.find(identifier);
-  if(windowIt == manager->windowsMap.end())
+  auto windowIt = data.windowsMap.find(identifier);
+  if(windowIt == data.windowsMap.end())
   {
     return FALSE;
   }
@@ -61,19 +67,19 @@ bool8 windowManagerRemoveWindow(WindowManager* manager, const std::string& ident
     freeWindow(windowIt->second);
   }
   
-  manager->windowsMap.erase(windowIt);
+  data.windowsMap.erase(windowIt);
   return TRUE;
 }
 
-bool8 windowManagerHasWindow(WindowManager* manager, const std::string& identifier)
+bool8 windowManagerHasWindow(const std::string& identifier)
 {
-  return manager->windowsMap.find(identifier) != manager->windowsMap.end();
+  return data.windowsMap.find(identifier) != data.windowsMap.end();
 }
 
-Window* windowManagerGetWindow(WindowManager* manager, const std::string& identifier)
+Window* windowManagerGetWindow(const std::string& identifier)
 {
-  auto windowIt = manager->windowsMap.find(identifier);
-  if(windowIt == manager->windowsMap.end())
+  auto windowIt = data.windowsMap.find(identifier);
+  if(windowIt == data.windowsMap.end())
   {
     return nullptr;
   }
@@ -83,9 +89,9 @@ Window* windowManagerGetWindow(WindowManager* manager, const std::string& identi
 
 // TODO: std::vector<Window*> windowManagerGetWindows(WindowManager* manager);
 
-void windowManagerDraw(WindowManager* manager, float64 delta)
+void windowManagerDraw(float64 delta)
 {
-  for(auto pair: manager->windowsMap)
+  for(auto pair: data.windowsMap)
   {
     if(windowIsVisible(pair.second))
     {
@@ -94,11 +100,11 @@ void windowManagerDraw(WindowManager* manager, float64 delta)
   }
 }
 
-void windowManagerUpdate(WindowManager* manager, float64 delta)
+void windowManagerUpdate(float64 delta)
 {
   vector<Window*> windowsToRemove;
   
-  for(auto pair: manager->windowsMap)
+  for(auto pair: data.windowsMap)
   {
     Window* window = pair.second;
     
@@ -114,13 +120,13 @@ void windowManagerUpdate(WindowManager* manager, float64 delta)
 
   for(Window* window: windowsToRemove)
   {
-    windowManagerRemoveWindow(manager, window);
+    windowManagerRemoveWindow(window);
   }
 }
 
-void windowManagerProcessInput(WindowManager* manager, const EventData& eventData, void* sender)
+void windowManagerProcessInput(const EventData& eventData, void* sender)
 {
-  for(auto pair: manager->windowsMap)
+  for(auto pair: data.windowsMap)
   {
     processInputWindow(pair.second, eventData, sender);
   }

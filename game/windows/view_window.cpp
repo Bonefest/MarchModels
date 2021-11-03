@@ -155,7 +155,7 @@ static void drawViewWindow(Window* window, float64 delta)
     if(cogPressed == TRUE && data->settingsWindow == nullptr)
     {
       assert(createViewSettingsWindow(window, &data->settingsWindow));
-      editorAddWindow(data->settingsWindow);      
+      windowManagerAddWindow(data->settingsWindow);      
     }
 
     char shortInfoBuf[255];

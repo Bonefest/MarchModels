@@ -23,9 +23,9 @@ bool8 initializeGameFramework(GameFramework* outFramework)
   outFramework->extractSetupConfig = extractSetupConfig;
   outFramework->initialize = initEditor;
   outFramework->shutdown = shutdownEditor;
-  outFramework->update = updateEditor;
-  outFramework->draw = drawEditor;
-  outFramework->processInput = processInputEditor;
+  outFramework->update = editorUpdate;
+  outFramework->draw = editorDraw;
+  outFramework->processInput = editorProcessInput;
 
   return TRUE;
 }
