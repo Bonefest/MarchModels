@@ -30,10 +30,10 @@ bool8 declareScriptFunction(ScriptFunctionType type,
                             const string& name,
                             const string& code,
                             const vector<string>& parameters,
-                            bool8 allowRedeclaration)
+                            bool8 redeclareIfExists)
 {
   ScriptFunctionsMap& map = functionMaps[type];
-  if(isScriptFunctionDeclared(type, name) && allowRedeclaration == FALSE)
+  if(isScriptFunctionDeclared(type, name) && redeclareIfExists == FALSE)
   {
     LOG_ERROR("Cannot declare a script function: \"%s\" is already declared!", name);
     return FALSE;

@@ -41,7 +41,7 @@ ENGINE_API bool8 declareScriptFunction(ScriptFunctionType type,
                                        const string& name,
                                        const string& code,
                                        const vector<string>& parameters,
-                                       bool8 allowRedeclaration = FALSE);
+                                       bool8 redeclareIfExists = FALSE);
 
 ENGINE_API bool8 loadScriptFunctionDeclarationFromFile(const string& filepath,
                                                        bool8 allowRedeclaration = FALSE);

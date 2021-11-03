@@ -60,6 +60,46 @@ void scriptFunctionSettingsWindowUpdate(Window* window, float64 delta)
 
 void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
 {
+  ScriptFunctionSettingsWindowData* data = (ScriptFunctionSettingsWindowData*)windowGetInternalData(window);
+
+  if(ImGui::BeginTable("ScriptFunctionArgsTable", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders))
+  {
+    ScriptFunctionArgs& args = scriptFunctionGetArgs(data->function);
+
+    ImGui::TableSetupColumn("##Commands");
+    ImGui::TableSetupColumn("ID");
+    ImGui::TableSetupColumn("Name");
+    ImGui::TableSetupColumn("Value");
+
+    ImGui::TableHeadersRow();
+    
+    for(uint32 argIdx = 0; argIdx < args.size(); argIdx++)
+    {
+      ImGui::TableNextRow();
+
+
+      
+      ImGui::TableSetColumnIndex(0);
+      // ImGui::SetColumnWidth(-1, 32);
+      ImGui::Button("X");
+
+
+      
+      // ID column
+      ImGui::TableSetColumnIndex(1);
+      ImGui::Text("%d", argIdx);
+
+      // Name column
+      ImGui::TableSetColumnIndex(2);
+      
+      // Value column
+      ImGui::TableSetColumnIndex(3);
+
+    }
+
+    ImGui::EndTable();
+  }
+  
   ImGui::Button("Test");
 }
 
