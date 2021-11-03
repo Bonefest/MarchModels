@@ -163,6 +163,17 @@ bool8 createGeometry(const std::string& name, Geometry** outGeometry)
 
 void destroyGeometry(Geometry* geometry)
 {
+  for(Geometry* child: geometry->children)
+  {
+    destroyGeometry(child);
+  }
+
+  auto functions = geometryGetScriptFunctions(geometry);
+  for(ScriptFunction* function: functions)
+  {
+    destroyScriptFunction(function);
+  }
+  
   engineFreeObject(geometry, MEMORY_TYPE_GENERAL);
 }
 

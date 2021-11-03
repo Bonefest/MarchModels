@@ -156,39 +156,41 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
 
       for(ScriptFunction* function: functions)
       {
+
+
+        ScriptFunctionType type = scriptFunctionGetType(function);
+        const char* functionTypeLabel;
+
+        if(type == SCRIPT_FUNCTION_TYPE_SDF)
+        {
+          if(!data->listGeometrySDF)
+          {
+            continue;
+          }
+
+          functionTypeLabel = "SDF";
+        }
+        else if(type == SCRIPT_FUNCTION_TYPE_IDF)
+        {
+          if(!data->listGeometryIDF)
+          {
+            continue;
+          }
+
+          functionTypeLabel = "IDF";
+        }
+        else if(type == SCRIPT_FUNCTION_TYPE_ODF)
+        {
+          if(!data->listGeometryODF)
+          {
+            continue;
+          }
+
+          functionTypeLabel = "ODF";
+        }
+
         ImGui::PushID(function);
-        
-          ScriptFunctionType type = scriptFunctionGetType(function);
-          const char* functionTypeLabel;
-
-          if(type == SCRIPT_FUNCTION_TYPE_SDF)
-          {
-            if(!data->listGeometrySDF)
-            {
-              continue;
-            }
-
-            functionTypeLabel = "SDF";
-          }
-          else if(type == SCRIPT_FUNCTION_TYPE_IDF)
-          {
-            if(!data->listGeometryIDF)
-            {
-              continue;
-            }
-
-            functionTypeLabel = "IDF";
-          }
-          else if(type == SCRIPT_FUNCTION_TYPE_ODF)
-          {
-            if(!data->listGeometryODF)
-            {
-              continue;
-            }
-
-            functionTypeLabel = "ODF";
-          }
-
+          
           ImGui::TextColored("_<C>0x4bcc4bff</C>_[%s] _<C>0x1</C>_'%s'",
                              functionTypeLabel,
                              scriptFunctionGetName(function).c_str());
