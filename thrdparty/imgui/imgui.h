@@ -369,7 +369,7 @@ namespace ImGui
 
     // CUSTOM_PATCH:
     IMGUI_API ImVec2        GetWindowContentAreaSize();                 // get area of the inner window
-    IMGUI_API float         GetWindowInnerAreaWidth();
+    IMGUI_API ImVec2        GetWindowInnerAreaSize();
     // END CUSTOM_PATCH
     
     IMGUI_API ImVec2        GetWindowSize();                            // get current window size

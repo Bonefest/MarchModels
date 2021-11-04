@@ -214,6 +214,13 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
           ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
             if(ImGui::SmallButton(ICON_KI_TRASH))
             {
+              // If settings window is opened - close it manually (otherwise it will use dangling pointer)
+              if(windowManagerHasWindow(scriptFunctionWindowIdentifier(function)) == TRUE)
+              {
+                Window* scriptFunctionSettingsWindow = windowManagerGetWindow(scriptFunctionWindowIdentifier(function));
+                windowSetOpen(scriptFunctionSettingsWindow, FALSE);
+              }
+              
               geometryRemoveFunction(geometry, function);            
               destroyScriptFunction(function);
             }

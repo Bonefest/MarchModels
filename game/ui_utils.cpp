@@ -23,12 +23,12 @@ bool8 textInputPopup(const char* name,
     }
 
 
-    ImGui::SetNextItemWidth(ImGui::GetWindowInnerAreaWidth());
+    ImGui::SetNextItemWidth(ImGui::GetWindowInnerAreaSize().x);
     ImGui::InputText("##NewNameInput", text, textSize);
 
     bool8 acceptBut = (buttons & ImGuiUtilsButtonsFlags_Accept) == ImGuiUtilsButtonsFlags_Accept ? TRUE : FALSE;
     bool8 cancelBut = (buttons & ImGuiUtilsButtonsFlags_Cancel) == ImGuiUtilsButtonsFlags_Cancel ? TRUE : FALSE;
-    float32 butWidth = ImGui::GetWindowInnerAreaWidth();
+    float32 butWidth = ImGui::GetWindowInnerAreaSize().x;
     if(acceptBut == TRUE && cancelBut == TRUE)
     {
       butWidth = (butWidth - style.ItemSpacing.x) * 0.5f;

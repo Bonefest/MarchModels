@@ -9,6 +9,7 @@
 struct ScriptFunctionSettingsWindowData
 {
   char newArgName[255];
+  char codeBuf[4096];
   ScriptFunction* function;
 };
 
@@ -63,11 +64,50 @@ void scriptFunctionSettingsWindowUpdate(Window* window, float64 delta)
 
 void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
 {
+  
   ScriptFunctionSettingsWindowData* data = (ScriptFunctionSettingsWindowData*)windowGetInternalData(window);
   ScriptFunctionArgs& args = scriptFunctionGetArgs(data->function);
   
   ImGuiStyle& style = ImGui::GetStyle();
-  
+
+
+  // Code frame
+  ImGui::PushStyleColor(ImGuiCol_FrameBg, 0x0);
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, float2(0.0f, 0.0f));
+  ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, float2(0.0f, 0.0f));      
+  if(ImGui::BeginChildFrame(ImGui::GetID("Code"), float2(0.0f, 160.0f), ImGuiWindowFlags_MenuBar))
+  {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, float2(0.0f, 4.0f));
+    if(ImGui::BeginMenuBar())
+    {
+      ImGui::MenuItem(ICON_KI_QUESTION" Help");
+      ImGui::MenuItem(ICON_KI_ARROW_LEFT" Undo");
+      ImGui::MenuItem(ICON_KI_ARROW_RIGHT" Redo");
+      ImGui::MenuItem(ICON_KI_WRENCH" Compile");      
+
+      ImGui::EndMenuBar();
+    }
+    ImGui::PopStyleVar();
+
+    float2 codeFrameSize = ImGui::GetWindowInnerAreaSize();
+
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, (float4)ImColor(32, 32, 32, 128));
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 5.0);
+      ImGui::InputTextMultiline("##CodeInputText",
+                                data->codeBuf,
+                                ARRAY_SIZE(data->codeBuf),
+                                codeFrameSize,
+                                ImGuiInputTextFlags_AllowTabInput);
+    ImGui::PopStyleVar(2);
+    ImGui::PopStyleColor();
+    
+    ImGui::EndChildFrame();
+  }
+  ImGui::PopStyleVar(2);
+  ImGui::PopStyleColor();
+
+  // Args table
   if(ImGui::BeginTable("ScriptFunctionArgsTable", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp))
   {
     ImGui::TableSetupColumn("##Commands", 0, 0.05f);
@@ -142,7 +182,7 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
     data->newArgName[0] = '\0';
   }
   ImGui::EndDisabled();
-  
+
 }
 
 void scriptFunctionSettingsWindowProcessInput(Window* window, const EventData& eventData, void* sender)

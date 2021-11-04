@@ -7425,9 +7425,9 @@ ImVec2 ImGui::GetWindowContentAreaSize()
   return ImVec2(regMax.x - regMin.x, regMax.y - regMin.y);
 }
 
-float ImGui::GetWindowInnerAreaWidth()
+ImVec2 ImGui::GetWindowInnerAreaSize()
 {
-  return GetWindowSize().x - 2.0f * GetStyle().WindowPadding.x;
+  return GetWindowSize() - GetStyle().WindowPadding * 2.0;
 }
 
 void ImGui::SetWindowSize(ImGuiWindow* window, const ImVec2& size, ImGuiCond cond)
