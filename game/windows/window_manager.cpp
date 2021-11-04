@@ -1,6 +1,7 @@
 #include <vector>
 #include <unordered_map>
 
+#include <logging.h>
 #include <memory_manager.h>
 
 #include "window_manager.h"
@@ -56,6 +57,12 @@ bool8 windowManagerRemoveWindow(Window* window, bool8 free)
 
 bool8 windowManagerRemoveWindow(const std::string& identifier, bool8 free)
 {
+  std::string trimmedId = identifier;
+  std::size_t hashIdx = trimmedId.find("##");
+  trimmedId = trimmedId.substr(0, hashIdx);
+
+  LOG_INFO("Removing '%s' window", trimmedId.c_str());
+  
   auto windowIt = data.windowsMap.find(identifier);
   if(windowIt == data.windowsMap.end())
   {
@@ -66,7 +73,7 @@ bool8 windowManagerRemoveWindow(const std::string& identifier, bool8 free)
   {
     freeWindow(windowIt->second);
   }
-  
+
   data.windowsMap.erase(windowIt);
   return TRUE;
 }

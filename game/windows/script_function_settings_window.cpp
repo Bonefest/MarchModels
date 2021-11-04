@@ -1,5 +1,6 @@
 #include <imgui/imgui.h>
 
+#include <logging.h>
 #include <memory_manager.h>
 
 #include "script_function_settings_window.h"
@@ -62,41 +63,53 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
 {
   ScriptFunctionSettingsWindowData* data = (ScriptFunctionSettingsWindowData*)windowGetInternalData(window);
 
-  if(ImGui::BeginTable("ScriptFunctionArgsTable", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders))
+  if(ImGui::BeginTable("ScriptFunctionArgsTable", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp))
   {
     ScriptFunctionArgs& args = scriptFunctionGetArgs(data->function);
 
-    ImGui::TableSetupColumn("##Commands");
-    ImGui::TableSetupColumn("ID");
-    ImGui::TableSetupColumn("Name");
-    ImGui::TableSetupColumn("Value");
-
+    ImGui::TableSetupColumn("##Commands", 0, 0.05f);
+    ImGui::TableSetupColumn("ID", 0, 0.05f);
+    ImGui::TableSetupColumn("Name", 0, 0.45f);
+    ImGui::TableSetupColumn("Value", 0, 0.45f);
     ImGui::TableHeadersRow();
+
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, 0x0);
     
-    for(uint32 argIdx = 0; argIdx < args.size(); argIdx++)
+    uint32 argIdx = 0;
+    for(auto argIt = args.begin(); argIt != args.end(); argIt++, argIdx++)
     {
-      ImGui::TableNextRow();
-
-
+      ImGui::PushID(argIt->first.c_str());
       
-      ImGui::TableSetColumnIndex(0);
-      // ImGui::SetColumnWidth(-1, 32);
-      ImGui::Button("X");
+        ImGui::TableNextRow();
 
+        ImGui::TableSetColumnIndex(0);
+        
+        float32 cellWidth = ImGui::GetContentRegionAvail().x;
 
-      
-      // ID column
-      ImGui::TableSetColumnIndex(1);
-      ImGui::Text("%d", argIdx);
+        ImGui::PushStyleColor(ImGuiCol_Button, (float4)ImColor(128, 0, 0, 255));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (float4)ImColor(160, 0, 0, 255));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (float4)ImColor(144, 0, 0, 255));                
+          ImGui::Button("Del", float2(cellWidth, 0.0f));
+        ImGui::PopStyleColor(3);
 
-      // Name column
-      ImGui::TableSetColumnIndex(2);
-      
-      // Value column
-      ImGui::TableSetColumnIndex(3);
+          
+        // ID column
+        ImGui::TableSetColumnIndex(1);
+        ImGui::Text("%d", argIdx);
 
+        // Name column
+        ImGui::TableSetColumnIndex(2);
+        ImGui::Text("%s", argIt->first.c_str());
+
+        // Value column
+        ImGui::TableSetColumnIndex(3);
+        ImGui::InputFloat("##ArgValueInput", &argIt->second, 0.0f, 0.0f, "%.1f");
+
+      ImGui::PopID();
     }
 
+    ImGui::PopStyleColor();
+    
     ImGui::EndTable();
   }
   

@@ -110,6 +110,7 @@ void processInputWindow(Window* window, const EventData& eventData, void* sender
 void windowSetSize(Window* window, float2 size)
 {
   window->size = size;
+  window->paramsUpdated = FALSE;
 }
 
 float2 windowGetSize(Window* window)
