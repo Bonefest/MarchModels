@@ -202,9 +202,12 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
           if(ImGui::SmallButton(ICON_KI_COG))
           {
               Window* scriptFunctionSettingsWindow = nullptr;
-              assert(createScriptFunctionSettingsWindow(function, &scriptFunctionSettingsWindow));
-              windowSetSize(scriptFunctionSettingsWindow, float2(640.0f, 0.0f));
-              windowManagerAddWindow(scriptFunctionSettingsWindow);
+              if(windowManagerHasWindow(scriptFunctionWindowIdentifier(function)) == FALSE)
+              {
+                assert(createScriptFunctionSettingsWindow(function, &scriptFunctionSettingsWindow));
+                windowSetSize(scriptFunctionSettingsWindow, float2(640.0f, 480.0f));
+                windowManagerAddWindow(scriptFunctionSettingsWindow);
+              }
           }
 
           ImGui::SameLine();
