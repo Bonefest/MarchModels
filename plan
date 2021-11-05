@@ -199,7 +199,7 @@
             2.9.5 Filtering by type
             2.9.6 Ability to load from a .json file
             2.9.7 Choosing mode (clicking on an item will execute a callback)
-            2.9.8 Ability to create with a specific subset (e.g display only script functions if we need to choose and sdf), subset can be given by a user
+            2.9.8 Ability to create with a specific subset (e.g display only script functions if we need to choose and sdf), subset can be given by a usery
 
         2.10 Scene settings
             2.10.1 Save/load from file button

@@ -1,5 +1,9 @@
 #pragma once
 
+#include <string>
+
+#include "defines.h"
+
 using AssetType = uint32;
 
 struct Asset;
