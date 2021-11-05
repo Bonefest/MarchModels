@@ -80,9 +80,16 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, float2(0.0f, 4.0f));
     if(ImGui::BeginMenuBar())
     {
-      ImGui::MenuItem(ICON_KI_QUESTION" Help");
-      ImGui::MenuItem(ICON_KI_ARROW_LEFT" Undo");
-      ImGui::MenuItem(ICON_KI_ARROW_RIGHT" Redo");
+      if(ImGui::BeginMenu("File"))
+      {
+        ImGui::MenuItem(" " ICON_KI_ARROW_LEFT" Undo", "ctrl-z");
+        ImGui::MenuItem(" " ICON_KI_ARROW_RIGHT" Redo", "ctrl-y");        
+        ImGui::MenuItem(" " ICON_KI_SEARCH" Open", "ctrl-o");
+        ImGui::MenuItem(" " ICON_KI_SAVE" Save", "ctrl-s");  
+
+        ImGui::EndMenu();
+      }
+      
       ImGui::MenuItem(ICON_KI_WRENCH" Compile");      
 
       ImGui::EndMenuBar();

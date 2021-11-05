@@ -67,3 +67,4 @@ ENGINE_API std::string scriptFunctionGetName(ScriptFunction* function);
 ENGINE_API float3 executeIDF(ScriptFunction* idf, float3 p);
 ENGINE_API float32 executeSDF(ScriptFunction* sdf, float3 p);
 ENGINE_API float32 executeODF(ScriptFunction* odf, float32 distance);
+
