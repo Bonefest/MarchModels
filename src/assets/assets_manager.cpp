@@ -92,3 +92,17 @@ const std::vector<Asset*>& assetsManagerGetAssets()
 {
   return manager.assets;
 }
+
+std::vector<Asset*> assetsManagerGetAssetsByType(AssetType type)
+{
+  std::vector<Asset*> result;
+  for(auto it = manager.assets.begin(); it != manager.assets.end(); it++)
+  {
+    if(assetGetType(*it) == type)
+    {
+      result.push_back(*it);
+    }
+  }
+
+  return result;
+}

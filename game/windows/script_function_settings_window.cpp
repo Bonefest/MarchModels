@@ -54,7 +54,11 @@ bool8 scriptFunctionSettingsWindowInitialize(Window* window)
 
 void scriptFunctionSettingsWindowShutdown(Window* window)
 {
-
+  ScriptFunctionSettingsWindowData* data = (ScriptFunctionSettingsWindowData*)windowGetInternalData(window);
+  if(data != nullptr)
+  {
+    engineFreeObject(data, MEMORY_TYPE_GENERAL);
+  }
 }
 
 void scriptFunctionSettingsWindowUpdate(Window* window, float64 delta)

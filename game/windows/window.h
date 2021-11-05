@@ -12,8 +12,8 @@ struct Window;
 
 struct WindowInterface
 {
-  bool8 (*initialize)(Window*);
-  void (*shutdown)(Window*);
+  bool8 (*initialize)(Window* window);
+  void (*shutdown)(Window* window);
   void (*update)(Window* window, float64 delta);
   void (*draw)(Window* window, float64 delta);
   void (*processInput)(Window* window, const EventData& eventData, void* sender);

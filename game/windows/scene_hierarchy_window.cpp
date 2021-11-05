@@ -1,8 +1,12 @@
 #include <memory_manager.h>
+#include <assets/assets_manager.h>
+//#include <assets/script_function.h>
+
 
 #include "editor.h"
 #include "ui_utils.h"
 #include "ui_styles.h"
+#include "assets_list_window.h"
 #include "scene_hierarchy_window.h"
 #include "script_function_settings_window.h"
 
@@ -196,7 +200,19 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
                              scriptFunctionGetName(function).c_str());
 
           ImGui::SameLine();
-          ImGui::SmallButton(ICON_KI_LIST);
+          if(ImGui::SmallButton(ICON_KI_LIST))
+          {
+            Window* assetsListWindow = windowManagerGetWindow(assetsListWindowGetIdentifier());
+            if(assetsListWindow != nullptr)
+            {
+              windowManagerRemoveWindow(assetsListWindow, TRUE);
+            }
+
+            createAssetsListWindowWithSomeAssets(assetsManagerGetAssetsByType(0x0 /** TODO */),
+                                                 &assetsListWindow);
+            
+            windowManagerAddWindow(assetsListWindow);
+          }
 
           ImGui::SameLine();        
           if(ImGui::SmallButton(ICON_KI_COG))
