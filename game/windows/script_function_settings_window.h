@@ -1,9 +1,9 @@
 #pragma once
 
-#include <script_function.h>
+#include <assets/script_function.h>
 
 #include "window.h"
 
-bool8 createScriptFunctionSettingsWindow(ScriptFunction* function, Window** outWindow);
-std::string scriptFunctionWindowIdentifier(ScriptFunction* function);
+bool8 createScriptFunctionSettingsWindow(Asset* function, Window** outWindow);
+std::string scriptFunctionWindowIdentifier(Asset* function);
 

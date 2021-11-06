@@ -1,6 +1,6 @@
 #include <memory_manager.h>
 #include <assets/assets_manager.h>
-//#include <assets/script_function.h>
+#include <assets/script_function.h>
 
 
 #include "editor.h"
@@ -47,15 +47,36 @@ static void sceneHierarchyUpdate(Window* window, float64 delta)
 
 }
 
+static Asset* createNewScriptFunction(const std::string& name)
+{
+  Asset* sfPrototype = assetsManagerFindAsset(name);
+  assert(sfPrototype != nullptr);
+  
+  Asset* sf = scriptFunctionClone(sfPrototype);
+  return sf;
+}
+
+static Asset* createNewSDF()
+{
+  return createNewScriptFunction("sphereSDF");
+}
+
+static Asset* createNewIDF()
+{
+  return createNewScriptFunction("emptyIDF");
+}
+
+static Asset* createNewODF()
+{
+  return createNewScriptFunction("emptyODF");  
+}
+
 static Geometry* createNewGeometry()
 {
-  ScriptFunction* sphereSDF;
-  assert(createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF, "sphereSDF", &sphereSDF));
-  scriptFunctionSetArgValue(sphereSDF, "radius", 1.0);
 
   Geometry* newGeometry;
   assert(createGeometry("sphere", &newGeometry));
-  geometrySetSDF(newGeometry, sphereSDF);
+  geometrySetSDF(newGeometry, createNewSDF());
 
   return newGeometry;
 }
@@ -121,28 +142,20 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
           {
             if(ImGui::SmallButton("[New SDF]"))
             {
-              ScriptFunction* newSphereSDF;
-              createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF, "sphereSDF", &newSphereSDF);
-              scriptFunctionSetArgValue(newSphereSDF, "radius", 1.0);
-              
-              geometrySetSDF(geometry, newSphereSDF);
+              geometrySetSDF(geometry, createNewSDF());
             }
             ImGui::SameLine();
           }
 
           if(ImGui::SmallButton("[New IDF]"))
           {
-            ScriptFunction* newEmptyIDF;
-            createScriptFunction(SCRIPT_FUNCTION_TYPE_IDF, "emptyIDF", &newEmptyIDF);
-            geometryAddIDF(geometry, newEmptyIDF);
+            geometryAddIDF(geometry, createNewIDF());
           }
 
           ImGui::SameLine();
           if(ImGui::SmallButton("[New ODF]"))
           {
-            ScriptFunction* newEmptyODF;
-            createScriptFunction(SCRIPT_FUNCTION_TYPE_ODF, "emptyODF", &newEmptyODF);
-            geometryAddODF(geometry, newEmptyODF);
+            geometryAddODF(geometry, createNewODF());
           }
 
           ImGui::SameLine();
@@ -156,12 +169,10 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
       
       // Script functions -----------------------------------------------------
 
-      std::vector<ScriptFunction*> functions = geometryGetScriptFunctions(geometry);
+      std::vector<Asset*> functions = geometryGetScriptFunctions(geometry);
 
-      for(ScriptFunction* function: functions)
+      for(Asset* function: functions)
       {
-
-
         ScriptFunctionType type = scriptFunctionGetType(function);
         const char* functionTypeLabel;
 
@@ -197,7 +208,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
           
           ImGui::TextColored("_<C>0x4bcc4bff</C>_[%s] _<C>0x1</C>_'%s'",
                              functionTypeLabel,
-                             scriptFunctionGetName(function).c_str());
+                             assetGetName(function).c_str());
 
           ImGui::SameLine();
           if(ImGui::SmallButton(ICON_KI_LIST))
@@ -208,9 +219,20 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
               windowManagerRemoveWindow(assetsListWindow, TRUE);
             }
 
-            createAssetsListWindowWithSomeAssets(assetsManagerGetAssetsByType(0x0 /** TODO */),
-                                                 &assetsListWindow);
+            std::vector<Asset*> assetsToDisplay = assetsManagerGetAssetsByType(0x0 /** TODO */);
+
+            // If list button was clicked for a SDF, only SDFs should be displayed - other assets should
+            // be removed.
             
+            // auto removeIt = std::remove_if(assetsToDisplay.begin(),
+            //                                assetsToDisplay.end(),
+            //                                [function](Asset* asset) {
+            //                                  return scriptFunctionGetType(asset) != scriptFunctionGetType(function);
+            //                                });
+            
+            // assetsToDisplay.erase(removeIt, assetsToDisplay.end());
+            
+            createAssetsListWindowWithSomeAssets(assetsToDisplay, &assetsListWindow);
             windowManagerAddWindow(assetsListWindow);
           }
 
@@ -238,7 +260,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
               }
               
               geometryRemoveFunction(geometry, function);            
-              destroyScriptFunction(function);
+              destroyAsset(function);
             }
           ImGui::PopStyleColor();
 

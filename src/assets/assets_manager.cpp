@@ -24,7 +24,10 @@ bool8 initAssetsManager()
 
 void shutdownAssetsManager()
 {
-
+  for(Asset* asset: manager.assets)
+  {
+    destroyAsset(asset);
+  }
 }
 
 bool8 assetsManagerAddAsset(Asset* asset)

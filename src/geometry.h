@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "maths/common.h"
-#include "script_function.h"
+#include "assets/script_function.h"
 
 struct Material;
 
@@ -32,16 +32,16 @@ ENGINE_API float3 geometryGetPosition(Geometry* geometry);
 ENGINE_API void geometrySetOrientation(Geometry* geometry, quat orientation);
 ENGINE_API quat geometryGetOrientation(Geometry* geometry);
 
-ENGINE_API bool8 geometryRemoveFunction(Geometry* geometry, ScriptFunction* function);
+ENGINE_API bool8 geometryRemoveFunction(Geometry* geometry, Asset* function);
 
-ENGINE_API void geometryAddIDF(Geometry* geometry, ScriptFunction* idf);
-ENGINE_API std::vector<ScriptFunction*>& geometryGetIDFs(Geometry* geometry);
+ENGINE_API void geometryAddIDF(Geometry* geometry, Asset* idf);
+ENGINE_API std::vector<Asset*>& geometryGetIDFs(Geometry* geometry);
 
-ENGINE_API void geometryAddODF(Geometry* geometry, ScriptFunction* odf);
-ENGINE_API std::vector<ScriptFunction*>& geometryGetODFs(Geometry* geometry);
+ENGINE_API void geometryAddODF(Geometry* geometry, Asset* odf);
+ENGINE_API std::vector<Asset*>& geometryGetODFs(Geometry* geometry);
 
 // Get SDF, IDFs and ODFs as a single array
-ENGINE_API std::vector<ScriptFunction*> geometryGetScriptFunctions(Geometry* geometry);
+ENGINE_API std::vector<Asset*> geometryGetScriptFunctions(Geometry* geometry);
 
 ENGINE_API void geometrySetName(Geometry* geometry, const std::string& name);
 ENGINE_API const std::string& geometryGetName(Geometry* geometry);
@@ -84,6 +84,6 @@ ENGINE_API CombinationFunction geometryGetCombinationFunction(Geometry* geometry
 // Leaf geometry-related interface
 // ----------------------------------------------------------------------------
 
-ENGINE_API void geometrySetSDF(Geometry* geometry, ScriptFunction* sdf);
-ENGINE_API ScriptFunction* geometryGetSDF(Geometry* geometry);
+ENGINE_API void geometrySetSDF(Geometry* geometry, Asset* sdf);
+ENGINE_API Asset* geometryGetSDF(Geometry* geometry);
 ENGINE_API bool8 geometryHasSDF(Geometry* geometry);

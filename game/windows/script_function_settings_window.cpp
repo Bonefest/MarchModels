@@ -10,7 +10,7 @@ struct ScriptFunctionSettingsWindowData
 {
   char newArgName[255];
   char codeBuf[4096];
-  ScriptFunction* function;
+  Asset* function;
 };
 
 static bool8 scriptFunctionSettingsWindowInitialize(Window*);
@@ -19,7 +19,7 @@ static void scriptFunctionSettingsWindowUpdate(Window* window, float64 delta);
 static void scriptFunctionSettingsWindowDraw(Window* window, float64 delta);
 static void scriptFunctionSettingsWindowProcessInput(Window* window, const EventData& eventData, void* sender);
 
-bool8 createScriptFunctionSettingsWindow(ScriptFunction* function, Window** outWindow)
+bool8 createScriptFunctionSettingsWindow(Asset* function, Window** outWindow)
 {
   WindowInterface interface = {};
   interface.initialize = scriptFunctionSettingsWindowInitialize;
@@ -40,10 +40,10 @@ bool8 createScriptFunctionSettingsWindow(ScriptFunction* function, Window** outW
   return TRUE;
 }
 
-std::string scriptFunctionWindowIdentifier(ScriptFunction* function)
+std::string scriptFunctionWindowIdentifier(Asset* function)
 {
   char identifier[128];
-  sprintf(identifier, "%s settings##%p", scriptFunctionGetName(function).c_str(), function);
+  sprintf(identifier, "%s settings##%p", assetGetName(function).c_str(), function);
   return identifier;
 }
 

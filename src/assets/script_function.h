@@ -1,3 +1,17 @@
+/**
+ * Script function is a function that can be registered from a C++ side in Lua state.
+ * Each such function has a name, code and list of parameters.
+ *
+ * Script function can be saved and loaded from the file, since it's basically a description.
+ *
+ * @note: Parameter can have only float32 type.
+ *
+ * @note: The next parameters are pre-defined:
+ *   time - Equals the time elapsed since the application has started
+ *   camera - A lua-table, which contains all information about a main view camera
+ *   material - In case if SDF is evaluated, contains information about a material of a shape
+ */
+
 #pragma once
 
 #include <string>
@@ -23,12 +37,14 @@ ENGINE_API bool8 createScriptFunction(ScriptFunctionType type,
                                       const std::string& name,
                                       Asset** outAsset);
 
+ENGINE_API Asset* scriptFunctionClone(Asset* assetCloneFrom);
+
 ENGINE_API void scriptFunctionSetArgValue(Asset* asset, const std::string& argName, float32 value);
 ENGINE_API float32 scriptFunctionGetArgValue(Asset* asset, const std::string& argName);
 ENGINE_API ScriptFunctionArgs& scriptFunctionGetArgs(Asset* asset);
 ENGINE_API ScriptFunctionType scriptFunctionGetType(Asset* asset);
 
-ENGINE_API void scriptFunctionSetCode(Asset* asset);
+ENGINE_API void scriptFunctionSetCode(Asset* asset, const std::string& code);
 ENGINE_API const std::string& scriptFunctionGetCode(Asset* asset);
 
 ENGINE_API float3 executeIDF(Asset* idf, float3 p);

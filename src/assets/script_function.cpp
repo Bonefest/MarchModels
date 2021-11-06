@@ -38,6 +38,19 @@ bool8 createScriptFunction(ScriptFunctionType type, const string& name, Asset** 
   return TRUE;
 }
 
+Asset* scriptFunctionClone(Asset* assetCloneFrom)
+{
+  ScriptFunction* fromData = (ScriptFunction*)assetGetInternalData(assetCloneFrom);
+
+  Asset* copy;
+  assert(createScriptFunction(fromData->type, assetGetName(assetCloneFrom), &copy));
+
+  ScriptFunction* copyData = (ScriptFunction*)assetGetInternalData(copy);
+  *copyData = *fromData;
+
+  return copy;
+}
+
 void scriptFunctionDestroy(Asset* asset)
 {
   ScriptFunction* data = (ScriptFunction*)assetGetInternalData(asset);
@@ -71,6 +84,31 @@ ScriptFunctionType scriptFunctionGetType(Asset* asset)
   ScriptFunction* data = (ScriptFunction*)assetGetInternalData(asset);
   
   return data->type;
+}
+
+void scriptFunctionSetCode(Asset* asset, const std::string& code)
+{
+  ScriptFunction* data = (ScriptFunction*)assetGetInternalData(asset);
+
+  data->code = code;
+
+  char fullCodeBuf[4096];
+  sprintf(fullCodeBuf,
+          "function %s()\n"
+          "  %s         \n"
+          "end          \n",
+          assetGetName(asset).c_str(), code.c_str());
+
+  sol::state& lua = luaGetMainState();
+  lua.set(assetGetName(asset), sol::lua_nil);
+  lua.script(fullCodeBuf);
+}
+
+const std::string& scriptFunctionGetCode(Asset* asset)
+{
+  ScriptFunction* data = (ScriptFunction*)assetGetInternalData(asset);
+  
+  return data->code;
 }
 
 float3 executeIDF(Asset* idf, float3 p)

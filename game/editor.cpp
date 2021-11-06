@@ -12,7 +12,8 @@
 #include <application.h>
 #include <memory_manager.h>
 #include <game_framework.h>
-#include <script_function.h>
+#include <assets/assets_manager.h>
+#include <assets/script_function.h>
 #include <ray_integrators/debug_ray_integrator.h>
 #include <samplers/center_sampler.h>
 
@@ -48,22 +49,29 @@ const char* consoleWindowName = "Console##EditorWindow";
 
 static void declareDefaultScriptFunctions()
 {
-  vector<string> sphereSDFParams = {"radius"}, emptyDFParams = {};
-  assert(declareScriptFunction(SCRIPT_FUNCTION_TYPE_SDF,
-                               "sphereSDF",
-                               "return float3.length(args[\"p\"]) - args[\"radius\"]",
-                               sphereSDFParams));
+  Asset *sphereSDFPrototype = nullptr,
+    *emptyIDFPrototype = nullptr,
+    *emptyODFPrototype = nullptr;
 
-  assert(declareScriptFunction(SCRIPT_FUNCTION_TYPE_IDF,
-                               "emptyIDF",
-                               "return float3.new(args[\"p\"])",
-                               emptyDFParams));
+  createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF,
+                       "sphereSDF",
+                       &sphereSDFPrototype);
+  scriptFunctionSetArgValue(sphereSDFPrototype, "radius", 1.0f);
+  scriptFunctionSetCode(sphereSDFPrototype, "return float3.length(args[\"p\"]) - args[\"radius\"]");
   
-  assert(declareScriptFunction(SCRIPT_FUNCTION_TYPE_ODF,
-                               "emptyODF",
-                               "return args[\"distance\"]",
-                               emptyDFParams));
+  createScriptFunction(SCRIPT_FUNCTION_TYPE_IDF,
+                       "emptyIDF",
+                       &emptyIDFPrototype);  
+  scriptFunctionSetCode(emptyIDFPrototype, "return float3.new(args[\"p\"])");
+  
+  createScriptFunction(SCRIPT_FUNCTION_TYPE_ODF,
+                       "emptyODF", 
+                       &emptyODFPrototype);
+  scriptFunctionSetCode(emptyODFPrototype, "return args[\"distance\"]");
 
+  assetsManagerAddAsset(sphereSDFPrototype);
+  assetsManagerAddAsset(emptyIDFPrototype);
+  assetsManagerAddAsset(emptyODFPrototype);  
 }
 
 bool8 initEditor(Application* app)
