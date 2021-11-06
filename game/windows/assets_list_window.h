@@ -4,7 +4,7 @@
 
 #include "window.h"
 
-typedef void(*fpOnAssetsListItemSelected)(Window*, Asset*, uint32);
+typedef void(*fpOnAssetsListItemSelected)(Window*, Asset*, uint32, void*);
 
 bool8 createAssetsListWindowWithAllAssets(Window** outWindow);
 bool8 createAssetsListWindowWithSomeAssets(const std::vector<Asset*>& assetsToList, Window** outWindow);

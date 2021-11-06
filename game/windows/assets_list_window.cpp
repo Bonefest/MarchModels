@@ -89,8 +89,44 @@ void assetsListWindowDraw(Window* window, float64 delta)
     data->assets = assetsManagerGetAssets();
   }
 
-  bool8 isSelectionList = data->selectedCb != nullptr ? TRUE : FALSE;
-  ImGui::Button("Test");
+  bool8 isEmpty = data->assets.size() == 0 ? TRUE : FALSE;
+  bool8 isSelectionList = data->selectedCb != nullptr ? FALSE : TRUE;
+
+  ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
+  uint32 assetIdx = 0;
+  for(Asset* asset: data->assets)
+  {
+    if(ImGui::Selectable(assetGetName(asset).c_str(), -1))
+    {
+      if(isSelectionList == TRUE)
+      {
+        ImGui::SameLine(-20.0f);
+        ImGui::Text(">");
+        
+        data->selectedCb(window, asset, assetIdx, data->cbUserData);
+        windowClose(window);
+      }
+    }
+  }
+  ImGui::PopStyleVar();
+
+
+  if(isSelectionList == TRUE)
+  {
+    ImGuiWindowFlags windowFlags = windowGetFlags(window);
+    // NOTE: If it's a selection list - hide titlebar of the window    
+    if((windowFlags & ImGuiWindowFlags_NoTitleBar) == 0)
+    {
+      windowFlags |= ImGuiWindowFlags_NoTitleBar;
+      windowSetFlags(window, windowFlags);
+    }
+
+    // NOTE: Close on lose focus
+    if(windowIsFocused(window) == FALSE)
+    {
+      //     windowClose(window);
+    }
+  }
 }
 
 void assetsListWindowProcessInput(Window* window, const EventData& eventData, void* sender)

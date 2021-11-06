@@ -219,20 +219,21 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
               windowManagerRemoveWindow(assetsListWindow, TRUE);
             }
 
-            std::vector<Asset*> assetsToDisplay = assetsManagerGetAssetsByType(0x0 /** TODO */);
+            std::vector<Asset*> assetsToDisplay = assetsManagerGetAssetsByType(ASSET_TYPE_SCRIPT_FUNCTION);
 
             // If list button was clicked for a SDF, only SDFs should be displayed - other assets should
             // be removed.
             
-            // auto removeIt = std::remove_if(assetsToDisplay.begin(),
-            //                                assetsToDisplay.end(),
-            //                                [function](Asset* asset) {
-            //                                  return scriptFunctionGetType(asset) != scriptFunctionGetType(function);
-            //                                });
+            auto removeIt = std::remove_if(assetsToDisplay.begin(),
+                                           assetsToDisplay.end(),
+                                           [function](Asset* asset) {
+                                             return scriptFunctionGetType(asset) != scriptFunctionGetType(function);
+                                           });
             
-            // assetsToDisplay.erase(removeIt, assetsToDisplay.end());
-            
+            assetsToDisplay.erase(removeIt, assetsToDisplay.end());
+
             createAssetsListWindowWithSomeAssets(assetsToDisplay, &assetsListWindow);
+            windowSetFocused(assetsListWindow, TRUE);
             windowManagerAddWindow(assetsListWindow);
           }
 
@@ -256,7 +257,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
               if(windowManagerHasWindow(scriptFunctionWindowIdentifier(function)) == TRUE)
               {
                 Window* scriptFunctionSettingsWindow = windowManagerGetWindow(scriptFunctionWindowIdentifier(function));
-                windowSetOpen(scriptFunctionSettingsWindow, FALSE);
+                windowClose(scriptFunctionSettingsWindow);
               }
               
               geometryRemoveFunction(geometry, function);            

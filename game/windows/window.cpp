@@ -18,6 +18,8 @@ struct Window
   bool open;
   bool8 paramsUpdated;
   bool8 visible;
+  bool8 focused;
+  bool8 hovered;
   
   void* internalData;
 };
@@ -84,21 +86,30 @@ void drawWindow(Window* window, float64 delta)
     {
       ImGui::SetNextWindowPos(window->position);
       ImGui::SetNextWindowSize(window->size);
+
+      if(window->focused == TRUE)
+      {
+        ImGui::SetNextWindowFocus();
+      }
       
       window->paramsUpdated = TRUE;
     }
-    
-    ImGui::Begin(window->identifier.c_str(), &window->open, window->flags);
 
+    ImGui::Begin(window->identifier.c_str(), &window->open, window->flags);
+    
     window->position = ImGui::GetWindowPos();
     window->size = ImGui::GetWindowSize();
   }
+
+  // TODO: Push focusing/hovering events
+  window->focused = ImGui::IsWindowFocused() ? TRUE : FALSE;
+  window->hovered = ImGui::IsWindowHovered() ? TRUE : FALSE;
   
   window->interface.draw(window, delta);
     
   if(window->interface.usesCustomDrawPipeline == FALSE)
   {
-    ImGui::End();    
+    ImGui::End();
   }
 }
 
@@ -128,6 +139,11 @@ float2 windowGetPosition(Window* window)
   return window->position;
 }
 
+void windowClose(Window* window)
+{
+  window->open = FALSE;
+}
+
 void windowSetOpen(Window* window, bool8 open)
 {
   window->open = (open == TRUE ? true : false);
@@ -147,6 +163,28 @@ bool8 windowIsVisible(Window* window)
 {
   return window->visible;
 }
+
+void windowSetFocused(Window* window, bool8 focused)
+{
+  window->focused = focused;
+  window->paramsUpdated = FALSE;
+}
+
+bool8 windowIsFocused(Window* window)
+{
+  return window->focused;
+}
+
+void windowSetFlags(Window* window, ImGuiWindowFlags flags)
+{
+  window->flags = flags;
+}
+
+ImGuiWindowFlags windowGetFlags(Window* window)
+{
+  return window->flags;
+}
+
 
 const std::string& windowGetIdentifier(Window* window)
 {

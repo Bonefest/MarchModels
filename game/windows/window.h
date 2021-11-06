@@ -35,6 +35,7 @@ float2 windowGetSize(Window* window);
 void windowSetPosition(Window* window, float2 position);
 float2 windowGetPosition(Window* window);
 
+void windowClose(Window* window);
 void windowSetOpen(Window* window, bool8 open);
 bool8 windowIsOpen(Window* window);
 
@@ -46,6 +47,13 @@ bool8 windowIsFocused(Window* window);
 
 void windowSetCollapsed(Window* window, bool8 collapsed);
 bool8 windowIsCollapsed(Window* window);
+
+bool8 windowIsHovered(Window* window);
+
+void windowSetStyle(Window* window, ImGuiStyleVar style, float32 value, bool8 influenceChild = FALSE);
+void windowSetStyle(Window* window, ImGuiStyleVar style, float2 value, bool8 influenceChild = FALSE);
+
+void windowSetColor(Window* window, ImGuiCol col, float4 value, bool8 influenceChild = FALSE);
 
 void windowSetFlags(Window* window, ImGuiWindowFlags flags);
 ImGuiWindowFlags windowGetFlags(Window* window);

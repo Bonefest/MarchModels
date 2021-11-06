@@ -167,7 +167,7 @@ static bool8 initImGUI()
   style.WindowPadding = float2(4.0f, 4.0f);
   style.WindowRounding = 12.0f;
   style.FrameRounding = 6.0f;
-  style.TabRounding = 0.0f;
+  style.TabRounding = 10.0f;
   style.WindowMenuButtonPosition = ImGuiDir_None;
   
   return TRUE;
