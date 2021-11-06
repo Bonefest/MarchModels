@@ -92,6 +92,12 @@ void assetsListWindowDraw(Window* window, float64 delta)
   bool8 isEmpty = data->assets.size() == 0 ? TRUE : FALSE;
   bool8 isSelectionList = data->selectedCb != nullptr ? FALSE : TRUE;
 
+  if(isSelectionList == TRUE)
+  {
+    ImGui::Text("Select a desired asset");
+    ImGui::Spacing();
+  }
+  
   ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
   uint32 assetIdx = 0;
   for(Asset* asset: data->assets)
@@ -100,13 +106,13 @@ void assetsListWindowDraw(Window* window, float64 delta)
     {
       if(isSelectionList == TRUE)
       {
-        ImGui::SameLine(-20.0f);
-        ImGui::Text(">");
-        
         data->selectedCb(window, asset, assetIdx, data->cbUserData);
         windowClose(window);
       }
     }
+
+    ImGui::SameLine();
+    ImGui::Text(ICON_KI_CARET_RIGHT);
   }
   ImGui::PopStyleVar();
 
@@ -121,11 +127,20 @@ void assetsListWindowDraw(Window* window, float64 delta)
       windowSetFlags(window, windowFlags);
     }
 
+    if((windowFlags & ImGuiWindowFlags_NoResize) == 0)
+    {
+      windowFlags |= ImGuiWindowFlags_NoResize;
+      windowSetFlags(window, windowFlags);
+    }
+
     // NOTE: Close on lose focus
     if(windowIsFocused(window) == FALSE)
     {
-      //     windowClose(window);
+      windowClose(window);
     }
+    
+    windowSetStyle(window, ImGuiStyleVar_WindowRounding, 0.0f);
+    windowSetStyle(window, ImGuiStyleVar_WindowBorderSize, 0.5f);    
   }
 }
 

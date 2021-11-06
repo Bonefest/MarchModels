@@ -1,3 +1,9 @@
+#include <string>
+#include <unordered_map>
+
+using std::string;
+using std::unordered_map;
+
 #include <logging.h>
 #include <memory_manager.h>
 
@@ -8,7 +14,7 @@
 struct Window
 {
   WindowInterface interface;
-  std::string identifier;
+  string identifier;
 
   float2 position;
   float2 size;
@@ -20,11 +26,28 @@ struct Window
   bool8 visible;
   bool8 focused;
   bool8 hovered;
+  unordered_map<ImGuiStyleVar, float2> styles;
+  unordered_map<ImGuiStyleVar, float2> stylesInfluenceChildren;
   
   void* internalData;
 };
 
-bool8 allocateWindow(WindowInterface interface, const std::string& identifier, Window** outWindow)
+static uint32 vectorStyles = (1 << ImGuiStyleVar_WindowPadding)    |
+                             (1 << ImGuiStyleVar_WindowMinSize)    |
+                             (1 << ImGuiStyleVar_WindowTitleAlign) |
+                             (1 << ImGuiStyleVar_FramePadding)     |
+                             (1 << ImGuiStyleVar_ItemSpacing)      |
+                             (1 << ImGuiStyleVar_ItemInnerSpacing) |
+                             (1 << ImGuiStyleVar_CellPadding)      |
+                             (1 << ImGuiStyleVar_ButtonTextAlign)  |
+                             (1 << ImGuiStyleVar_SelectableTextAlign);  
+
+static bool8 isVectorStyle(ImGuiStyleVar style)
+{
+  return ((1 << (uint32)style) & vectorStyles) == (1 << (uint32)style);
+}
+
+bool8 allocateWindow(WindowInterface interface, const string& identifier, Window** outWindow)
 {
   *outWindow = engineAllocObject<Window>(MEMORY_TYPE_GENERAL);
   (*outWindow)->interface = interface;
@@ -95,7 +118,33 @@ void drawWindow(Window* window, float64 delta)
       window->paramsUpdated = TRUE;
     }
 
+    for(auto stylePair: window->stylesInfluenceChildren)
+    {
+      if(isVectorStyle(stylePair.first) == TRUE)
+      {
+        ImGui::PushStyleVar(stylePair.first, stylePair.second);
+      }
+      else
+      {
+        ImGui::PushStyleVar(stylePair.first, stylePair.second.x);
+      }
+    }
+
+    for(auto stylePair: window->styles)
+    {
+      if(isVectorStyle(stylePair.first) == TRUE)
+      {
+        ImGui::PushStyleVar(stylePair.first, stylePair.second);
+      }
+      else
+      {
+        ImGui::PushStyleVar(stylePair.first, stylePair.second.x);
+      }
+    }
+    
     ImGui::Begin(window->identifier.c_str(), &window->open, window->flags);
+
+    ImGui::PopStyleVar(window->styles.size());
     
     window->position = ImGui::GetWindowPos();
     window->size = ImGui::GetWindowSize();
@@ -110,6 +159,8 @@ void drawWindow(Window* window, float64 delta)
   if(window->interface.usesCustomDrawPipeline == FALSE)
   {
     ImGui::End();
+
+    ImGui::PopStyleVar(window->stylesInfluenceChildren.size());
   }
 }
 
@@ -175,6 +226,72 @@ bool8 windowIsFocused(Window* window)
   return window->focused;
 }
 
+void windowClearAllStyles(Window* window)
+{
+  window->styles.clear();
+  window->stylesInfluenceChildren.clear();
+}
+
+void windowClearStyle(Window* window, ImGuiStyleVar style)
+{
+  if(window->styles.erase(style) == 0)
+  {
+    window->stylesInfluenceChildren.erase(style);
+  }
+}
+
+void windowSetStyle(Window* window, ImGuiStyleVar style, float32 value, bool8 influenceChild)
+{
+  windowSetStyle(window, style, float2(value, 0), influenceChild);
+}
+
+float32 windowGetStyle(Window* window, ImGuiStyleVar style, bool8* influenceChild)
+{
+  return windowGetStyle2(window, style, influenceChild).x;
+}
+
+void windowSetStyle(Window* window, ImGuiStyleVar style, float2 value, bool8 influenceChild)
+{
+  if(influenceChild == TRUE)
+  {
+    // Attempt to remove style from another map, so that only one copy of a style exists    
+    window->styles.erase(style);
+    window->stylesInfluenceChildren[style] = value;
+  }
+  else
+  {
+    window->styles[style] = value;
+  }
+}
+
+float2 windowGetStyle2(Window* window, ImGuiStyleVar style, bool8* influenceChild)
+{
+  auto styleIt = window->stylesInfluenceChildren.find(style);
+  if(styleIt != window->stylesInfluenceChildren.end())
+  {
+    if(influenceChild != nullptr)
+    {
+      *influenceChild = TRUE;
+    }
+    
+    return styleIt->second;
+  }
+
+  styleIt = window->styles.find(style);
+  if(styleIt != window->styles.end())
+  {
+    if(influenceChild != nullptr)
+    {
+      *influenceChild = FALSE;
+    }
+    
+    return styleIt->second;
+  }
+
+  LOG_WARNING("Requested style '%d' is not overriden!", (int)style);
+  return float2();
+}
+
 void windowSetFlags(Window* window, ImGuiWindowFlags flags)
 {
   window->flags = flags;
@@ -186,7 +303,7 @@ ImGuiWindowFlags windowGetFlags(Window* window)
 }
 
 
-const std::string& windowGetIdentifier(Window* window)
+const string& windowGetIdentifier(Window* window)
 {
   return window->identifier;
 }

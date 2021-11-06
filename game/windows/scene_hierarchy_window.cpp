@@ -213,6 +213,8 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
           ImGui::SameLine();
           if(ImGui::SmallButton(ICON_KI_LIST))
           {
+            float2 itemTopPos = ImGui::GetItemRectMin();
+            
             Window* assetsListWindow = windowManagerGetWindow(assetsListWindowGetIdentifier());
             if(assetsListWindow != nullptr)
             {
@@ -233,6 +235,8 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
             assetsToDisplay.erase(removeIt, assetsToDisplay.end());
 
             createAssetsListWindowWithSomeAssets(assetsToDisplay, &assetsListWindow);
+            windowSetSize(assetsListWindow, float2(180.0, 100.0));
+            windowSetPosition(assetsListWindow, itemTopPos + float2(10, 10));
             windowSetFocused(assetsListWindow, TRUE);
             windowManagerAddWindow(assetsListWindow);
           }

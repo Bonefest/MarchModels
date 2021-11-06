@@ -50,8 +50,14 @@ bool8 windowIsCollapsed(Window* window);
 
 bool8 windowIsHovered(Window* window);
 
+void windowClearAllStyles(Window* window);
+void windowClearStyle(Window* window, ImGuiStyleVar style);
+
 void windowSetStyle(Window* window, ImGuiStyleVar style, float32 value, bool8 influenceChild = FALSE);
+float32 windowGetStyle(Window* window, ImGuiStyleVar style, bool8* influenceChild = nullptr);
+
 void windowSetStyle(Window* window, ImGuiStyleVar style, float2 value, bool8 influenceChild = FALSE);
+float2 windowGetStyle2(Window* window, ImGuiStyleVar style, bool8* inluenceChild = nullptr);
 
 void windowSetColor(Window* window, ImGuiCol col, float4 value, bool8 influenceChild = FALSE);
 
