@@ -40,15 +40,20 @@ bool8 createScriptFunction(ScriptFunctionType type, const string& name, Asset** 
 
 Asset* scriptFunctionClone(Asset* assetCloneFrom)
 {
-  ScriptFunction* fromData = (ScriptFunction*)assetGetInternalData(assetCloneFrom);
-
   Asset* copy;
-  assert(createScriptFunction(fromData->type, assetGetName(assetCloneFrom), &copy));
-
-  ScriptFunction* copyData = (ScriptFunction*)assetGetInternalData(copy);
-  *copyData = *fromData;
+  assert(createScriptFunction((ScriptFunctionType)0, "", &copy));
+  scriptFunctionCopy(copy, assetCloneFrom);
 
   return copy;
+}
+
+void scriptFunctionCopy(Asset* dst, Asset* src)
+{
+  ScriptFunction* srcData = (ScriptFunction*)assetGetInternalData(src);  
+  ScriptFunction* dstData = (ScriptFunction*)assetGetInternalData(dst);
+
+  *dstData = *srcData;
+  assetSetName(dst, assetGetName(src));
 }
 
 void scriptFunctionDestroy(Asset* asset)

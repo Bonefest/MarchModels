@@ -9,6 +9,8 @@ typedef void(*fpOnAssetsListItemSelected)(Window*, Asset*, uint32, void*);
 bool8 createAssetsListWindowWithAllAssets(Window** outWindow);
 bool8 createAssetsListWindowWithSomeAssets(const std::vector<Asset*>& assetsToList, Window** outWindow);
 
-void createAssetsListWindowSetSelectCallback(Window* window, fpOnAssetsListItemSelected calback, void* userData);
+void assetsListWindowSetSelectCallback(Window* window,
+                                        fpOnAssetsListItemSelected callback,
+                                        void* userData = nullptr);
 
 std::string assetsListWindowGetIdentifier();

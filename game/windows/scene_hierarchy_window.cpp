@@ -56,6 +56,12 @@ static Asset* createNewScriptFunction(const std::string& name)
   return sf;
 }
 
+static void onScriptFunctionIsSelected(Window* window, Asset* asset, uint32 index, void* target)
+{
+  Asset* targetAsset = (Asset*)target;
+  scriptFunctionCopy(targetAsset, asset);
+}
+
 static Asset* createNewSDF()
 {
   return createNewScriptFunction("sphereSDF");
@@ -113,7 +119,6 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
         geometrySetName(geometry, newName);
       }
     pushCommonButtonsStyle();
-    
 
     ImGui::SameLine();       
     ImGui::SmallButton(ICON_KI_LIST"##GeometryChoose");
@@ -235,6 +240,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
             assetsToDisplay.erase(removeIt, assetsToDisplay.end());
 
             createAssetsListWindowWithSomeAssets(assetsToDisplay, &assetsListWindow);
+            assetsListWindowSetSelectCallback(assetsListWindow, onScriptFunctionIsSelected, function);
             windowSetSize(assetsListWindow, float2(180.0, 100.0));
             windowSetPosition(assetsListWindow, itemTopPos + float2(10, 10));
             windowSetFocused(assetsListWindow, TRUE);

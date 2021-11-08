@@ -32,6 +32,11 @@ void destroyAsset(Asset* asset)
   engineFreeObject(asset, MEMORY_TYPE_GENERAL);
 }
 
+void assetSetName(Asset* asset, const std::string& newName)
+{
+  asset->name = newName;
+}
+
 const std::string& assetGetName(Asset* asset)
 {
   return asset->name;

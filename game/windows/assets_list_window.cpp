@@ -9,7 +9,7 @@ struct AssetsListWindowData
 {
 
   std::vector<Asset*> assets;
-  fpOnAssetsListItemSelected selectedCb;
+  fpOnAssetsListItemSelected selectCb;
   void* cbUserData;
 
   bool8 listAllAssets;
@@ -62,6 +62,13 @@ std::string assetsListWindowGetIdentifier()
   return "AssetsManagerList";
 }
 
+void assetsListWindowSetSelectCallback(Window* window, fpOnAssetsListItemSelected callback, void* userData)
+{
+  AssetsListWindowData* data = (AssetsListWindowData*)windowGetInternalData(window);
+  data->selectCb = callback;
+  data->cbUserData = userData;
+}
+
 bool8 assetsListWindowInitialize(Window* window)
 {
   return TRUE;
@@ -90,7 +97,7 @@ void assetsListWindowDraw(Window* window, float64 delta)
   }
 
   bool8 isEmpty = data->assets.size() == 0 ? TRUE : FALSE;
-  bool8 isSelectionList = data->selectedCb != nullptr ? FALSE : TRUE;
+  bool8 isSelectionList = data->selectCb != nullptr ? TRUE : FALSE;
 
   if(isSelectionList == TRUE)
   {
@@ -106,7 +113,7 @@ void assetsListWindowDraw(Window* window, float64 delta)
     {
       if(isSelectionList == TRUE)
       {
-        data->selectedCb(window, asset, assetIdx, data->cbUserData);
+        data->selectCb(window, asset, assetIdx, data->cbUserData);
         windowClose(window);
       }
     }

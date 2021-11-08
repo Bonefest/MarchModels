@@ -89,7 +89,8 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
         ImGui::MenuItem(" " ICON_KI_ARROW_LEFT" Undo", "ctrl-z");
         ImGui::MenuItem(" " ICON_KI_ARROW_RIGHT" Redo", "ctrl-y");        
         ImGui::MenuItem(" " ICON_KI_SEARCH" Open", "ctrl-o");
-        ImGui::MenuItem(" " ICON_KI_SAVE" Save", "ctrl-s");  
+        ImGui::MenuItem(" " ICON_KI_SAVE" Save", "ctrl-s");
+        ImGui::MenuItem(" " ICON_KI_SAVE" Save as", "ctrl-shift-s");          
 
         ImGui::EndMenu();
       }
