@@ -13,9 +13,9 @@ enum ImGuiUtilsButtonsFlags_
 
 typedef int ImGuiUtilsButtonsFlags;
 
-bool8 textInputPopup(const char* name,
-                     const char* tip,
-                     char* text,
-                     uint32 textSize,
-                     ImGuiUtilsButtonsFlags buttons = ImGuiUtilsButtonsFlags_Default);
+ImGuiUtilsButtonsFlags textInputPopup(const char* name,
+                                      const char* tip,
+                                      char* text,
+                                      uint32 textSize,
+                                      ImGuiUtilsButtonsFlags buttons = ImGuiUtilsButtonsFlags_Default);
 

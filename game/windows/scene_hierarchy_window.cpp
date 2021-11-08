@@ -114,7 +114,11 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
     }
 
     popCommonButtonsStyle();
-      if(textInputPopup("Change geometry name", "Enter a new name", newName, maxNameSize) == TRUE)
+      ImGuiUtilsButtonsFlags pressedButton = textInputPopup("Change geometry name",
+                                                            "Enter a new name",
+                                                            newName,
+                                                            maxNameSize);
+      if(ImGuiUtilsButtonsFlags_Accept == pressedButton)
       {
         geometrySetName(geometry, newName);
       }

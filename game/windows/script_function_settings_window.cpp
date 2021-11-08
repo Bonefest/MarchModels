@@ -4,14 +4,18 @@
 #include <logging.h>
 #include <memory_manager.h>
 
+#include "ui_utils.h"
 #include "script_function_settings_window.h"
 
 struct ScriptFunctionSettingsWindowData
 {
+  char saveName[255];
   char newArgName[255];
   char codeBuf[4096];
   Asset* function;
 };
+
+static char tempSaveName[255];
 
 static bool8 scriptFunctionSettingsWindowInitialize(Window*);
 static void scriptFunctionSettingsWindowShutdown(Window*);
@@ -35,6 +39,7 @@ bool8 createScriptFunctionSettingsWindow(Asset* function, Window** outWindow)
 
   ScriptFunctionSettingsWindowData* data = engineAllocObject<ScriptFunctionSettingsWindowData>(MEMORY_TYPE_GENERAL);
   data->function = function;
+  strcpy(data->saveName, assetGetName(function).c_str());
   windowSetInternalData(*outWindow, data);
 
   return TRUE;
@@ -74,8 +79,9 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
   
   ImGuiStyle& style = ImGui::GetStyle();
 
-
   // Code frame
+  bool8 needOpenSavePopup = FALSE;
+  
   ImGui::PushStyleColor(ImGuiCol_FrameBg, 0x0);
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, float2(0.0f, 0.0f));
   ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, float2(0.0f, 0.0f));      
@@ -90,7 +96,12 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
         ImGui::MenuItem(" " ICON_KI_ARROW_RIGHT" Redo", "ctrl-y");        
         ImGui::MenuItem(" " ICON_KI_SEARCH" Open", "ctrl-o");
         ImGui::MenuItem(" " ICON_KI_SAVE" Save", "ctrl-s");
-        ImGui::MenuItem(" " ICON_KI_SAVE" Save as", "ctrl-shift-s");          
+        if(ImGui::MenuItem(" " ICON_KI_SAVE" Save as", "ctrl-shift-s"))
+        {
+          needOpenSavePopup = TRUE;
+
+          strcpy(tempSaveName, data->saveName);
+        }
 
         ImGui::EndMenu();
       }
@@ -119,6 +130,25 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
   ImGui::PopStyleVar(2);
   ImGui::PopStyleColor();
 
+  if(needOpenSavePopup == TRUE)
+  {
+    ImGui::OpenPopup("Save name");
+  }
+  
+  // Save name popup
+  ImGuiUtilsButtonsFlags pressedButton = textInputPopup("Save name",
+                                                        "Enter save name",
+                                                        data->saveName,
+                                                        ARRAY_SIZE(data->saveName));
+  if(ImGuiUtilsButtonsFlags_Accept == pressedButton)
+  {
+    // if name is taken - show warning
+    // if name is wrong (0 len) - show error
+    // else:
+    strcpy(data->saveName, tempSaveName);
+    // call save script function function
+  }
+  
   // Args table
   if(ImGui::BeginTable("ScriptFunctionArgsTable", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp))
   {

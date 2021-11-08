@@ -2,14 +2,14 @@
 
 #include "ui_utils.h"
 
-bool8 textInputPopup(const char* name,
-                     const char* tip,
-                     char* text,
-                     uint32 textSize,
-                     ImGuiUtilsButtonsFlags buttons)
+ImGuiUtilsButtonsFlags textInputPopup(const char* name,
+                                      const char* tip,
+                                      char* text,
+                                      uint32 textSize,
+                                      ImGuiUtilsButtonsFlags buttons)
 {
   const float32 popupWidth = 200.0f;
-  bool8 accepted = FALSE;
+  ImGuiUtilsButtonsFlags pressedButton = ImGuiUtilsButtonsFlags_None;
   
   ImGuiStyle& style = ImGui::GetStyle();
   ImGui::SetNextWindowSize(float2(popupWidth, 0.0f));
@@ -39,7 +39,7 @@ bool8 textInputPopup(const char* name,
       if(ImGui::Button("Accept", float2(butWidth, 0)))
       {
         ImGui::CloseCurrentPopup();
-        accepted = TRUE;
+        pressedButton = ImGuiUtilsButtonsFlags_Accept;
       }
     }
 
@@ -52,6 +52,7 @@ bool8 textInputPopup(const char* name,
 
       if(ImGui::Button("Cancel", float2(butWidth, 0)))
       {
+        pressedButton = ImGuiUtilsButtonsFlags_Cancel;
         ImGui::CloseCurrentPopup();
       }
     }
@@ -59,6 +60,6 @@ bool8 textInputPopup(const char* name,
     ImGui::EndPopup();
   }
 
-  return accepted;
+  return pressedButton;
 }
 
