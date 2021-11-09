@@ -101,7 +101,10 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
         ImGui::MenuItem(" " ICON_KI_ARROW_LEFT" Undo", "ctrl-z");
         ImGui::MenuItem(" " ICON_KI_ARROW_RIGHT" Redo", "ctrl-y");        
         ImGui::MenuItem(" " ICON_KI_SEARCH" Open", "ctrl-o");
-        ImGui::MenuItem(" " ICON_KI_SAVE" Save", "ctrl-s");
+        if(ImGui::MenuItem(" " ICON_KI_SAVE" Save", "ctrl-s"))
+        {
+          saveFunction(data);
+        }
         if(ImGui::MenuItem(" " ICON_KI_SAVE" Save as", "ctrl-shift-s"))
         {
           needOpenSavePopup = TRUE;
@@ -149,10 +152,15 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
                                                           ARRAY_SIZE(tempSaveName));
     if(ImGuiUtilsButtonsFlags_Accept == pressedButton)
     {
-      // if name is wrong (0 len) - show error
-      // else:
-      strcpy(data->saveName, tempSaveName);
-      saveFunction(data);
+      if(strlen(tempSaveName) == 0)
+      {
+        // TODO: Show error popup
+      }
+      else
+      {
+        strcpy(data->saveName, tempSaveName);
+        saveFunction(data);
+      }
     }
   }
   
@@ -247,7 +255,7 @@ void saveFunction(ScriptFunctionSettingsWindowData* windowData)
   // If name already taken and save name is not equal to the script function's name - show warning
   if(prototypeAsset != nullptr && strcmp(windowData->saveName, assetGetName(assetToSave).c_str()) != 0)
   {
-    // show warning popup
+    // TODO: show warning popup
   }
 
   if(prototypeAsset != nullptr)
@@ -260,4 +268,8 @@ void saveFunction(ScriptFunctionSettingsWindowData* windowData)
     assetSetName(prototypeAsset, windowData->saveName);
     assetsManagerAddAsset(prototypeAsset);
   }
+
+  LOG_INFO("Script function '%s' was saved with name '%s'",
+           assetGetName(assetToSave).c_str(),
+           windowData->saveName);
 }

@@ -196,6 +196,12 @@ void drawMenu(float2& outMenuSize)
       ImGui::EndMenu();
     }
 
+    if(ImGui::BeginMenu(ICON_KI_LIST" Assets list"))
+    {
+      
+      ImGui::EndMenu();
+    }
+    
   outMenuSize = ImGui::GetWindowSize();
     
   ImGui::EndMainMenuBar();
