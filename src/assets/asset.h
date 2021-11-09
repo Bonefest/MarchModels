@@ -16,6 +16,8 @@ struct AssetInterface
   bool8(*deserialize)(Asset*);
   uint32(*getSize)(Asset*);
   
+  void (*onNameChanged)(Asset*, const std::string&, const std::string&);
+  
   AssetType type;
 };
 

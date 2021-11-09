@@ -2,7 +2,6 @@
 #include <assets/assets_manager.h>
 #include <assets/script_function.h>
 
-
 #include "editor.h"
 #include "ui_utils.h"
 #include "ui_styles.h"

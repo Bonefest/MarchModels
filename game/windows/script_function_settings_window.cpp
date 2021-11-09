@@ -3,9 +3,13 @@
 #include <utils.h>
 #include <logging.h>
 #include <memory_manager.h>
+#include <assets/assets_manager.h>
+#include <assets/script_function.h>
 
 #include "ui_utils.h"
 #include "script_function_settings_window.h"
+
+static const char* NewSaveNamePopupName = "NewSaveName##ScriptFunctionSettingsWindow";
 
 struct ScriptFunctionSettingsWindowData
 {
@@ -22,6 +26,8 @@ static void scriptFunctionSettingsWindowShutdown(Window*);
 static void scriptFunctionSettingsWindowUpdate(Window* window, float64 delta);
 static void scriptFunctionSettingsWindowDraw(Window* window, float64 delta);
 static void scriptFunctionSettingsWindowProcessInput(Window* window, const EventData& eventData, void* sender);
+
+static void saveFunction(ScriptFunctionSettingsWindowData* windowData);
 
 bool8 createScriptFunctionSettingsWindow(Asset* function, Window** outWindow)
 {
@@ -99,7 +105,6 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
         if(ImGui::MenuItem(" " ICON_KI_SAVE" Save as", "ctrl-shift-s"))
         {
           needOpenSavePopup = TRUE;
-
           strcpy(tempSaveName, data->saveName);
         }
 
@@ -132,21 +137,23 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
 
   if(needOpenSavePopup == TRUE)
   {
-    ImGui::OpenPopup("Save name");
+    ImGui::OpenPopup(NewSaveNamePopupName);
   }
   
   // Save name popup
-  ImGuiUtilsButtonsFlags pressedButton = textInputPopup("Save name",
-                                                        "Enter save name",
-                                                        data->saveName,
-                                                        ARRAY_SIZE(data->saveName));
-  if(ImGuiUtilsButtonsFlags_Accept == pressedButton)
+  if(ImGui::IsPopupOpen(NewSaveNamePopupName))
   {
-    // if name is taken - show warning
-    // if name is wrong (0 len) - show error
-    // else:
-    strcpy(data->saveName, tempSaveName);
-    // call save script function function
+    ImGuiUtilsButtonsFlags pressedButton = textInputPopup(NewSaveNamePopupName,
+                                                          "Enter save name",
+                                                          tempSaveName,
+                                                          ARRAY_SIZE(tempSaveName));
+    if(ImGuiUtilsButtonsFlags_Accept == pressedButton)
+    {
+      // if name is wrong (0 len) - show error
+      // else:
+      strcpy(data->saveName, tempSaveName);
+      saveFunction(data);
+    }
   }
   
   // Args table
@@ -230,4 +237,27 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
 void scriptFunctionSettingsWindowProcessInput(Window* window, const EventData& eventData, void* sender)
 {
 
+}
+
+void saveFunction(ScriptFunctionSettingsWindowData* windowData)
+{
+  Asset* assetToSave = windowData->function;
+  Asset* prototypeAsset = assetsManagerFindAsset(windowData->saveName);
+
+  // If name already taken and save name is not equal to the script function's name - show warning
+  if(prototypeAsset != nullptr && strcmp(windowData->saveName, assetGetName(assetToSave).c_str()) != 0)
+  {
+    // show warning popup
+  }
+
+  if(prototypeAsset != nullptr)
+  {
+    scriptFunctionCopy(prototypeAsset, assetToSave);
+  }
+  else
+  {
+    prototypeAsset = scriptFunctionClone(assetToSave);
+    assetSetName(prototypeAsset, windowData->saveName);
+    assetsManagerAddAsset(prototypeAsset);
+  }
 }

@@ -34,7 +34,13 @@ void destroyAsset(Asset* asset)
 
 void assetSetName(Asset* asset, const std::string& newName)
 {
+  std::string prevName = asset->name;
+  
   asset->name = newName;
+  if(asset->interface.onNameChanged != nullptr)
+  {
+    asset->interface.onNameChanged(asset, prevName, newName);
+  }
 }
 
 const std::string& assetGetName(Asset* asset)

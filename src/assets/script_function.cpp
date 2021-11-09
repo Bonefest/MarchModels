@@ -17,6 +17,7 @@ static void scriptFunctionDestroy(Asset* asset);
 static bool8 scriptFunctionSerialize(Asset* asset) { /** TODO */ }
 static bool8 scriptFunctionDeserialize(Asset* asset) { /** TODO */ }
 static uint32 scriptFunctionGetSize(Asset* asset) { /** TODO */ }
+static void scriptFunctionOnNameChanged(Asset* asset, const std::string& prevName, const std::string& newName);
 
 bool8 createScriptFunction(ScriptFunctionType type, const string& name, Asset** outAsset)
 {
@@ -25,6 +26,7 @@ bool8 createScriptFunction(ScriptFunctionType type, const string& name, Asset** 
   interface.serialize = scriptFunctionSerialize;
   interface.deserialize = scriptFunctionDeserialize;
   interface.getSize = scriptFunctionGetSize;
+  interface.onNameChanged = scriptFunctionOnNameChanged;
   interface.type = ASSET_TYPE_SCRIPT_FUNCTION;
 
   assert(allocateAsset(interface, name, outAsset));
@@ -183,4 +185,10 @@ float32 executeODF(Asset* odf, float32 distance)
   lua["args"]["distance"] = distance;
   
   return distance; //lua[odf->name]();
+}
+
+void scriptFunctionOnNameChanged(Asset* asset, const std::string& prevName, const std::string& newName)
+{
+  // NOTE: Re-register code: it will save the same code in lua but with a new name
+  scriptFunctionSetCode(asset, scriptFunctionGetCode(asset));
 }
