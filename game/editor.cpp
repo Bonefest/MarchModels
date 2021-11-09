@@ -21,6 +21,7 @@
 #include "windows/view_window.h"
 #include "windows/console_window.h"
 #include "windows/window_manager.h"
+#include "windows/assets_manager_window.h"
 #include "windows/scene_hierarchy_window.h"
 
 using std::vector;
@@ -198,6 +199,12 @@ void drawMenu(float2& outMenuSize)
 
     if(ImGui::BeginMenu(ICON_KI_LIST" Assets list"))
     {
+      if(windowManagerHasWindow(assetsManagerWindowGetIdentifier()) == FALSE)
+      {
+        Window* assetsManagerWindow = nullptr;
+        assert(createAssetsManagerWindow(&assetsManagerWindow));
+        windowManagerAddWindow(assetsManagerWindow);
+      }
       
       ImGui::EndMenu();
     }
