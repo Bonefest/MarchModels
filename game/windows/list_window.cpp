@@ -119,6 +119,12 @@ void listWindowDraw(Window* window, float64 delta)
     return;
   }
 
+  if(data->tip.size() > 0)
+  {
+    ImGui::Text("%s", data->tip.c_str());
+    ImGui::Spacing();
+  }
+  
   ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.0f);
   uint32 itemIdx = 0;
   for(const ListItem& item: data->items)

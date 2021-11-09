@@ -5,6 +5,7 @@
 #include "editor.h"
 #include "ui_utils.h"
 #include "ui_styles.h"
+#include "list_window.h"
 #include "assets_list_window.h"
 #include "scene_hierarchy_window.h"
 #include "script_function_settings_window.h"
@@ -55,10 +56,11 @@ static Asset* createNewScriptFunction(const std::string& name)
   return sf;
 }
 
-static void onScriptFunctionIsSelected(Window* window, Asset* asset, uint32 index, void* target)
+static void onScriptFunctionIsSelected(Window* window, void* selection, uint32 index, void* target)
 {
+  Asset* selectedAsset = (Asset*)selection;
   Asset* targetAsset = (Asset*)target;
-  scriptFunctionCopy(targetAsset, asset);
+  scriptFunctionCopy(targetAsset, selectedAsset);
 }
 
 static Asset* createNewSDF()
@@ -223,7 +225,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
           {
             float2 itemTopPos = ImGui::GetItemRectMin();
             
-            Window* assetsListWindow = windowManagerGetWindow(assetsListWindowGetIdentifier());
+            Window* assetsListWindow = windowManagerGetWindow("Script functions list");
             if(assetsListWindow != nullptr)
             {
               windowManagerRemoveWindow(assetsListWindow, TRUE);
@@ -231,9 +233,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
 
             std::vector<Asset*> assetsToDisplay = assetsManagerGetAssetsByType(ASSET_TYPE_SCRIPT_FUNCTION);
 
-            // If list button was clicked for a SDF, only SDFs should be displayed - other assets should
-            // be removed.
-            
+            // NOTE: Remove all script functions that don't have similar type
             auto removeIt = std::remove_if(assetsToDisplay.begin(),
                                            assetsToDisplay.end(),
                                            [function](Asset* asset) {
@@ -242,11 +242,24 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
             
             assetsToDisplay.erase(removeIt, assetsToDisplay.end());
 
-            createAssetsListWindowWithSomeAssets(assetsToDisplay, &assetsListWindow);
-            assetsListWindowSetSelectCallback(assetsListWindow, onScriptFunctionIsSelected, function);
+            std::vector<ListItem> items = {};
+            for(Asset* asset: assetsToDisplay)
+            {
+              items.push_back(ListItem{assetGetName(asset), asset});
+            }
+            
+            assert(createListWindow("Script functions list",
+                                    "Select a function",
+                                    items,
+                                    onScriptFunctionIsSelected,
+                                    function,
+                                    &assetsListWindow));
+            
+            listWindowSetCloseOnLoseFocus(assetsListWindow, TRUE);
             windowSetSize(assetsListWindow, float2(180.0, 100.0));
             windowSetPosition(assetsListWindow, itemTopPos + float2(10, 10));
             windowSetFocused(assetsListWindow, TRUE);
+            
             windowManagerAddWindow(assetsListWindow);
           }
 
