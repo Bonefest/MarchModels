@@ -13,6 +13,8 @@
 #include "ui_styles.h"
 #include "assets_manager_window.h"
 
+#include <ptr.h>
+
 using std::vector;
 using std::string;
 
