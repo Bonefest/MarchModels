@@ -45,6 +45,11 @@ public:
     
     return *this;
   }
+
+  bool operator==(T* data)
+  {
+    return ptr == data;
+  }
   
   T* operator->()
   {
@@ -87,7 +92,7 @@ public:
     {
       if(ptr == nullptr)
       {
-        LOG_WARNING("Empty SharedPtr was released!");
+        // LOG_WARNING("Empty SharedPtr was released!");
       }
       else
       {

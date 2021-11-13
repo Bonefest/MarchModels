@@ -13,7 +13,7 @@ using std::unordered_map;
 struct WindowManagerData
 {
   bool8 initialized;
-  unordered_map<string, Window*> windowsMap;
+  unordered_map<string, WindowPtr> windowsMap;
 };
 
 static WindowManagerData data;
@@ -33,7 +33,7 @@ void shutdownWindowManager()
   data.windowsMap.clear();
 }
 
-void windowManagerAddWindow(Window* window, bool8 initialize)
+void windowManagerAddWindow(WindowPtr window, bool8 initialize)
 {
   string windowID = windowGetIdentifier(window);
   assert(data.windowsMap.find(windowID) == data.windowsMap.end() && "Same window cannot be added twice!");
@@ -45,12 +45,12 @@ void windowManagerAddWindow(Window* window, bool8 initialize)
   }
 }
 
-bool8 windowManagerRemoveWindow(Window* window, bool8 free)
+bool8 windowManagerRemoveWindow(Window* window)
 {
-  return windowManagerRemoveWindow(windowGetIdentifier(window), free);
+  return windowManagerRemoveWindow(windowGetIdentifier(window));
 }
 
-bool8 windowManagerRemoveWindow(const std::string& identifier, bool8 free)
+bool8 windowManagerRemoveWindow(const std::string& identifier)
 {
   std::string trimmedId = identifier;
   std::size_t hashIdx = trimmedId.find("##");
@@ -73,7 +73,7 @@ bool8 windowManagerHasWindow(const std::string& identifier)
   return data.windowsMap.find(identifier) != data.windowsMap.end();
 }
 
-Window* windowManagerGetWindow(const std::string& identifier)
+WindowPtr windowManagerGetWindow(const std::string& identifier)
 {
   auto windowIt = data.windowsMap.find(identifier);
   if(windowIt == data.windowsMap.end())
@@ -99,11 +99,11 @@ void windowManagerDraw(float64 delta)
 
 void windowManagerUpdate(float64 delta)
 {
-  vector<Window*> windowsToRemove;
+  vector<WindowPtr> windowsToRemove;
   
   for(auto pair: data.windowsMap)
   {
-    Window* window = pair.second;
+    WindowPtr window = pair.second;
     
     if(windowIsOpen(window) == TRUE)
     {
@@ -115,7 +115,7 @@ void windowManagerUpdate(float64 delta)
     }
   }
 
-  for(Window* window: windowsToRemove)
+  for(WindowPtr window: windowsToRemove)
   {
     windowManagerRemoveWindow(window);
   }

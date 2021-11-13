@@ -221,10 +221,10 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
           {
             float2 itemTopPos = ImGui::GetItemRectMin();
             
-            Window* assetsListWindow = windowManagerGetWindow("Script functions list");
-            if(assetsListWindow != nullptr)
+            WindowPtr prevAssetsListWindow = windowManagerGetWindow("Script functions list");
+            if(prevAssetsListWindow != nullptr)
             {
-              windowManagerRemoveWindow(assetsListWindow, TRUE);
+              windowManagerRemoveWindow(prevAssetsListWindow);
             }
 
             std::vector<AssetPtr> assetsToDisplay = assetsManagerGetAssetsByType(ASSET_TYPE_SCRIPT_FUNCTION);
@@ -243,13 +243,14 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
             {
               items.push_back(ListItem{assetGetName(asset), asset});
             }
-            
+
+            WindowPtr assetsListWindow;
             assert(createListWindow("Script functions list",
                                     "Select a function",
                                     items,
                                     onScriptFunctionIsSelected,
                                     function,
-                                    &assetsListWindow));
+                                    &assetsListWindow.ptr));
             
             listWindowSetCloseOnLoseFocus(assetsListWindow, TRUE);
             windowSetSize(assetsListWindow, float2(180.0, 100.0));

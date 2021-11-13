@@ -33,9 +33,9 @@ struct EditorData
   Scene* currentScene = nullptr;
   Camera* camera;
 
-  Window* viewWindow;
-  Window* sceneHierarchyWindow = nullptr;
-  Window* consoleWindow;
+  WindowPtr viewWindow;
+  WindowPtr sceneHierarchyWindow;
+  WindowPtr consoleWindow;
 };
 
 static EditorData editorData;
@@ -82,7 +82,7 @@ bool8 initEditor(Application* app)
   assert(createScene(&editorData.currentScene));
   assert(initWindowManager());
   
-  assert(createConsoleWindow(consoleWindowName, &editorData.consoleWindow));
+  assert(createConsoleWindow(consoleWindowName, &editorData.consoleWindow.ptr));
   windowManagerAddWindow(editorData.consoleWindow);
 
   Sampler* centerSampler = nullptr;
@@ -95,10 +95,10 @@ bool8 initEditor(Application* app)
   assert(createPerspectiveCamera(1.0f, toRad(45.0f), 0.01f, 100.0f, &camera));
   cameraLookAt(camera, float3(0.0f, 0.0f, -10.0f), float3(), float3(0.0f, 1.0f, 0.0f));
   
-  assert(createViewWindow(viewWindowName, centerSampler, debugRayIntegrator, camera, &editorData.viewWindow));
+  assert(createViewWindow(viewWindowName, centerSampler, debugRayIntegrator, camera, &editorData.viewWindow.ptr));
   windowManagerAddWindow(editorData.viewWindow);
 
-  assert(createSceneHierarchyWindow(sceneHierarchyWindowName, &editorData.sceneHierarchyWindow));
+  assert(createSceneHierarchyWindow(sceneHierarchyWindowName, &editorData.sceneHierarchyWindow.ptr));
   windowManagerAddWindow(editorData.sceneHierarchyWindow);
   
   return TRUE;

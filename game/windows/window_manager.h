@@ -16,12 +16,13 @@ struct WindowManager;
 bool8 initWindowManager();
 void shutdownWindowManager();
 
-void windowManagerAddWindow(Window* window, bool8 initialize = TRUE);
-bool8 windowManagerRemoveWindow(Window* window, bool8 free = TRUE);
-bool8 windowManagerRemoveWindow(const std::string& identifier, bool8 free = TRUE);
+void windowManagerAddWindow(WindowPtr window, bool8 initialize = TRUE);
+// NOTE: We use raw window pointers to prevent cases where shared ptr is allocated by mistake
+bool8 windowManagerRemoveWindow(Window* window);
+bool8 windowManagerRemoveWindow(const std::string& identifier);
 bool8 windowManagerHasWindow(const std::string& identifier);
-Window* windowManagerGetWindow(const std::string& identifier);
-std::vector<Window*> windowManagerGetWindows();
+WindowPtr windowManagerGetWindow(const std::string& identifier);
+std::vector<WindowPtr> windowManagerGetWindows();
 
 void windowManagerDraw(float64 delta);
 void windowManagerUpdate(float64 delta);
