@@ -44,7 +44,7 @@ bool8 assetsManagerAddAsset(AssetPtr asset)
   return TRUE;
 }
 
-bool8 assetsManagerRemoveAsset(AssetPtr asset)
+bool8 assetsManagerRemoveAsset(Asset* asset)
 {
   auto assetIt = std::find(manager.assets.begin(), manager.assets.end(), asset);
   if(assetIt != manager.assets.end())

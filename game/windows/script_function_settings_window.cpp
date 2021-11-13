@@ -108,7 +108,7 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
         if(ImGui::MenuItem(" " ICON_KI_SAVE" Save as", "ctrl-shift-s"))
         {
           needOpenSavePopup = TRUE;
-          strcpy(tempSaveName, data->saveName);
+          strcpy(textInputPopupGetBuffer(), data->saveName);
         }
 
         ImGui::EndMenu();
@@ -146,19 +146,19 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
   // Save name popup
   if(ImGui::IsPopupOpen(NewSaveNamePopupName))
   {
-    ImGuiUtilsButtonsFlags pressedButton = textInputPopup(NewSaveNamePopupName,
-                                                          "Enter save name",
-                                                          tempSaveName,
-                                                          ARRAY_SIZE(tempSaveName));
+    ImGuiUtilsButtonsFlags pressedButton = textInputPopup(NewSaveNamePopupName, "Enter save name");
+                                                          
     if(ImGuiUtilsButtonsFlags_Accept == pressedButton)
     {
-      if(strlen(tempSaveName) == 0)
+      const char* enteredName = textInputPopupGetBuffer();
+      
+      if(strlen(enteredName) == 0)
       {
         // TODO: Show error popup
       }
       else
       {
-        strcpy(data->saveName, tempSaveName);
+        strcpy(data->saveName, enteredName);
         saveFunction(data);
       }
     }

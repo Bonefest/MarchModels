@@ -8,7 +8,7 @@ ENGINE_API bool8 initAssetsManager();
 ENGINE_API void shutdownAssetsManager();
 
 ENGINE_API bool8 assetsManagerAddAsset(AssetPtr asset);
-ENGINE_API bool8 assetsManagerRemoveAsset(AssetPtr asset);
+ENGINE_API bool8 assetsManagerRemoveAsset(Asset* asset);
 ENGINE_API bool8 assetsManagerRemoveAsset(const std::string& name);
 
 ENGINE_API AssetPtr assetsManagerFindAsset(const std::string& name);

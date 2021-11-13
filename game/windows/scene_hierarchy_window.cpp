@@ -90,8 +90,6 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
                                            SceneHierarchyData* data,
                                            Scene* currentScene)
 {
-  const uint32 maxNameSize = 128;
-  static char newName[maxNameSize];
   const char* geometryName = geometryGetName(geometry).c_str();
   ImGuiStyle& style = ImGui::GetStyle();  
   
@@ -107,17 +105,15 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
     if(ImGui::SmallButton(ICON_KI_PENCIL"##GeometryChangeName"))
     {
       ImGui::OpenPopup("Change geometry name");
-      strcpy(newName, geometryName);
+      strcpy(textInputPopupGetBuffer(), geometryName);
     }
 
     popIconButtonStyle();
-      ImGuiUtilsButtonsFlags pressedButton = textInputPopup("Change geometry name",
-                                                            "Enter a new name",
-                                                            newName,
-                                                            maxNameSize);
+      ImGuiUtilsButtonsFlags pressedButton = textInputPopup("Change geometry name", "Enter a new name");
+
       if(ImGuiUtilsButtonsFlags_Accept == pressedButton)
       {
-        geometrySetName(geometry, newName);
+        geometrySetName(geometry, textInputPopupGetBuffer());
       }
     pushIconButtonStyle();
 

@@ -2,6 +2,9 @@
 
 #include "ui_utils.h"
 
+static const uint32 textInputPopupBufSize = 1024;
+static char textInputPopupBuf[textInputPopupBufSize];
+
 void pushIconButtonStyle()
 {
   ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, float2(0.0f, 0.0f));
@@ -15,11 +18,24 @@ void popIconButtonStyle()
   ImGui::PopStyleVar();
 }
 
+char* textInputPopupGetBuffer()
+{
+  return textInputPopupBuf;
+}
+
 ImGuiUtilsButtonsFlags textInputPopup(const char* name,
                                       const char* tip,
-                                      char* text,
-                                      uint32 textSize,
                                       ImGuiUtilsButtonsFlags buttons)
+{
+  return textInputPopupCustom(name, tip, textInputPopupBuf, textInputPopupBufSize, buttons);
+}
+
+
+ImGuiUtilsButtonsFlags textInputPopupCustom(const char* name,
+                                            const char* tip,
+                                            char* text,
+                                            uint32 textSize,
+                                            ImGuiUtilsButtonsFlags buttons)
 {
   const float32 popupWidth = 200.0f;
   ImGuiUtilsButtonsFlags pressedButton = ImGuiUtilsButtonsFlags_None;

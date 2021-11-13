@@ -75,6 +75,8 @@ void assetsManagerWindowUpdate(Window* window, float64 delta)
 
 static void drawAssetsCategory(Window* window, const char* categoryName, vector<AssetPtr> assets)
 {
+  static const char* renamePopupName = "Asset rename popup";
+  
   if(ImGui::TreeNode(categoryName))
   {
     uint32 idx = 1;
@@ -83,17 +85,36 @@ static void drawAssetsCategory(Window* window, const char* categoryName, vector<
       ImGui::Text("%3d. %s", idx, assetGetName(asset).c_str());
       ImGui::SameLine();
 
+      ImGui::PushID(asset.ptr);
       pushIconButtonStyle();
-        ImGui::Button(ICON_KI_PENCIL"##AssetRename");
+        if(ImGui::Button(ICON_KI_PENCIL"##AssetRename"))
+        {
+          strcpy(textInputPopupGetBuffer(), assetGetName(asset).c_str());
+          ImGui::OpenPopup(renamePopupName);
+        }
         ImGui::SameLine();
-      
+
+        if(ImGui::IsPopupOpen(renamePopupName))
+        {
+          ImGuiUtilsButtonsFlags button = textInputPopup(renamePopupName, "Enter new name");
+
+          if(button == ImGuiUtilsButtonsFlags_Accept)
+          {
+            assetSetName(asset, textInputPopupGetBuffer());
+          }
+        }
+          
         ImGui::Button(ICON_KI_COG"##AssetEdit");
         ImGui::SameLine();
         
         ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
-          ImGui::Button(ICON_KI_TRASH"##AssetDelete");
+          if(ImGui::Button(ICON_KI_TRASH"##AssetDelete"))
+          {
+            assetsManagerRemoveAsset(asset.ptr);
+          }
         ImGui::PopStyleColor();
       popIconButtonStyle();
+      ImGui::PopID();
       idx++;
     }
     
