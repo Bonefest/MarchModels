@@ -6,7 +6,6 @@
 #include "ui_utils.h"
 #include "ui_styles.h"
 #include "list_window.h"
-#include "assets_list_window.h"
 #include "scene_hierarchy_window.h"
 #include "script_function_settings_window.h"
 
@@ -28,9 +27,6 @@ static void sceneHierarchyProcessGeometryArray(Window* window,
                                                std::vector<Geometry*>& array,
                                                SceneHierarchyData* data,
                                                Scene* currentScene);
-
-static void pushCommonButtonsStyle();
-static void popCommonButtonsStyle();
 
 static bool8 sceneHierarchyInitialize(Window* window)
 {
@@ -105,7 +101,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
   bool8 processedNormally = TRUE;
   
   ImGui::SameLine();
-  pushCommonButtonsStyle();
+  pushIconButtonStyle();
 
     // Geometry-related action buttons ----------------------------------------
     if(ImGui::SmallButton(ICON_KI_PENCIL"##GeometryChangeName"))
@@ -114,7 +110,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
       strcpy(newName, geometryName);
     }
 
-    popCommonButtonsStyle();
+    popIconButtonStyle();
       ImGuiUtilsButtonsFlags pressedButton = textInputPopup("Change geometry name",
                                                             "Enter a new name",
                                                             newName,
@@ -123,7 +119,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
       {
         geometrySetName(geometry, newName);
       }
-    pushCommonButtonsStyle();
+    pushIconButtonStyle();
 
     ImGui::SameLine();       
     ImGui::SmallButton(ICON_KI_LIST"##GeometryChoose");
@@ -295,14 +291,14 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
       }
       
       // Children geometry ----------------------------------------------------
-      popCommonButtonsStyle();
+      popIconButtonStyle();
         std::vector<Geometry*>& children = geometryGetChildren(geometry);
         sceneHierarchyProcessGeometryArray(window, children, data, currentScene);
-      pushCommonButtonsStyle();
+      pushIconButtonStyle();
       ImGui::TreePop();
     }
 
-  popCommonButtonsStyle();
+    popIconButtonStyle();
 
   ImGui::PopID();
 
@@ -351,7 +347,7 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
 
   if(data->showMetaInfo == TRUE)
   {
-    pushCommonButtonsStyle();
+    pushIconButtonStyle();
     ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
       if(ImGui::SmallButton("[New geometry]"))
       {
@@ -361,7 +357,7 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
       ImGui::SameLine();
       ImGui::SmallButton("[New light]");  
     ImGui::PopStyleColor();
-    popCommonButtonsStyle();
+    popIconButtonStyle();
 
     ImGui::Separator();    
   }
@@ -417,17 +413,4 @@ void sceneHierarchyProcessGeometryArray(Window* window,
       geometryIt++;
     }
   }  
-}
-
-void pushCommonButtonsStyle()
-{
-  ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, float2(0.0f, 0.0f));
-  ImGui::PushStyleColor(ImGuiCol_Button, (float4)ImColor(0, 0, 0, 0));
-  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (float4)ImColor(0, 0, 0, 0));  
-}
-
-void popCommonButtonsStyle()
-{
-  ImGui::PopStyleColor(2);
-  ImGui::PopStyleVar();
 }

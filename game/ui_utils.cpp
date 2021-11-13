@@ -2,6 +2,19 @@
 
 #include "ui_utils.h"
 
+void pushIconButtonStyle()
+{
+  ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, float2(0.0f, 0.0f));
+  ImGui::PushStyleColor(ImGuiCol_Button, (float4)ImColor(0, 0, 0, 0));
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (float4)ImColor(0, 0, 0, 0));    
+}
+
+void popIconButtonStyle()
+{
+  ImGui::PopStyleColor(2);
+  ImGui::PopStyleVar();
+}
+
 ImGuiUtilsButtonsFlags textInputPopup(const char* name,
                                       const char* tip,
                                       char* text,

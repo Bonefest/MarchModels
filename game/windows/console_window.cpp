@@ -6,16 +6,17 @@
 #include <event_system.h>
 #include <memory_manager.h>
 
+#include "ui_styles.h"
 #include "console_window.h"
 
 const static uint32 MAX_BUF_SIZE = 255;
 
 const static ImColor mapLogMessageTypeToColor[] =
 {
-  ImColor(192, 0, 0),
-  ImColor(192, 192, 0),
-  ImColor(192, 0, 192),
-  ImColor(66, 135, 246),
+  ErrorClr,
+  WarningClr,
+  VerboseClr,
+  InfoClr
 };
 
 struct LogMessage

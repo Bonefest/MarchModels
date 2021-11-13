@@ -13,6 +13,9 @@ enum ImGuiUtilsButtonsFlags_
 
 typedef int ImGuiUtilsButtonsFlags;
 
+void pushIconButtonStyle();
+void popIconButtonStyle();
+
 ImGuiUtilsButtonsFlags textInputPopup(const char* name,
                                       const char* tip,
                                       char* text,

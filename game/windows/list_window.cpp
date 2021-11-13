@@ -1,5 +1,6 @@
 #include <memory_manager.h>
 
+#include "ui_styles.h"
 #include "list_window.h"
 
 using std::string;
@@ -121,7 +122,9 @@ void listWindowDraw(Window* window, float64 delta)
 
   if(data->tip.size() > 0)
   {
-    ImGui::Text("%s", data->tip.c_str());
+    ImGui::PushStyleColor(ImGuiCol_Text, (float4)SecondaryTextClr);
+      ImGui::Text("%s", data->tip.c_str());
+    ImGui::PopStyleColor();
     ImGui::Spacing();
   }
   
