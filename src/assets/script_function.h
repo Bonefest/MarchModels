@@ -33,17 +33,20 @@ enum ScriptFunctionType
   SCRIPT_FUNCTION_TYPE_COUNT
 };
 
+ENGINE_API const char* scriptFunctionTypeLabel(ScriptFunctionType type);
+
 ENGINE_API bool8 createScriptFunction(ScriptFunctionType type,
                                       const std::string& name,
                                       Asset** outAsset);
 
-ENGINE_API Asset* scriptFunctionClone(Asset* assetCloneFrom);
-
-ENGINE_API void scriptFunctionCopy(Asset* dst, Asset* src);
+ENGINE_API void scriptFunctionCopy(Asset* dst, Asset* src, bool8 isFullCopy = FALSE, bool8 freePrevData = FALSE);
+ENGINE_API AssetPtr scriptFunctionClone(Asset* assetCloneFrom, bool8 cloneInternalData = FALSE);
 
 ENGINE_API void scriptFunctionSetArgValue(Asset* asset, const std::string& argName, float32 value);
 ENGINE_API float32 scriptFunctionGetArgValue(Asset* asset, const std::string& argName);
 ENGINE_API ScriptFunctionArgs& scriptFunctionGetArgs(Asset* asset);
+
+ENGINE_API void scriptFunctionSetType(Asset* asset, ScriptFunctionType type);
 ENGINE_API ScriptFunctionType scriptFunctionGetType(Asset* asset);
 
 ENGINE_API void scriptFunctionSetCode(Asset* asset, const std::string& code);

@@ -32,16 +32,16 @@ ENGINE_API float3 geometryGetPosition(Geometry* geometry);
 ENGINE_API void geometrySetOrientation(Geometry* geometry, quat orientation);
 ENGINE_API quat geometryGetOrientation(Geometry* geometry);
 
-ENGINE_API bool8 geometryRemoveFunction(Geometry* geometry, Asset* function);
+ENGINE_API bool8 geometryRemoveFunction(Geometry* geometry, AssetPtr function);
 
-ENGINE_API void geometryAddIDF(Geometry* geometry, Asset* idf);
-ENGINE_API std::vector<Asset*>& geometryGetIDFs(Geometry* geometry);
+ENGINE_API void geometryAddIDF(Geometry* geometry, AssetPtr idf);
+ENGINE_API std::vector<AssetPtr>& geometryGetIDFs(Geometry* geometry);
 
-ENGINE_API void geometryAddODF(Geometry* geometry, Asset* odf);
-ENGINE_API std::vector<Asset*>& geometryGetODFs(Geometry* geometry);
+ENGINE_API void geometryAddODF(Geometry* geometry, AssetPtr odf);
+ENGINE_API std::vector<AssetPtr>& geometryGetODFs(Geometry* geometry);
 
 // Get SDF, IDFs and ODFs as a single array
-ENGINE_API std::vector<Asset*> geometryGetScriptFunctions(Geometry* geometry);
+ENGINE_API std::vector<AssetPtr> geometryGetScriptFunctions(Geometry* geometry);
 
 ENGINE_API void geometrySetName(Geometry* geometry, const std::string& name);
 ENGINE_API const std::string& geometryGetName(Geometry* geometry);
@@ -84,6 +84,6 @@ ENGINE_API CombinationFunction geometryGetCombinationFunction(Geometry* geometry
 // Leaf geometry-related interface
 // ----------------------------------------------------------------------------
 
-ENGINE_API void geometrySetSDF(Geometry* geometry, Asset* sdf);
-ENGINE_API Asset* geometryGetSDF(Geometry* geometry);
+ENGINE_API void geometrySetSDF(Geometry* geometry, AssetPtr sdf);
+ENGINE_API AssetPtr geometryGetSDF(Geometry* geometry);
 ENGINE_API bool8 geometryHasSDF(Geometry* geometry);

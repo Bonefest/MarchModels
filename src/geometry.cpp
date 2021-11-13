@@ -7,8 +7,8 @@ struct Geometry
   // Common data
   std::string name;
   
-  std::vector<Asset*> idfs;
-  std::vector<Asset*> odfs;
+  std::vector<AssetPtr> idfs;
+  std::vector<AssetPtr> odfs;
 
   Geometry* parent;
   
@@ -30,7 +30,7 @@ struct Geometry
   CombinationFunction combinationFunction;
 
   // Leaf geometry data
-  Asset* sdf;
+  AssetPtr sdf;
   Material* material;
 };
 
@@ -169,7 +169,7 @@ void destroyGeometry(Geometry* geometry)
   }
 
   auto functions = geometryGetScriptFunctions(geometry);
-  for(Asset* function: functions)
+  for(AssetPtr function: functions)
   {
     destroyAsset(function);
   }
@@ -210,7 +210,7 @@ quat geometryGetOrientation(Geometry* geometry)
   return geometry->orientation;
 }
 
-bool8 geometryRemoveFunction(Geometry* geometry, Asset* function)
+bool8 geometryRemoveFunction(Geometry* geometry, AssetPtr function)
 {
   ScriptFunctionType type = scriptFunctionGetType(function);
   if(type == SCRIPT_FUNCTION_TYPE_SDF)
@@ -249,7 +249,7 @@ bool8 geometryRemoveFunction(Geometry* geometry, Asset* function)
   return FALSE;
 }
 
-void geometryAddIDF(Geometry* geometry, Asset* idf)
+void geometryAddIDF(Geometry* geometry, AssetPtr idf)
 {
   assert(assetGetType(idf) == ASSET_TYPE_SCRIPT_FUNCTION &&
          scriptFunctionGetType(idf) == SCRIPT_FUNCTION_TYPE_IDF);
@@ -257,12 +257,12 @@ void geometryAddIDF(Geometry* geometry, Asset* idf)
   geometry->idfs.push_back(idf);
 }
 
-std::vector<Asset*>& geometryGetIDFs(Geometry* geometry)
+std::vector<AssetPtr>& geometryGetIDFs(Geometry* geometry)
 {
   return geometry->idfs;
 }
 
-void geometryAddODF(Geometry* geometry, Asset* odf)
+void geometryAddODF(Geometry* geometry, AssetPtr odf)
 {
   assert(assetGetType(odf) == ASSET_TYPE_SCRIPT_FUNCTION &&
          scriptFunctionGetType(odf) == SCRIPT_FUNCTION_TYPE_ODF);
@@ -270,14 +270,14 @@ void geometryAddODF(Geometry* geometry, Asset* odf)
   geometry->odfs.push_back(odf);
 }
 
-std::vector<Asset*>& geometryGetODFs(Geometry* geometry)
+std::vector<AssetPtr>& geometryGetODFs(Geometry* geometry)
 {
   return geometry->odfs;
 }
 
-std::vector<Asset*> geometryGetScriptFunctions(Geometry* geometry)
+std::vector<AssetPtr> geometryGetScriptFunctions(Geometry* geometry)
 {
-  std::vector<Asset*> functions;
+  std::vector<AssetPtr> functions;
   functions.reserve(1 + geometry->idfs.size() + geometry->odfs.size());
 
   if(geometry->sdf != nullptr)
@@ -384,7 +384,7 @@ float32 geometryCalculateDistanceToPoint(Geometry* geometry,
                                          float3 p,
                                          Geometry** outClosestLeafGeometry)
 {
-  for(Asset* idf: geometry->idfs)
+  for(AssetPtr idf: geometry->idfs)
   {
     p = executeIDF(idf, p);
   }
@@ -427,7 +427,7 @@ float32 geometryCalculateDistanceToPoint(Geometry* geometry,
     }
   }
 
-  for(Asset* odf: geometry->odfs)
+  for(AssetPtr odf: geometry->odfs)
   {
     distance = executeODF(odf, distance);
   }
@@ -502,7 +502,7 @@ CombinationFunction geometryGetCombinationFunction(Geometry* geometry)
 // Leaft geometry-related interface
 // ----------------------------------------------------------------------------
 
-void geometrySetSDF(Geometry* geometry, Asset* sdf)
+void geometrySetSDF(Geometry* geometry, AssetPtr sdf)
 {
   assert(assetGetType(sdf) == ASSET_TYPE_SCRIPT_FUNCTION &&
          scriptFunctionGetType(sdf) == SCRIPT_FUNCTION_TYPE_SDF);
@@ -510,7 +510,7 @@ void geometrySetSDF(Geometry* geometry, Asset* sdf)
   geometry->sdf = sdf;
 }
 
-Asset* geometryGetSDF(Geometry* geometry)
+AssetPtr geometryGetSDF(Geometry* geometry)
 {
   return geometry->sdf;
 }

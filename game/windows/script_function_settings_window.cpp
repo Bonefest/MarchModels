@@ -7,6 +7,7 @@
 #include <assets/script_function.h>
 
 #include "ui_utils.h"
+#include "ui_styles.h"
 #include "script_function_settings_window.h"
 
 static const char* NewSaveNamePopupName = "NewSaveName##ScriptFunctionSettingsWindow";
@@ -16,7 +17,7 @@ struct ScriptFunctionSettingsWindowData
   char saveName[255];
   char newArgName[255];
   char codeBuf[4096];
-  Asset* function;
+  AssetPtr function;
 };
 
 static char tempSaveName[255];
@@ -29,7 +30,7 @@ static void scriptFunctionSettingsWindowProcessInput(Window* window, const Event
 
 static void saveFunction(ScriptFunctionSettingsWindowData* windowData);
 
-bool8 createScriptFunctionSettingsWindow(Asset* function, Window** outWindow)
+bool8 createScriptFunctionSettingsWindow(AssetPtr function, Window** outWindow)
 {
   WindowInterface interface = {};
   interface.initialize = scriptFunctionSettingsWindowInitialize;
@@ -79,12 +80,63 @@ void scriptFunctionSettingsWindowUpdate(Window* window, float64 delta)
 
 void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
 {
-  
   ScriptFunctionSettingsWindowData* data = (ScriptFunctionSettingsWindowData*)windowGetInternalData(window);
   ScriptFunctionArgs& args = scriptFunctionGetArgs(data->function);
+  ScriptFunctionType sfType = scriptFunctionGetType(data->function);
   
   ImGuiStyle& style = ImGui::GetStyle();
 
+  AssetPtr assetFromManager = assetsManagerFindAsset(assetGetName(data->function));
+
+  // NOTE: It's a prototype if it points to the same data as an asset from the manager
+  // TODO: replace GetInternalData by open API function
+  bool8 isPrototype = assetFromManager != nullptr &&
+    (assetGetInternalData(assetFromManager) == assetGetInternalData(data->function));
+  
+  // Meta information
+  ImGui::Text("%s", isPrototype == TRUE ? "Prototype" : "Instance");
+  ImGui::SameLine();
+
+  ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
+  pushIconButtonStyle();
+
+    char typeButton[32];
+    sprintf(typeButton, "[%s]", scriptFunctionTypeLabel(sfType));
+    if(ImGui::SmallButton(typeButton) && isPrototype == TRUE)
+    {
+      sfType = (ScriptFunctionType)(((int)sfType + 1) % (int)SCRIPT_FUNCTION_TYPE_COUNT);
+      scriptFunctionSetType(data->function, sfType);
+    }
+  
+    ImGui::SameLine();
+    if(isPrototype == FALSE)
+    {
+      bool8 prototypeExists = assetFromManager != nullptr;
+
+      ImGui::BeginDisabled(prototypeExists == FALSE);
+        // NOTE: We can unfork back only in prototype exists
+        if(ImGui::SmallButton("[Unfork]") && prototypeExists == TRUE)
+        {
+          // NOTE: Make a coarse copy (copy internal pointer only), free previous data
+          scriptFunctionCopy(data->function, assetFromManager, FALSE, TRUE);
+        }
+      ImGui::EndDisabled();
+    }
+    else
+    {
+      if(ImGui::SmallButton("[Fork]"))
+      {
+        // NOTE: Make a full copy, so that memory for internal data is allocated too
+        scriptFunctionCopy(data->function, assetFromManager, TRUE);
+      }
+    }
+
+    
+  popIconButtonStyle();
+  ImGui::PopStyleColor();
+
+  ImGui::Separator();
+  
   // Code frame
   bool8 needOpenSavePopup = FALSE;
   
@@ -250,7 +302,7 @@ void scriptFunctionSettingsWindowProcessInput(Window* window, const EventData& e
 void saveFunction(ScriptFunctionSettingsWindowData* windowData)
 {
   Asset* assetToSave = windowData->function;
-  Asset* prototypeAsset = assetsManagerFindAsset(windowData->saveName);
+  AssetPtr prototypeAsset = assetsManagerFindAsset(windowData->saveName);
 
   // If name already taken and save name is not equal to the script function's name - show warning
   if(prototypeAsset != nullptr && strcmp(windowData->saveName, assetGetName(assetToSave).c_str()) != 0)
@@ -264,7 +316,7 @@ void saveFunction(ScriptFunctionSettingsWindowData* windowData)
   }
   else
   {
-    prototypeAsset = scriptFunctionClone(assetToSave);
+    prototypeAsset = scriptFunctionClone(assetToSave, TRUE);
     assetSetName(prototypeAsset, windowData->saveName);
     assetsManagerAddAsset(prototypeAsset);
   }

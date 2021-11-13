@@ -7,5 +7,5 @@
 
 #define DeleteClr ImColor(160, 0, 0, 255)
 #define NewClr ImColor(127, 127, 160, 255)
-#define PrimaryTextClr ImColor(255, 255, 255, 255)
-#define SecondaryTextClr ImColor(192, 192, 192, 255)
+#define PrimaryClr ImColor(255, 255, 255, 255)
+#define SecondaryClr ImColor(192, 192, 192, 255)

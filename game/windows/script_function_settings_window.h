@@ -4,6 +4,7 @@
 
 #include "window.h"
 
-bool8 createScriptFunctionSettingsWindow(Asset* function, Window** outWindow);
+bool8 createScriptFunctionSettingsWindow(AssetPtr function, Window** outWindow);
+
 std::string scriptFunctionWindowIdentifier(Asset* function);
 

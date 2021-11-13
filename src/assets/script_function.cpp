@@ -19,6 +19,18 @@ static bool8 scriptFunctionDeserialize(Asset* asset) { /** TODO */ }
 static uint32 scriptFunctionGetSize(Asset* asset) { /** TODO */ }
 static void scriptFunctionOnNameChanged(Asset* asset, const std::string& prevName, const std::string& newName);
 
+const char* scriptFunctionTypeLabel(ScriptFunctionType type)
+{
+  const static char* typeToLabel[] =
+  {
+    "SDF",
+    "IDF",
+    "ODF"
+  };
+
+  return typeToLabel[type];
+}
+
 bool8 createScriptFunction(ScriptFunctionType type, const string& name, Asset** outAsset)
 {
   AssetInterface interface = {};
@@ -40,22 +52,36 @@ bool8 createScriptFunction(ScriptFunctionType type, const string& name, Asset** 
   return TRUE;
 }
 
-Asset* scriptFunctionClone(Asset* assetCloneFrom)
+AssetPtr scriptFunctionClone(Asset* assetCloneFrom, bool8 cloneInternalData)
 {
   Asset* copy;
   assert(createScriptFunction((ScriptFunctionType)0, "", &copy));
-  scriptFunctionCopy(copy, assetCloneFrom);
+  scriptFunctionCopy(copy, assetCloneFrom, cloneInternalData);
 
   return copy;
 }
 
-void scriptFunctionCopy(Asset* dst, Asset* src)
+void scriptFunctionCopy(Asset* dst, Asset* src, bool8 isFullCopy, bool8 freePrevData)
 {
-  ScriptFunction* srcData = (ScriptFunction*)assetGetInternalData(src);  
-  ScriptFunction* dstData = (ScriptFunction*)assetGetInternalData(dst);
+  if(isFullCopy == FALSE)
+  {
+    assetSetInternalData(dst, assetGetInternalData(src));
+  }
+  else
+  {
+    if(freePrevData == TRUE)
+    {
+      scriptFunctionDestroy(dst);
+    }
+    
+    ScriptFunction* srcData = (ScriptFunction*)assetGetInternalData(src);      
+    ScriptFunction* dstData = engineAllocObject<ScriptFunction>(MEMORY_TYPE_GENERAL);
+    *dstData = *srcData;
 
-  *dstData = *srcData;
-  assetSetName(dst, assetGetName(src));
+    assetSetInternalData(dst, dstData);
+  }
+
+  assetSetName(dst, assetGetName(src));  
 }
 
 void scriptFunctionDestroy(Asset* asset)
@@ -84,6 +110,12 @@ ScriptFunctionArgs& scriptFunctionGetArgs(Asset* asset)
   ScriptFunction* data = (ScriptFunction*)assetGetInternalData(asset);
   
   return data->args;
+}
+
+void scriptFunctionSetType(Asset* asset, ScriptFunctionType type)
+{
+  ScriptFunction* data = (ScriptFunction*)assetGetInternalData(asset);
+  data->type = type;
 }
 
 ScriptFunctionType scriptFunctionGetType(Asset* asset)

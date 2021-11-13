@@ -85,6 +85,15 @@ AssetPtr assetsManagerFindAsset(const std::string& name)
   return nullptr;
 }
 
+bool8 assetsManagerHasAsset(AssetPtr asset)
+{
+  auto assetIt = std::find_if(manager.assets.begin(),
+                              manager.assets.end(),
+                              [&asset](AssetPtr lasset) { return lasset.ptr == asset.ptr; });
+  
+  return assetIt != manager.assets.end() ? TRUE : FALSE;
+}
+
 bool8 assetsManagerHasAsset(const std::string& name)
 {
   return assetsManagerFindAsset(name) != nullptr;

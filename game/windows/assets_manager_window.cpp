@@ -29,6 +29,7 @@ struct AssetsListWindowData
 struct AssetsCategoryData
 {
   AssetType categoryAssetType;
+  const char* categoryName;
   const char* dataName;
   Asset*(*create)();
   void(*edit)();
@@ -57,6 +58,7 @@ static unordered_map<AssetType, AssetsCategoryData> categoryData =
     {
       ASSET_TYPE_GEOMETRY,      
       "Geometry",
+      "geometry",
       createGeometryAsset,
       editGeometryAsset,
     }
@@ -68,6 +70,7 @@ static unordered_map<AssetType, AssetsCategoryData> categoryData =
     {
       ASSET_TYPE_SCRIPT_FUNCTION,    
       "Script function",
+      "script_function",
       createScriptFunctionAsset,
       editScriptFunctionAsset
     }
@@ -79,6 +82,7 @@ static unordered_map<AssetType, AssetsCategoryData> categoryData =
     {
       ASSET_TYPE_MATERIAL,    
       "Material",
+      "material",
       createMaterialAsset,
       editMaterialAsset
     }
@@ -133,7 +137,7 @@ static void drawAssetsCategory(Window* window, const AssetsCategoryData& categor
 {
   static const char* renamePopupName = "Asset rename popup";
   
-  if(ImGui::TreeNode(categoryData.dataName, "%s assets", categoryData.dataName))
+  if(ImGui::TreeNode(categoryData.dataName, "%s assets", categoryData.categoryName))
   {
     pushIconButtonStyle();    
 
@@ -144,6 +148,18 @@ static void drawAssetsCategory(Window* window, const AssetsCategoryData& categor
       if(ImGui::SmallButton(createButtonName))
       {
         LOG_INFO("Create new %s", categoryData.dataName);
+
+        char newAssetName[255];
+        uint32 idx = 1;
+        do
+        {
+          sprintf(newAssetName, "%s%d", categoryData.dataName, idx++);
+        } while(assetsManagerHasAsset(newAssetName) == TRUE);
+
+        Asset* newAsset = categoryData.create();
+        assetSetName(newAsset, newAssetName);
+
+        assetsManagerAddAsset(newAsset);
       }
     ImGui::PopStyleColor();
     
@@ -167,10 +183,19 @@ static void drawAssetsCategory(Window* window, const AssetsCategoryData& categor
           popIconButtonStyle();
             ImGuiUtilsButtonsFlags button = textInputPopup(renamePopupName, "Enter new name");
           pushIconButtonStyle();
-          
+
+
           if(button == ImGuiUtilsButtonsFlags_Accept)
           {
-            assetSetName(asset, textInputPopupGetBuffer());
+            const char* newAssetName = textInputPopupGetBuffer();            
+            if(assetsManagerHasAsset(newAssetName) == FALSE)
+            {
+              assetSetName(asset, newAssetName);
+            }
+            else
+            {
+              LOG_ERROR("Asset with name '%s' already exists!", newAssetName);
+            }
           }
         }
           

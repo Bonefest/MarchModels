@@ -12,6 +12,7 @@ ENGINE_API bool8 assetsManagerRemoveAsset(Asset* asset);
 ENGINE_API bool8 assetsManagerRemoveAsset(const std::string& name);
 
 ENGINE_API AssetPtr assetsManagerFindAsset(const std::string& name);
+ENGINE_API bool8 assetsManagerHasAsset(AssetPtr asset);
 ENGINE_API bool8 assetsManagerHasAsset(const std::string& name);
 
 ENGINE_API bool8 assetsManagerLoadFromFile(const std::string& fileName);

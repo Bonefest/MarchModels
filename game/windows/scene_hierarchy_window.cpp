@@ -43,13 +43,12 @@ static void sceneHierarchyUpdate(Window* window, float64 delta)
 
 }
 
-static Asset* createNewScriptFunction(const std::string& name)
+static AssetPtr createNewScriptFunction(const std::string& name)
 {
-  Asset* sfPrototype = assetsManagerFindAsset(name);
+  AssetPtr sfPrototype = assetsManagerFindAsset(name);
   assert(sfPrototype != nullptr);
-  
-  Asset* sf = scriptFunctionClone(sfPrototype);
-  return sf;
+
+  return scriptFunctionClone(sfPrototype);
 }
 
 static void onScriptFunctionIsSelected(Window* window, void* selection, uint32 index, void* target)
@@ -59,17 +58,17 @@ static void onScriptFunctionIsSelected(Window* window, void* selection, uint32 i
   scriptFunctionCopy(targetAsset, selectedAsset);
 }
 
-static Asset* createNewSDF()
+static AssetPtr createNewSDF()
 {
   return createNewScriptFunction("sphereSDF");
 }
 
-static Asset* createNewIDF()
+static AssetPtr createNewIDF()
 {
   return createNewScriptFunction("emptyIDF");
 }
 
-static Asset* createNewODF()
+static AssetPtr createNewODF()
 {
   return createNewScriptFunction("emptyODF");  
 }
@@ -171,41 +170,27 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
       
       // Script functions -----------------------------------------------------
 
-      std::vector<Asset*> functions = geometryGetScriptFunctions(geometry);
+      std::vector<AssetPtr> functions = geometryGetScriptFunctions(geometry);
 
-      for(Asset* function: functions)
+      for(AssetPtr function: functions)
       {
         ScriptFunctionType type = scriptFunctionGetType(function);
-        const char* functionTypeLabel;
 
-        if(type == SCRIPT_FUNCTION_TYPE_SDF)
+        if(type == SCRIPT_FUNCTION_TYPE_SDF && !data->listGeometrySDF)
         {
-          if(!data->listGeometrySDF)
-          {
             continue;
-          }
-
-          functionTypeLabel = "SDF";
         }
-        else if(type == SCRIPT_FUNCTION_TYPE_IDF)
+        else if(type == SCRIPT_FUNCTION_TYPE_IDF && !data->listGeometryIDF)
         {
-          if(!data->listGeometryIDF)
-          {
-            continue;
-          }
-
-          functionTypeLabel = "IDF";
+          continue;
         }
-        else if(type == SCRIPT_FUNCTION_TYPE_ODF)
+        else if(type == SCRIPT_FUNCTION_TYPE_ODF && !data->listGeometryODF)
         {
-          if(!data->listGeometryODF)
-          {
-            continue;
-          }
-
-          functionTypeLabel = "ODF";
+          continue;
         }
 
+        const char* functionTypeLabel = scriptFunctionTypeLabel(type);
+        
         ImGui::PushID(function);
           
           ImGui::TextColored("_<C>0x4bcc4bff</C>_[%s] _<C>0x1</C>_'%s'",
@@ -235,7 +220,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
             assetsToDisplay.erase(removeIt, assetsToDisplay.end());
 
             std::vector<ListItem> items = {};
-            for(Asset* asset: assetsToDisplay)
+            for(AssetPtr asset: assetsToDisplay)
             {
               items.push_back(ListItem{assetGetName(asset), asset});
             }
@@ -279,7 +264,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
                 windowClose(scriptFunctionSettingsWindow);
               }
               
-              geometryRemoveFunction(geometry, function);            
+              geometryRemoveFunction(geometry, function);
               destroyAsset(function);
             }
           ImGui::PopStyleColor();
