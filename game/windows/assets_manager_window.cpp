@@ -1,3 +1,5 @@
+#include <unordered_map>
+
 #include <imgui/imgui.h>
 
 #include <utils.h>
@@ -17,10 +19,19 @@
 
 using std::vector;
 using std::string;
+using std::unordered_map;
 
 struct AssetsListWindowData
 {
   char pass;
+};
+
+struct AssetsCategoryData
+{
+  AssetType categoryAssetType;
+  const char* dataName;
+  Asset*(*create)();
+  void(*edit)();
 };
 
 static bool8 assetsManagerWindowInitialize(Window* window);
@@ -28,6 +39,51 @@ static void assetsManagerWindowShutdown(Window* window);
 static void assetsManagerWindowUpdate(Window* window, float64 delta);
 static void assetsManagerWindowDraw(Window* window, float64 delta);
 static void assetsManagerWindowProcessInput(Window* window, const EventData& eventData, void* sender);
+
+static Asset* createGeometryAsset() { /** TODO */ }
+static void editGeometryAsset() { /** TODO */ }
+
+static Asset* createScriptFunctionAsset();
+static void editScriptFunctionAsset();
+
+static Asset* createMaterialAsset() { /** TODO */ }
+static void editMaterialAsset() { /** TODO */ }
+
+static unordered_map<AssetType, AssetsCategoryData> categoryData =
+{
+  // Geometry category data
+  {
+    ASSET_TYPE_GEOMETRY,
+    {
+      ASSET_TYPE_GEOMETRY,      
+      "Geometry",
+      createGeometryAsset,
+      editGeometryAsset,
+    }
+  },
+  
+  // Script function category data
+  {
+    ASSET_TYPE_SCRIPT_FUNCTION,
+    {
+      ASSET_TYPE_SCRIPT_FUNCTION,    
+      "Script function",
+      createScriptFunctionAsset,
+      editScriptFunctionAsset
+    }
+  },
+
+  // Material category data
+  {
+    ASSET_TYPE_MATERIAL,
+    {
+      ASSET_TYPE_MATERIAL,    
+      "Material",
+      createMaterialAsset,
+      editMaterialAsset
+    }
+  }
+};
 
 bool8 createAssetsManagerWindow(Window** outWindow)
 {
@@ -73,20 +129,32 @@ void assetsManagerWindowUpdate(Window* window, float64 delta)
 
 }
 
-static void drawAssetsCategory(Window* window, const char* categoryName, vector<AssetPtr> assets)
+static void drawAssetsCategory(Window* window, const AssetsCategoryData& categoryData, vector<AssetPtr> assets)
 {
   static const char* renamePopupName = "Asset rename popup";
   
-  if(ImGui::TreeNode(categoryName))
+  if(ImGui::TreeNode(categoryData.dataName, "%s assets", categoryData.dataName))
   {
+    pushIconButtonStyle();    
+
+    char createButtonName[128];
+    sprintf(createButtonName, "[Create new %s asset]", categoryData.dataName);
+
+    ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
+      if(ImGui::SmallButton(createButtonName))
+      {
+        LOG_INFO("Create new %s", categoryData.dataName);
+      }
+    ImGui::PopStyleColor();
+    
     uint32 idx = 1;
     for(AssetPtr asset: assets)
     {
-      ImGui::Text("%3d. %s", idx, assetGetName(asset).c_str());
+      ImGui::Text("%3d. %-32s", idx, assetGetName(asset).c_str());
       ImGui::SameLine();
 
       ImGui::PushID(asset.ptr);
-      pushIconButtonStyle();
+
         if(ImGui::Button(ICON_KI_PENCIL"##AssetRename"))
         {
           strcpy(textInputPopupGetBuffer(), assetGetName(asset).c_str());
@@ -96,8 +164,10 @@ static void drawAssetsCategory(Window* window, const char* categoryName, vector<
 
         if(ImGui::IsPopupOpen(renamePopupName))
         {
-          ImGuiUtilsButtonsFlags button = textInputPopup(renamePopupName, "Enter new name");
-
+          popIconButtonStyle();
+            ImGuiUtilsButtonsFlags button = textInputPopup(renamePopupName, "Enter new name");
+          pushIconButtonStyle();
+          
           if(button == ImGuiUtilsButtonsFlags_Accept)
           {
             assetSetName(asset, textInputPopupGetBuffer());
@@ -113,11 +183,12 @@ static void drawAssetsCategory(Window* window, const char* categoryName, vector<
             assetsManagerRemoveAsset(asset.ptr);
           }
         ImGui::PopStyleColor();
-      popIconButtonStyle();
+
       ImGui::PopID();
       idx++;
     }
     
+    popIconButtonStyle();   
     ImGui::TreePop();
   }
 }
@@ -173,12 +244,25 @@ void assetsManagerWindowDraw(Window* window, float64 delta)
     ImGui::OpenPopup("Filter popup##AssetsManager");
   }
   
-  drawAssetsCategory(window, "Geometry assets", geometryAssets);
-  drawAssetsCategory(window, "Script functions assets", scriptFunctionAssets);
-  drawAssetsCategory(window, "Material assets", materialAssets);
+  drawAssetsCategory(window, categoryData[ASSET_TYPE_GEOMETRY], geometryAssets);
+  drawAssetsCategory(window, categoryData[ASSET_TYPE_SCRIPT_FUNCTION], scriptFunctionAssets);
+  drawAssetsCategory(window, categoryData[ASSET_TYPE_MATERIAL], materialAssets);
 }
 
 void assetsManagerWindowProcessInput(Window* window, const EventData& eventData, void* sender)
 {
   
+}
+
+Asset* createScriptFunctionAsset()
+{
+  Asset* newSF = nullptr;
+  assert(createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF, "", &newSF));
+
+  return newSF;
+}
+
+void editScriptFunctionAsset()
+{
+
 }
