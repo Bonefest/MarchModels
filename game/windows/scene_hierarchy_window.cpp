@@ -227,12 +227,12 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
               windowManagerRemoveWindow(assetsListWindow, TRUE);
             }
 
-            std::vector<Asset*> assetsToDisplay = assetsManagerGetAssetsByType(ASSET_TYPE_SCRIPT_FUNCTION);
+            std::vector<AssetPtr> assetsToDisplay = assetsManagerGetAssetsByType(ASSET_TYPE_SCRIPT_FUNCTION);
 
             // NOTE: Remove all script functions that don't have similar type
             auto removeIt = std::remove_if(assetsToDisplay.begin(),
                                            assetsToDisplay.end(),
-                                           [function](Asset* asset) {
+                                           [function](AssetPtr asset) {
                                              return scriptFunctionGetType(asset) != scriptFunctionGetType(function);
                                            });
             

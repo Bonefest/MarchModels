@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "ptr.h"
 #include "defines.h"
 
 using AssetType = uint32;
@@ -38,3 +39,5 @@ ENGINE_API AssetType assetGetType(Asset* asset);
 
 void assetSetInternalData(Asset* asset, void* data);
 void* assetGetInternalData(Asset* asset);
+
+using AssetPtr = SharedPtr<Asset, &destroyAsset>;

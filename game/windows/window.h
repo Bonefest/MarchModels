@@ -4,6 +4,7 @@
 
 #include <imgui/imgui.h>
 
+#include <ptr.h>
 #include <defines.h>
 #include <event_system.h>
 #include <maths/common.h>
@@ -68,3 +69,5 @@ const std::string& windowGetIdentifier(Window* window);
 
 void windowSetInternalData(Window* window, void* internalData);
 void* windowGetInternalData(Window* window);
+
+using WindowPtr = SharedPtr<Window, &freeWindow>;

@@ -73,12 +73,12 @@ void assetsManagerWindowUpdate(Window* window, float64 delta)
 
 }
 
-static void drawAssetsCategory(Window* window, const char* categoryName, vector<Asset*> assets)
+static void drawAssetsCategory(Window* window, const char* categoryName, vector<AssetPtr> assets)
 {
   if(ImGui::TreeNode(categoryName))
   {
     uint32 idx = 1;
-    for(Asset* asset: assets)
+    for(AssetPtr asset: assets)
     {
       ImGui::Text("%3d. %s", idx, assetGetName(asset).c_str());
       ImGui::SameLine();
@@ -104,12 +104,12 @@ static void drawAssetsCategory(Window* window, const char* categoryName, vector<
 void assetsManagerWindowDraw(Window* window, float64 delta)
 {
   // TODO: Recalculate arrays only when assets list has changed
-  vector<Asset*> assetsToList = assetsManagerGetAssets();  
-  vector<Asset*> geometryAssets;
-  vector<Asset*> scriptFunctionAssets;
-  vector<Asset*> materialAssets;
+  vector<AssetPtr> assetsToList = assetsManagerGetAssets();  
+  vector<AssetPtr> geometryAssets;
+  vector<AssetPtr> scriptFunctionAssets;
+  vector<AssetPtr> materialAssets;
   
-  for(Asset* asset: assetsToList)
+  for(AssetPtr asset: assetsToList)
   {
     AssetType type = assetGetType(asset);
     if(type == ASSET_TYPE_GEOMETRY)

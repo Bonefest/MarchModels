@@ -8,15 +8,16 @@ template <typename T, void(*destroyFunc)(T*) = nullptr>
 class SharedPtr
 {
 public:
-  T* ptr;
+  T* ptr = nullptr;
   
 public:
-  SharedPtr()
+  SharedPtr(T* rawPtr = nullptr)
   {
+    ptr = rawPtr;
     m_refCounter = engineAllocObject<uint32>(MEMORY_TYPE_GENERAL);
-    retain();
+    retain();    
   }
-
+  
   SharedPtr(const SharedPtr& sharedPtr)
   {
     m_refCounter = sharedPtr.m_refCounter;
@@ -32,7 +33,7 @@ public:
 
   SharedPtr& operator=(const SharedPtr& sharedPtr)
   {
-    if(this == &ptr)
+    if(this == &sharedPtr)
     {
       return *this;
     }
@@ -44,7 +45,22 @@ public:
     
     return *this;
   }
-
+  
+  T* operator->()
+  {
+    return ptr;
+  }
+  
+  T& operator*()
+  {
+    return *ptr;
+  }
+  
+  T* operator&()
+  {
+    return ptr;
+  }
+  
   void retain()
   {
     if(m_refCounter != nullptr)
@@ -84,6 +100,13 @@ public:
     }
   }
 
+  uint32 getRefCount()
+  {
+    return m_refCounter == nullptr ? 0 : *m_refCounter;
+  }
+
+  operator T*() const { return ptr; }
+  
 private:
   uint32* m_refCounter = nullptr;
   

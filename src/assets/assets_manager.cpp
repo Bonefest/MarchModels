@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <unordered_map>
 
-
 using std::string;
 using std::vector;
 using std::unordered_map;
@@ -12,7 +11,7 @@ using std::unordered_map;
 
 struct AssetsManager
 {
-  vector<Asset*> assets;
+  vector<AssetPtr> assets;
 };
 
 static AssetsManager manager;
@@ -30,11 +29,11 @@ void shutdownAssetsManager()
   }
 }
 
-bool8 assetsManagerAddAsset(Asset* asset)
+bool8 assetsManagerAddAsset(AssetPtr asset)
 {
   auto assetIt = std::find_if(manager.assets.begin(),
                               manager.assets.end(),
-                              [asset](Asset* arrAsset){ return assetGetName(asset) == assetGetName(arrAsset); });
+                              [asset](AssetPtr arrAsset){ return assetGetName(asset) == assetGetName(arrAsset); });
   
   if(assetIt != manager.assets.end())
   {
@@ -45,7 +44,7 @@ bool8 assetsManagerAddAsset(Asset* asset)
   return TRUE;
 }
 
-bool8 assetsManagerRemoveAsset(Asset* asset)
+bool8 assetsManagerRemoveAsset(AssetPtr asset)
 {
   auto assetIt = std::find(manager.assets.begin(), manager.assets.end(), asset);
   if(assetIt != manager.assets.end())
@@ -72,11 +71,11 @@ bool8 assetsManagerRemoveAsset(const std::string& name)
   return FALSE;
 }
 
-Asset* assetsManagerFindAsset(const std::string& name)
+AssetPtr assetsManagerFindAsset(const std::string& name)
 {
   auto assetIt = std::find_if(manager.assets.begin(),
                               manager.assets.end(),
-                              [&name](Asset* asset){ return assetGetName(asset) == name; });
+                              [&name](AssetPtr asset){ return assetGetName(asset) == name; });
 
   if(assetIt != manager.assets.end())
   {
@@ -91,14 +90,14 @@ bool8 assetsManagerHasAsset(const std::string& name)
   return assetsManagerFindAsset(name) != nullptr;
 }
 
-const std::vector<Asset*>& assetsManagerGetAssets()
+const std::vector<AssetPtr>& assetsManagerGetAssets()
 {
   return manager.assets;
 }
 
-std::vector<Asset*> assetsManagerGetAssetsByType(AssetType type)
+std::vector<AssetPtr> assetsManagerGetAssetsByType(AssetType type)
 {
-  std::vector<Asset*> result;
+  std::vector<AssetPtr> result;
   for(auto it = manager.assets.begin(); it != manager.assets.end(); it++)
   {
     if(assetGetType(*it) == type)

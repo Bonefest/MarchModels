@@ -29,11 +29,6 @@ bool8 initWindowManager()
 void shutdownWindowManager()
 {
   assert(data.initialized == TRUE);
-  
-  for(auto pair: data.windowsMap)
-  {
-    freeWindow(pair.second);
-  }
 
   data.windowsMap.clear();
 }
@@ -67,11 +62,6 @@ bool8 windowManagerRemoveWindow(const std::string& identifier, bool8 free)
   if(windowIt == data.windowsMap.end())
   {
     return FALSE;
-  }
-
-  if(free == TRUE)
-  {
-    freeWindow(windowIt->second);
   }
 
   data.windowsMap.erase(windowIt);
