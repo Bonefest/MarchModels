@@ -302,7 +302,7 @@ void editScriptFunctionAsset(AssetPtr asset)
   else
   {
     Window* settingsWindow = nullptr;
-    createScriptFunctionSettingsWindow(asset, &settingsWindow);
+    createScriptFunctionSettingsWindow(nullptr, asset, &settingsWindow);
 
     windowManagerAddWindow(WindowPtr(settingsWindow));
   }

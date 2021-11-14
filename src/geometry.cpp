@@ -210,7 +210,24 @@ quat geometryGetOrientation(Geometry* geometry)
   return geometry->orientation;
 }
 
-bool8 geometryRemoveFunction(Geometry* geometry, AssetPtr function)
+void geometryAddFunction(Geometry* geometry, AssetPtr function)
+{
+  ScriptFunctionType type = scriptFunctionGetType(function);
+  if(type == SCRIPT_FUNCTION_TYPE_SDF)
+  {
+    geometrySetSDF(geometry, function);
+  }
+  else if(type == SCRIPT_FUNCTION_TYPE_IDF)
+  {
+    geometryAddIDF(geometry, function);
+  }
+  else if(type == SCRIPT_FUNCTION_TYPE_ODF)
+  {
+    geometryAddODF(geometry, function);
+  }
+}
+
+bool8 geometryRemoveFunction(Geometry* geometry, Asset* function)
 {
   ScriptFunctionType type = scriptFunctionGetType(function);
   if(type == SCRIPT_FUNCTION_TYPE_SDF)

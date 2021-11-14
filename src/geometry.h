@@ -32,7 +32,8 @@ ENGINE_API float3 geometryGetPosition(Geometry* geometry);
 ENGINE_API void geometrySetOrientation(Geometry* geometry, quat orientation);
 ENGINE_API quat geometryGetOrientation(Geometry* geometry);
 
-ENGINE_API bool8 geometryRemoveFunction(Geometry* geometry, AssetPtr function);
+ENGINE_API void geometryAddFunction(Geometry* geometry, AssetPtr function);
+ENGINE_API bool8 geometryRemoveFunction(Geometry* geometry, Asset* function);
 
 ENGINE_API void geometryAddIDF(Geometry* geometry, AssetPtr idf);
 ENGINE_API std::vector<AssetPtr>& geometryGetIDFs(Geometry* geometry);
@@ -87,3 +88,5 @@ ENGINE_API CombinationFunction geometryGetCombinationFunction(Geometry* geometry
 ENGINE_API void geometrySetSDF(Geometry* geometry, AssetPtr sdf);
 ENGINE_API AssetPtr geometryGetSDF(Geometry* geometry);
 ENGINE_API bool8 geometryHasSDF(Geometry* geometry);
+
+using GeometryPtr = SharedPtr<Geometry, &destroyGeometry>;

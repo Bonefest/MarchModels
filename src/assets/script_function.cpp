@@ -52,34 +52,20 @@ bool8 createScriptFunction(ScriptFunctionType type, const string& name, Asset** 
   return TRUE;
 }
 
-Asset* scriptFunctionClone(Asset* assetCloneFrom, bool8 cloneInternalData)
+Asset* scriptFunctionClone(Asset* assetCloneFrom)
 {
   Asset* copy;
   assert(createScriptFunction((ScriptFunctionType)0, "", &copy));
-  scriptFunctionCopy(copy, assetCloneFrom, cloneInternalData);
+  scriptFunctionCopy(copy, assetCloneFrom);
 
   return copy;
 }
 
-void scriptFunctionCopy(Asset* dst, Asset* src, bool8 isFullCopy, bool8 freePrevData)
+void scriptFunctionCopy(Asset* dst, Asset* src)
 {
-  if(isFullCopy == FALSE)
-  {
-    assetSetInternalData(dst, assetGetInternalData(src));
-  }
-  else
-  {
-    if(freePrevData == TRUE)
-    {
-      scriptFunctionDestroy(dst);
-    }
-    
-    ScriptFunction* srcData = (ScriptFunction*)assetGetInternalData(src);      
-    ScriptFunction* dstData = engineAllocObject<ScriptFunction>(MEMORY_TYPE_GENERAL);
-    *dstData = *srcData;
-
-    assetSetInternalData(dst, dstData);
-  }
+  ScriptFunction* srcData = (ScriptFunction*)assetGetInternalData(src);
+  ScriptFunction* dstData = (ScriptFunction*)assetGetInternalData(dst);        
+  *dstData = *srcData;
 
   assetSetName(dst, assetGetName(src));  
 }

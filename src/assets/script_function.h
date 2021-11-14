@@ -39,8 +39,8 @@ ENGINE_API bool8 createScriptFunction(ScriptFunctionType type,
                                       const std::string& name,
                                       Asset** outAsset);
 
-ENGINE_API void scriptFunctionCopy(Asset* dst, Asset* src, bool8 isFullCopy = FALSE, bool8 freePrevData = FALSE);
-ENGINE_API Asset* scriptFunctionClone(Asset* assetCloneFrom, bool8 cloneInternalData = FALSE);
+ENGINE_API void scriptFunctionCopy(Asset* dst, Asset* src);
+ENGINE_API Asset* scriptFunctionClone(Asset* assetCloneFrom);
 
 ENGINE_API void scriptFunctionSetArgValue(Asset* asset, const std::string& argName, float32 value);
 ENGINE_API float32 scriptFunctionGetArgValue(Asset* asset, const std::string& argName);

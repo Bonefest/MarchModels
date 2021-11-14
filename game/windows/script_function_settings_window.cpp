@@ -17,6 +17,7 @@ struct ScriptFunctionSettingsWindowData
   char saveName[255];
   char newArgName[255];
   char codeBuf[4096];
+  Geometry* owner;
   AssetPtr function;
 };
 
@@ -30,7 +31,7 @@ static void scriptFunctionSettingsWindowProcessInput(Window* window, const Event
 
 static void saveFunction(ScriptFunctionSettingsWindowData* windowData);
 
-bool8 createScriptFunctionSettingsWindow(AssetPtr function, Window** outWindow)
+bool8 createScriptFunctionSettingsWindow(Geometry* owner, AssetPtr function, Window** outWindow)
 {
   WindowInterface interface = {};
   interface.initialize = scriptFunctionSettingsWindowInitialize;
@@ -45,6 +46,7 @@ bool8 createScriptFunctionSettingsWindow(AssetPtr function, Window** outWindow)
   }
 
   ScriptFunctionSettingsWindowData* data = engineAllocObject<ScriptFunctionSettingsWindowData>(MEMORY_TYPE_GENERAL);
+  data->owner = owner;
   data->function = function;
   strcpy(data->saveName, assetGetName(function).c_str());
   windowSetInternalData(*outWindow, data);
@@ -81,7 +83,7 @@ void scriptFunctionSettingsWindowUpdate(Window* window, float64 delta)
 void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
 {
   ScriptFunctionSettingsWindowData* data = (ScriptFunctionSettingsWindowData*)windowGetInternalData(window);
-  ScriptFunctionArgs& args = scriptFunctionGetArgs(data->function);
+
   ScriptFunctionType sfType = scriptFunctionGetType(data->function);
   
   ImGuiStyle& style = ImGui::GetStyle();
@@ -92,7 +94,7 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
   // TODO: replace GetInternalData by open API function
   bool8 isPrototype = assetFromManager != nullptr &&
     (assetGetInternalData(assetFromManager) == assetGetInternalData(data->function));
-  
+
   // Meta information
   ImGui::Text("%s", isPrototype == TRUE ? "Prototype" : "Instance");
   ImGui::SameLine();
@@ -117,17 +119,22 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
         // NOTE: We can unfork back only in prototype exists
         if(ImGui::SmallButton("[Unfork]") && prototypeExists == TRUE)
         {
-          // NOTE: Make a coarse copy (copy internal pointer only), free previous data
-          scriptFunctionCopy(data->function, assetFromManager, FALSE, TRUE);
+          // NOTE: Replace script function by a function from the assets manager
+          geometryRemoveFunction(data->owner, data->function);
+          data->function = assetFromManager;
+          geometryAddFunction(data->owner, data->function);
         }
+
+        // if(ImGui::SmallButton("[Sync]") ...
       ImGui::EndDisabled();
     }
     else
     {
       if(ImGui::SmallButton("[Fork]"))
       {
-        // NOTE: Make a full copy, so that memory for internal data is allocated too
-        scriptFunctionCopy(data->function, assetFromManager, TRUE);
+        geometryRemoveFunction(data->owner, data->function);
+        data->function = AssetPtr(scriptFunctionClone(assetFromManager));
+        geometryAddFunction(data->owner, data->function);
       }
     }
 
@@ -217,6 +224,8 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
   }
   
   // Args table
+  ScriptFunctionArgs& args = scriptFunctionGetArgs(data->function);
+  
   if(ImGui::BeginTable("ScriptFunctionArgsTable", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp))
   {
     ImGui::TableSetupColumn("##Commands", 0, 0.05f);
@@ -316,7 +325,7 @@ void saveFunction(ScriptFunctionSettingsWindowData* windowData)
   }
   else
   {
-    prototypeAsset = AssetPtr(scriptFunctionClone(assetToSave, TRUE));
+    prototypeAsset = AssetPtr(scriptFunctionClone(assetToSave));
     assetSetName(prototypeAsset, windowData->saveName);
     assetsManagerAddAsset(prototypeAsset);
   }

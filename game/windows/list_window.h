@@ -2,12 +2,14 @@
 
 #include <string>
 #include <vector>
+#include <functional>
 
 #include <assets/asset.h>
 
 #include "window.h"
 
-typedef void(*fpOnListItemSelected)(Window* window, void* itemData, uint32 itemIdx, void* userData);
+using fpOnListItemSelected =  std::function<void(Window* window, void* itemData, uint32 itemIdx, void* userData)>;
+// typedef void(*fpOnListItemSelected)(Window* window, void* itemData, uint32 itemIdx, void* userData);
 
 struct ListItem
 {

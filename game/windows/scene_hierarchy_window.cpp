@@ -47,15 +47,8 @@ static AssetPtr createNewScriptFunction(const std::string& name)
 {
   AssetPtr sfPrototype = assetsManagerFindAsset(name);
   assert(sfPrototype != nullptr);
-
-  return AssetPtr(scriptFunctionClone(sfPrototype));
-}
-
-static void onScriptFunctionIsSelected(Window* window, void* selection, uint32 index, void* target)
-{
-  Asset* selectedAsset = (Asset*)selection;
-  Asset* targetAsset = (Asset*)target;
-  scriptFunctionCopy(targetAsset, selectedAsset);
+  
+  return sfPrototype;
 }
 
 static AssetPtr createNewSDF()
@@ -225,6 +218,16 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
               items.push_back(ListItem{assetGetName(asset), asset});
             }
 
+
+            auto onScriptFunctionIsSelected = [geometry](Window* window, void* selection, uint32 index, void* target)
+            {
+              AssetPtr assetFromManager = assetsManagerFindAsset(assetGetName((Asset*)selection));
+              if(assetFromManager != nullptr)
+              {
+                geometryRemoveFunction(geometry, (Asset*)target);
+                geometryAddFunction(geometry, assetFromManager);
+              }
+            };
             
             Window* assetsListWindow;
             assert(createListWindow("Script functions list",
@@ -248,7 +251,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
               Window* scriptFunctionSettingsWindow = nullptr;
               if(windowManagerHasWindow(scriptFunctionWindowIdentifier(function)) == FALSE)
               {
-                assert(createScriptFunctionSettingsWindow(function, &scriptFunctionSettingsWindow));
+                assert(createScriptFunctionSettingsWindow(geometry, function, &scriptFunctionSettingsWindow));
                 windowSetSize(scriptFunctionSettingsWindow, float2(640.0f, 360.0f));
                 windowManagerAddWindow(WindowPtr(scriptFunctionSettingsWindow));
               }
