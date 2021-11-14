@@ -78,7 +78,7 @@ WindowPtr windowManagerGetWindow(const std::string& identifier)
   auto windowIt = data.windowsMap.find(identifier);
   if(windowIt == data.windowsMap.end())
   {
-    return nullptr;
+    return WindowPtr(nullptr);
   }
 
   return windowIt->second;

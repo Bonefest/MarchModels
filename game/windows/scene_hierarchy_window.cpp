@@ -48,7 +48,7 @@ static AssetPtr createNewScriptFunction(const std::string& name)
   AssetPtr sfPrototype = assetsManagerFindAsset(name);
   assert(sfPrototype != nullptr);
 
-  return scriptFunctionClone(sfPrototype);
+  return AssetPtr(scriptFunctionClone(sfPrototype));
 }
 
 static void onScriptFunctionIsSelected(Window* window, void* selection, uint32 index, void* target)
@@ -225,20 +225,21 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
               items.push_back(ListItem{assetGetName(asset), asset});
             }
 
-            WindowPtr assetsListWindow;
+            
+            Window* assetsListWindow;
             assert(createListWindow("Script functions list",
                                     "Select a function",
                                     items,
                                     onScriptFunctionIsSelected,
                                     function,
-                                    &assetsListWindow.ptr));
+                                    &assetsListWindow));
             
             listWindowSetCloseOnLoseFocus(assetsListWindow, TRUE);
             windowSetSize(assetsListWindow, float2(180.0, 100.0));
             windowSetPosition(assetsListWindow, itemTopPos + float2(10, 10));
             windowSetFocused(assetsListWindow, TRUE);
             
-            windowManagerAddWindow(assetsListWindow);
+            windowManagerAddWindow(WindowPtr(assetsListWindow));
           }
 
           ImGui::SameLine();        
@@ -249,7 +250,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
               {
                 assert(createScriptFunctionSettingsWindow(function, &scriptFunctionSettingsWindow));
                 windowSetSize(scriptFunctionSettingsWindow, float2(640.0f, 360.0f));
-                windowManagerAddWindow(scriptFunctionSettingsWindow);
+                windowManagerAddWindow(WindowPtr(scriptFunctionSettingsWindow));
               }
           }
 

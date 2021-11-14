@@ -70,9 +70,9 @@ static void declareDefaultScriptFunctions()
                        &emptyODFPrototype);
   scriptFunctionSetCode(emptyODFPrototype, "return args[\"distance\"]");
 
-  assetsManagerAddAsset(sphereSDFPrototype);
-  assetsManagerAddAsset(emptyIDFPrototype);
-  assetsManagerAddAsset(emptyODFPrototype);  
+  assetsManagerAddAsset(AssetPtr(sphereSDFPrototype));
+  assetsManagerAddAsset(AssetPtr(emptyIDFPrototype));
+  assetsManagerAddAsset(AssetPtr(emptyODFPrototype));
 }
 
 bool8 initEditor(Application* app)
@@ -81,8 +81,10 @@ bool8 initEditor(Application* app)
 
   assert(createScene(&editorData.currentScene));
   assert(initWindowManager());
-  
-  assert(createConsoleWindow(consoleWindowName, &editorData.consoleWindow.ptr));
+
+  Window* consoleWindow = nullptr;
+  assert(createConsoleWindow(consoleWindowName, &consoleWindow));
+  editorData.consoleWindow = WindowPtr(consoleWindow);
   windowManagerAddWindow(editorData.consoleWindow);
 
   Sampler* centerSampler = nullptr;
@@ -94,11 +96,15 @@ bool8 initEditor(Application* app)
   Camera* camera = nullptr;
   assert(createPerspectiveCamera(1.0f, toRad(45.0f), 0.01f, 100.0f, &camera));
   cameraLookAt(camera, float3(0.0f, 0.0f, -10.0f), float3(), float3(0.0f, 1.0f, 0.0f));
-  
-  assert(createViewWindow(viewWindowName, centerSampler, debugRayIntegrator, camera, &editorData.viewWindow.ptr));
+
+  Window* viewWindow = nullptr;
+  assert(createViewWindow(viewWindowName, centerSampler, debugRayIntegrator, camera, &viewWindow));
+  editorData.viewWindow = WindowPtr(viewWindow);
   windowManagerAddWindow(editorData.viewWindow);
 
-  assert(createSceneHierarchyWindow(sceneHierarchyWindowName, &editorData.sceneHierarchyWindow.ptr));
+  Window* sceneHierarchyWindow = nullptr;
+  assert(createSceneHierarchyWindow(sceneHierarchyWindowName, &sceneHierarchyWindow));
+  editorData.sceneHierarchyWindow = WindowPtr(sceneHierarchyWindow);
   windowManagerAddWindow(editorData.sceneHierarchyWindow);
   
   return TRUE;
@@ -203,7 +209,7 @@ void drawMenu(float2& outMenuSize)
       {
         Window* assetsManagerWindow = nullptr;
         assert(createAssetsManagerWindow(&assetsManagerWindow));
-        windowManagerAddWindow(assetsManagerWindow);
+        windowManagerAddWindow(WindowPtr(assetsManagerWindow));
       }
       
       ImGui::EndMenu();

@@ -316,7 +316,7 @@ void saveFunction(ScriptFunctionSettingsWindowData* windowData)
   }
   else
   {
-    prototypeAsset = scriptFunctionClone(assetToSave, TRUE);
+    prototypeAsset = AssetPtr(scriptFunctionClone(assetToSave, TRUE));
     assetSetName(prototypeAsset, windowData->saveName);
     assetsManagerAddAsset(prototypeAsset);
   }

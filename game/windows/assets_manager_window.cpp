@@ -32,7 +32,7 @@ struct AssetsCategoryData
   const char* categoryName;
   const char* dataName;
   Asset*(*create)();
-  void(*edit)();
+  void(*edit)(AssetPtr asset);
 };
 
 static bool8 assetsManagerWindowInitialize(Window* window);
@@ -42,13 +42,13 @@ static void assetsManagerWindowDraw(Window* window, float64 delta);
 static void assetsManagerWindowProcessInput(Window* window, const EventData& eventData, void* sender);
 
 static Asset* createGeometryAsset() { /** TODO */ }
-static void editGeometryAsset() { /** TODO */ }
+static void editGeometryAsset(AssetPtr asset) { /** TODO */ }
 
 static Asset* createScriptFunctionAsset();
-static void editScriptFunctionAsset();
+static void editScriptFunctionAsset(AssetPtr asset);
 
 static Asset* createMaterialAsset() { /** TODO */ }
-static void editMaterialAsset() { /** TODO */ }
+static void editMaterialAsset(AssetPtr asset) { /** TODO */ }
 
 static unordered_map<AssetType, AssetsCategoryData> categoryData =
 {
@@ -159,7 +159,7 @@ static void drawAssetsCategory(Window* window, const AssetsCategoryData& categor
         Asset* newAsset = categoryData.create();
         assetSetName(newAsset, newAssetName);
 
-        assetsManagerAddAsset(newAsset);
+        assetsManagerAddAsset(AssetPtr(newAsset));
       }
     ImGui::PopStyleColor();
     
@@ -169,7 +169,7 @@ static void drawAssetsCategory(Window* window, const AssetsCategoryData& categor
       ImGui::Text("%3d. %-32s", idx, assetGetName(asset).c_str());
       ImGui::SameLine();
 
-      ImGui::PushID(asset.ptr);
+      ImGui::PushID(asset.raw());
 
         if(ImGui::Button(ICON_KI_PENCIL"##AssetRename"))
         {
@@ -205,7 +205,7 @@ static void drawAssetsCategory(Window* window, const AssetsCategoryData& categor
         ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
           if(ImGui::Button(ICON_KI_TRASH"##AssetDelete"))
           {
-            assetsManagerRemoveAsset(asset.ptr);
+            assetsManagerRemoveAsset(asset.raw());
           }
         ImGui::PopStyleColor();
 
@@ -287,7 +287,7 @@ Asset* createScriptFunctionAsset()
   return newSF;
 }
 
-void editScriptFunctionAsset()
+void editScriptFunctionAsset(AssetPtr asset)
 {
 
 }

@@ -14,7 +14,7 @@ struct ViewSettingsWindowData;
 struct ViewWindowData
 {
   ImageIntegrator* integrator;
-  Window* settingsWindow;
+  WindowPtr settingsWindow;
   
   float32 maxFPS;
   Stopwatch lifetimeStopwatch;
@@ -154,7 +154,10 @@ static void drawViewWindow(Window* window, float64 delta)
 
     if(cogPressed == TRUE && data->settingsWindow == nullptr)
     {
-      assert(createViewSettingsWindow(window, &data->settingsWindow));
+      Window* settingsWindow = nullptr;
+      assert(createViewSettingsWindow(window, &settingsWindow));
+      data->settingsWindow = WindowPtr(settingsWindow);
+      
       windowManagerAddWindow(data->settingsWindow);      
     }
 
@@ -182,7 +185,7 @@ static void processInputViewWindow(Window* window,
 static void viewWindowOnSettingsWindowShutdown(Window* window, Window* settingsWindow)
 {
   ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);  
-  data->settingsWindow = nullptr;
+  data->settingsWindow = WindowPtr(nullptr);
 }
 
 static ImageIntegrator* viewWindowGetImageIntegrator(Window* window)
@@ -231,7 +234,7 @@ bool8 createViewWindow(const std::string& identifier,
   
   ViewWindowData* data = engineAllocObject<ViewWindowData>(MEMORY_TYPE_GENERAL);
   data->integrator = imageIntegrator;
-  data->settingsWindow = nullptr;  
+  data->settingsWindow = WindowPtr(nullptr);  
   
   windowSetInternalData(*outWindow, data);
   viewWindowSetMaxFPS(*outWindow, 10.0f);

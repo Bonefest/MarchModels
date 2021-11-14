@@ -52,7 +52,7 @@ bool8 createScriptFunction(ScriptFunctionType type, const string& name, Asset** 
   return TRUE;
 }
 
-AssetPtr scriptFunctionClone(Asset* assetCloneFrom, bool8 cloneInternalData)
+Asset* scriptFunctionClone(Asset* assetCloneFrom, bool8 cloneInternalData)
 {
   Asset* copy;
   assert(createScriptFunction((ScriptFunctionType)0, "", &copy));

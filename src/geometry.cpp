@@ -217,7 +217,7 @@ bool8 geometryRemoveFunction(Geometry* geometry, AssetPtr function)
   {
     if(geometry->sdf != nullptr)
     {
-      geometry->sdf = nullptr;
+      geometry->sdf = AssetPtr(nullptr);
       return TRUE;
     }
 
