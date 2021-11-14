@@ -52,6 +52,11 @@ public:
   {
     return m_ptr == data;
   }
+
+  bool operator!=(T* data)
+  {
+    return m_ptr != data;
+  }
   
   T* operator->()
   {

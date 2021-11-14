@@ -13,7 +13,9 @@
 
 #include "ui_utils.h"
 #include "ui_styles.h"
+#include "window_manager.h"
 #include "assets_manager_window.h"
+#include "script_function_settings_window.h"
 
 #include <ptr.h>
 
@@ -199,7 +201,10 @@ static void drawAssetsCategory(Window* window, const AssetsCategoryData& categor
           }
         }
           
-        ImGui::Button(ICON_KI_COG"##AssetEdit");
+        if(ImGui::Button(ICON_KI_COG"##AssetEdit"))
+        {
+          categoryData.edit(asset);
+        }
         ImGui::SameLine();
         
         ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
@@ -289,5 +294,16 @@ Asset* createScriptFunctionAsset()
 
 void editScriptFunctionAsset(AssetPtr asset)
 {
+  WindowPtr openedWindow = windowManagerGetWindow(scriptFunctionWindowIdentifier(asset));
+  if(openedWindow != nullptr)
+  {
+    windowSetFocused(openedWindow, TRUE);
+  }
+  else
+  {
+    Window* settingsWindow = nullptr;
+    createScriptFunctionSettingsWindow(asset, &settingsWindow);
 
+    windowManagerAddWindow(WindowPtr(settingsWindow));
+  }
 }

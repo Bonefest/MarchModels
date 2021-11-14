@@ -178,7 +178,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
 
         if(type == SCRIPT_FUNCTION_TYPE_SDF && !data->listGeometrySDF)
         {
-            continue;
+          continue;
         }
         else if(type == SCRIPT_FUNCTION_TYPE_IDF && !data->listGeometryIDF)
         {
@@ -266,7 +266,6 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
               }
               
               geometryRemoveFunction(geometry, function);
-              destroyAsset(function);
             }
           ImGui::PopStyleColor();
 

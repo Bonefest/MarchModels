@@ -59,7 +59,7 @@ static void declareDefaultScriptFunctions()
                        &sphereSDFPrototype);
   scriptFunctionSetArgValue(sphereSDFPrototype, "radius", 1.0f);
   scriptFunctionSetCode(sphereSDFPrototype, "return float3.length(args[\"p\"]) - args[\"radius\"]");
-  
+    
   createScriptFunction(SCRIPT_FUNCTION_TYPE_IDF,
                        "emptyIDF",
                        &emptyIDFPrototype);  
