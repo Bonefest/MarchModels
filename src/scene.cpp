@@ -8,7 +8,7 @@ using std::vector;
 
 struct Scene
 {
-  vector<Geometry*> geometryArray;
+  vector<AssetPtr> geometryArray;
   vector<LightSource*> lightSourceArray;
 };
 
@@ -24,12 +24,12 @@ void destroyScene(Scene* scene)
   engineFreeObject(scene, MEMORY_TYPE_GENERAL);
 }
 
-void sceneAddGeometry(Scene* scene, Geometry* geometry)
+void sceneAddGeometry(Scene* scene, AssetPtr geometry)
 {
   scene->geometryArray.push_back(geometry);
 }
 
-bool8 sceneRemoveGeometry(Scene* scene, Geometry* geometry)
+bool8 sceneRemoveGeometry(Scene* scene, AssetPtr geometry)
 {
   auto it = std::find(scene->geometryArray.begin(), scene->geometryArray.end(), geometry);
   if(it == scene->geometryArray.end())
@@ -42,7 +42,7 @@ bool8 sceneRemoveGeometry(Scene* scene, Geometry* geometry)
   return TRUE;
 }
 
-std::vector<Geometry*>& sceneGetGeometry(Scene* scene)
+std::vector<AssetPtr>& sceneGetGeometry(Scene* scene)
 {
   return scene->geometryArray;
 }
@@ -76,11 +76,11 @@ IntersectionDetails sceneFindIntersection(Scene* scene, Ray ray, bool8 calculate
   for(step = 0; step < MAX_STEPS; step++)
   {
     float32 minDistance = std::numeric_limits<float32>::max();
-    Geometry* closestGeometry = nullptr;
+    Asset* closestGeometry = nullptr;
     
-    for(Geometry* geometry: scene->geometryArray)
+    for(AssetPtr geometry: scene->geometryArray)
     {
-      Geometry* closestLeaf = nullptr;
+      Asset* closestLeaf = nullptr;
       float32 distance = geometryCalculateDistanceToPoint(geometry, localRay.origin, &closestLeaf);
       if(distance < minDistance)
       {

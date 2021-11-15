@@ -2,8 +2,6 @@
 
 #include "asset.h"
 
-
-
 #include <string>
 #include <vector>
 

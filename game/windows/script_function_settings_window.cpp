@@ -17,7 +17,7 @@ struct ScriptFunctionSettingsWindowData
   char saveName[255];
   char newArgName[255];
   char codeBuf[4096];
-  Geometry* owner;
+  AssetPtr owner;
   AssetPtr function;
 };
 
@@ -31,7 +31,7 @@ static void scriptFunctionSettingsWindowProcessInput(Window* window, const Event
 
 static void saveFunction(ScriptFunctionSettingsWindowData* windowData);
 
-bool8 createScriptFunctionSettingsWindow(Geometry* owner, AssetPtr function, Window** outWindow)
+bool8 createScriptFunctionSettingsWindow(AssetPtr owner, AssetPtr function, Window** outWindow)
 {
   WindowInterface interface = {};
   interface.initialize = scriptFunctionSettingsWindowInitialize;

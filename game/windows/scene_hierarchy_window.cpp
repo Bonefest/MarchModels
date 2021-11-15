@@ -24,7 +24,7 @@ struct SceneHierarchyData
 };
 
 static void sceneHierarchyProcessGeometryArray(Window* window,
-                                               std::vector<Geometry*>& array,
+                                               std::vector<AssetPtr>& array,
                                                SceneHierarchyData* data,
                                                Scene* currentScene);
 
@@ -66,23 +66,23 @@ static AssetPtr createNewODF()
   return createNewScriptFunction("emptyODF");  
 }
 
-static Geometry* createNewGeometry()
+static AssetPtr createNewGeometry()
 {
 
-  Geometry* newGeometry;
+  Asset* newGeometry;
   assert(createGeometry("sphere", &newGeometry));
   geometrySetSDF(newGeometry, createNewSDF());
 
-  return newGeometry;
+  return AssetPtr(newGeometry);
 }
 
 
 static bool8 sceneHierarchyDrawGeometryData(Window* window,
-                                           Geometry* geometry,
+                                           AssetPtr geometry,
                                            SceneHierarchyData* data,
                                            Scene* currentScene)
 {
-  const char* geometryName = geometryGetName(geometry).c_str();
+  const char* geometryName = assetGetName(geometry).c_str();
   ImGuiStyle& style = ImGui::GetStyle();  
   
   ImGui::PushID(geometry);
@@ -105,7 +105,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
 
       if(ImGuiUtilsButtonsFlags_Accept == pressedButton)
       {
-        geometrySetName(geometry, textInputPopupGetBuffer());
+        assetSetName(geometry, textInputPopupGetBuffer());
       }
     pushIconButtonStyle();
 
@@ -277,7 +277,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
       
       // Children geometry ----------------------------------------------------
       popIconButtonStyle();
-        std::vector<Geometry*>& children = geometryGetChildren(geometry);
+        std::vector<AssetPtr>& children = geometryGetChildren(geometry);
         sceneHierarchyProcessGeometryArray(window, children, data, currentScene);
       pushIconButtonStyle();
       ImGui::TreePop();
@@ -349,7 +349,7 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
   
   if(data->listGeometry)
   {
-    std::vector<Geometry*>& geometryArray = sceneGetGeometry(currentScene);
+    std::vector<AssetPtr>& geometryArray = sceneGetGeometry(currentScene);
     sceneHierarchyProcessGeometryArray(window, geometryArray, data, currentScene);
   }
 }
@@ -380,7 +380,7 @@ bool8 createSceneHierarchyWindow(const std::string& identifier, Window** outWind
 }
 
 void sceneHierarchyProcessGeometryArray(Window* window,
-                                        std::vector<Geometry*>& array,
+                                        std::vector<AssetPtr>& array,
                                         SceneHierarchyData* data,
                                         Scene* currentScene)
 {
@@ -390,7 +390,6 @@ void sceneHierarchyProcessGeometryArray(Window* window,
     // destroy the geometry and remove it from the array
     if(sceneHierarchyDrawGeometryData(window, *geometryIt, data, currentScene) == FALSE)
     {
-      destroyGeometry(*geometryIt);
       geometryIt = array.erase(geometryIt);
     }
     else
