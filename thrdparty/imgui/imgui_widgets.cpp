@@ -3170,6 +3170,11 @@ bool ImGui::SliderScalarN(const char* label, ImGuiDataType data_type, void* v, i
         PopID();
         PopItemWidth();
         v = (void*)((char*)v + type_size);
+        if((flags & (ImGuiSliderFlags_MultiRange)) == ImGuiSliderFlags_MultiRange)
+        {
+          v_min = (void*)((char*)v_min + type_size);
+          v_max = (void*)((char*)v_max + type_size);
+        }
     }
     PopID();
 

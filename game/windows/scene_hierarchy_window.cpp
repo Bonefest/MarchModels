@@ -121,7 +121,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
       {
         Window* newSettingsWindow = nullptr;        
         assert(createGeometrySettingsWindow(geometry, &newSettingsWindow));
-        // windowSetSize(scriptFunctionSettingsWindow, float2(640.0f, 360.0f));
+        windowSetSize(newSettingsWindow, float2(480.0f, 180.0f));
         windowManagerAddWindow(WindowPtr(newSettingsWindow));
       }
       else
