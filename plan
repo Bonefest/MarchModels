@@ -10,6 +10,7 @@
             0.1.2 New allocators registration
             0.1.3 Get allocated memory statistics in general/for a specific memory type
 [DONE]      0.1.4 All basic operations (free, alloc, copy)
+[DONE]      0.1.5 Engine-suitable shared ptr (with an ability to call custom deallocator function)
 
 [DONE]  0.3 Logging
         0.4 Asynchronus files loading
@@ -27,7 +28,8 @@
         0.8 SDF/IDF/ODF scripts collapser
             0.8.1 Given a geometry produces a single glsl shader (with metainfo such as what uniforms are used,
             what uniforms accept what params, what operation apply to pixels that have values (union, intersection, diff))
-        0.9 Multicolor text (with tags)
+
+[DONE]  0.9 Multicolor text (with tags)
 
     1. Main mechanics
         1.1 SDF, IDF, ODF
@@ -134,7 +136,7 @@
         2.2 View window
 [DONE]      2.2.1 Time buttons
 [TODO]      2.2.2 Image save button (implement Film saving function)
-            2.2.3 Settings
+[DONE]      2.2.3 Settings
             2.2.4 FPS, elapsed frame time overlay
             2.2.5 Overlining selected geometry from hierarchy
             2.2.6 AABB rendering
@@ -148,18 +150,19 @@
             2.3.3 Ability to show partial channels (in case of a DBuffer)
 
         2.4 Scene hierarchy window
-[TODO]      2.4.1 Display of loaded geometry in the hierarchy
-            2.4.2 Display of lights sources
+[DONE]      2.4.1 Display of loaded geometry in the hierarchy
+            2.4.2 Display of light sources
 [50% ]      2.4.3 Ability to show/hide attached materials, SDFs, IDFs, ODFs
             2.4.4 Ability to enable/disable geometry
-            2.4.5 Remove/Choose/Create/Edit buttons (edit is overloaded: edit for SDF != edit for geometry in general != editr for scene in general)
-            2.4.6 Geometry renaming
-            2.4.7 Geometry settings button
+[50% ]      2.4.5 Remove/Choose/Create/Edit buttons (edit is overloaded: edit for SDF != edit for geometry in general != editr for scene in general)
+[DONE]      2.4.6 Geometry renaming
+[0%  ]      2.4.7 Geometry settings button
             2.4.8 Save button (each geometry can be saved, save button near the scene saves all geometry)
             2.4.9 Ability to select a geometry - Other windows can use currently selected geometry
             2.4.10 Marking wrong/unused parts of the geometry in some way (e.g with a gray color)
             2.4.11 Search textfield
             2.4.12 Scene settings button
+            2.4.12 Changing combination function of a geometry
 
         2.5 Console window
 [DONE]      2.5.1 Logging messages handling
@@ -177,6 +180,7 @@
         2.7 Geometry settings
             2.7.1 Ability to set position, orientation
             2.7.2 Ability to set uniform scale
+            2.7.3 Changing combination function
             2.7.3 AABB size text preview
             2.7.4 Metainfo (creation time)
             2.7.5 ImGizmo for visual rotations
@@ -187,19 +191,20 @@
 [0%  ]      2.8.3 Loading/saving from file
 [DEPR]      2.8.4 Code edit button
             2.8.5 Geometry preview button (loads a scene with a single geometry and attaches the SDF to it)
-            2.8.6 Code preview
+[0%  ]      2.8.6 Code preview
             2.8.7 Statistics (difficulty based on time of finding an intersection, lines of code, num of params, AABB's sizes)
             2.8.8 Metainfo (creation time)
 
         2.9 Assets manager window
-            2.9.1 Displaying a list of loaded assets
-            2.9.2 Deleting assets
-            2.9.3 Creating new assets (if possible)
+[DONE]      2.9.1 Displaying a list of loaded assets
+[DONE]      2.9.2 Deleting assets
+[DONE]      2.9.3 Creating new assets (if possible)
             2.9.4 Searching
-            2.9.5 Filtering by type
+[DEPR]      2.9.5 Filtering by type. (Deprecated, we simply can close a tree node for a specific type)
             2.9.6 Ability to load from a .json file
-            2.9.7 Choosing mode (clicking on an item will execute a callback)
-            2.9.8 Ability to create with a specific subset (e.g display only script functions if we need to choose and sdf), subset can be given by a usery
+[DEPR]      2.9.7 Choosing mode (clicking on an item will execute a callback)
+[DEPR]      2.9.8 Ability to create with a specific subset (e.g display only script functions if we need to choose and sdf), subset can be given by a usery.
+                  (Deprecated, now it does a list_window.cpp)
 
         2.10 Scene settings
             2.10.1 Save/load from file button

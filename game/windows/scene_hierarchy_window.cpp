@@ -7,6 +7,7 @@
 #include "ui_styles.h"
 #include "list_window.h"
 #include "scene_hierarchy_window.h"
+#include "geometry_settings_window.h"
 #include "script_function_settings_window.h"
 
 struct SceneHierarchyData
@@ -113,7 +114,21 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
     ImGui::SmallButton(ICON_KI_LIST"##GeometryChoose");
     
     ImGui::SameLine();
-    ImGui::SmallButton(ICON_KI_COG"##GeometryEdit");
+    if(ImGui::SmallButton(ICON_KI_COG"##GeometryEdit"))
+    {
+      WindowPtr geometrySettingsWindow = windowManagerGetWindow(geometrySettingsWindowIdentifier(geometry));
+      if(geometrySettingsWindow == nullptr)
+      {
+        Window* newSettingsWindow = nullptr;        
+        assert(createGeometrySettingsWindow(geometry, &newSettingsWindow));
+        // windowSetSize(scriptFunctionSettingsWindow, float2(640.0f, 360.0f));
+        windowManagerAddWindow(WindowPtr(newSettingsWindow));
+      }
+      else
+      {
+        windowSetFocused(geometrySettingsWindow, TRUE);
+      }      
+    }
     
     ImGui::SameLine();
     ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
@@ -248,13 +263,18 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
           ImGui::SameLine();        
           if(ImGui::SmallButton(ICON_KI_COG))
           {
-              Window* scriptFunctionSettingsWindow = nullptr;
-              if(windowManagerHasWindow(scriptFunctionWindowIdentifier(function)) == FALSE)
-              {
-                assert(createScriptFunctionSettingsWindow(geometry, function, &scriptFunctionSettingsWindow));
-                windowSetSize(scriptFunctionSettingsWindow, float2(640.0f, 360.0f));
-                windowManagerAddWindow(WindowPtr(scriptFunctionSettingsWindow));
-              }
+            WindowPtr scriptFunctionSettingsWindow = windowManagerGetWindow(scriptFunctionWindowIdentifier(function));
+            if(scriptFunctionSettingsWindow == nullptr)
+            {
+              Window* newSettingsWindow = nullptr;
+              assert(createScriptFunctionSettingsWindow(geometry, function, &newSettingsWindow));
+              windowSetSize(newSettingsWindow, float2(640.0f, 360.0f));
+              windowManagerAddWindow(WindowPtr(newSettingsWindow));
+            }
+            else
+            {
+              windowSetFocused(scriptFunctionSettingsWindow, TRUE);
+            }
           }
 
           ImGui::SameLine();
