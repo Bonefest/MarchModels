@@ -61,7 +61,20 @@ void geometrySettingsWindowUpdate(Window* window, float64 delta)
 
 void geometrySettingsWindowDraw(Window* window, float64 delta)
 {
-  ImGui::Button("Test");
+  GeometrySettingsWindowData* data = (GeometrySettingsWindowData*)windowGetInternalData(window);
+  
+  float3 geometryPosition = geometryGetPosition(data->geometry);
+  ImGui::SliderFloat3("Position##Geometry", &geometryPosition.x, -10.0, 10.0);
+  geometrySetPosition(data->geometry, geometryPosition);
+
+  quat geometryOrientation = geometryGetOrientation(data->geometry);
+  float3 axis = qaxis(geometryOrientation);
+  float32 angle = qangle(geometryOrientation);
+  
+  ImGui::SliderFloat3("Axis##GeometryOrientation", &axis.x, -1.0, 1.0);
+  ImGui::SliderAngle("Angle##GeometryOrientation", &angle, 1.0, 359.0);
+
+  geometrySetOrientation(data->geometry, rotation_quat(normalize(axis), angle));
 }
 
 void geometrySettingsWindowProcessInput(Window* window, const EventData& eventData, void* sender)

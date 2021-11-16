@@ -405,7 +405,7 @@ float3 geometryTransformToParent(Asset* geometry, float3 p)
   }
 
   float4 transformedP = mul(geometryData->transformToParentFromLocal, float4(p.x, p.y, p.z, 1.0f));
-  return swizzle<0, 1, 2>(transformedP);
+  return transformedP.xyz();
 }
 
 float3 geometryTransformFromParent(Asset* geometry, float3 p)
@@ -418,7 +418,7 @@ float3 geometryTransformFromParent(Asset* geometry, float3 p)
   }
 
   float4 transformedP = mul(geometryData->transformToLocalFromParent, float4(p.x, p.y, p.z, 1.0f));
-  return swizzle<0, 1, 2>(transformedP);
+  return transformedP.xyz();
 }
 
 float3 geometryTransformToLocal(Asset* geometry, float3 p)
@@ -431,7 +431,7 @@ float3 geometryTransformToLocal(Asset* geometry, float3 p)
   }
 
   float4 transformedP = mul(geometryData->transformToLocal, float4(p.x, p.y, p.z, 1.0f));
-  return swizzle<0, 1, 2>(transformedP);
+  return transformedP.xyz();
 }
 
 float3 geometryTransformToWorld(Asset* geometry, float3 p)
@@ -444,7 +444,7 @@ float3 geometryTransformToWorld(Asset* geometry, float3 p)
   }
 
   float4 transformedP = mul(geometryData->transformToWorld, float4(p.x, p.y, p.z, 1.0f));
-  return swizzle<0, 1, 2>(transformedP);
+  return transformedP.xyz();
 }
 
 float32 geometryCalculateDistanceToPoint(Asset* geometry,

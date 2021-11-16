@@ -173,7 +173,7 @@ float3 cameraProject(Camera* camera, float3 worldPosition)
 
   position = mul(camera->transformWorldToNDC, position);
 
-  return swizzle<0, 1, 2>(position / position.w);
+  return (position / position.w).xyz();
 }
 
 float3 cameraToLocal(Camera* camera, float3 worldPosition)
@@ -208,7 +208,7 @@ Ray cameraGenerateCameraRay(Camera* camera, float2 ndc)
   float4 frustumFPoint = mul(camera->transformNDCToCamera, fullFNDC);
   frustumFPoint /= frustumFPoint.w;
   
-  float3 normalizedDir = normalize(swizzle<0, 1, 2>(frustumFPoint) - swizzle<0, 1, 2>(frustumNPoint));
+  float3 normalizedDir = normalize((frustumFPoint).xyz() - (frustumNPoint).xyz());
 
   return Ray(float3(), normalizedDir);
 }
@@ -226,7 +226,7 @@ Ray cameraGenerateWorldRay(Camera* camera, float2 ndc)
   float4 frustumFPoint = mul(camera->transformNDCToWorld, fullFNDC);
   frustumFPoint /= frustumFPoint.w;
   
-  float3 normalizedDir = normalize(swizzle<0, 1, 2>(frustumFPoint) - swizzle<0, 1, 2>(frustumNPoint));
+  float3 normalizedDir = normalize((frustumFPoint).xyz() - (frustumNPoint).xyz());
 
   return Ray(camera->position, normalizedDir);
 }
