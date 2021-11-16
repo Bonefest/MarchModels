@@ -92,7 +92,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
   bool8 processedNormally = TRUE;
   
   ImGui::SameLine();
-  pushIconButtonStyle();
+  pushIconSmallButtonStyle();
 
     // Geometry-related action buttons ----------------------------------------
     if(ImGui::SmallButton(ICON_KI_PENCIL"##GeometryChangeName"))
@@ -101,14 +101,14 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
       strcpy(textInputPopupGetBuffer(), geometryName);
     }
 
-    popIconButtonStyle();
+    popIconSmallButtonStyle();
       ImGuiUtilsButtonsFlags pressedButton = textInputPopup("Change geometry name", "Enter a new name");
 
       if(ImGuiUtilsButtonsFlags_Accept == pressedButton)
       {
         assetSetName(geometry, textInputPopupGetBuffer());
       }
-    pushIconButtonStyle();
+    pushIconSmallButtonStyle();
 
     ImGui::SameLine();       
     ImGui::SmallButton(ICON_KI_LIST"##GeometryChoose");
@@ -296,14 +296,14 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
       }
       
       // Children geometry ----------------------------------------------------
-      popIconButtonStyle();
+      popIconSmallButtonStyle();
         std::vector<AssetPtr>& children = geometryGetChildren(geometry);
         sceneHierarchyProcessGeometryArray(window, children, data, currentScene);
-      pushIconButtonStyle();
+      pushIconSmallButtonStyle();
       ImGui::TreePop();
     }
 
-    popIconButtonStyle();
+    popIconSmallButtonStyle();
 
   ImGui::PopID();
 
@@ -352,7 +352,7 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
 
   if(data->showMetaInfo == TRUE)
   {
-    pushIconButtonStyle();
+    pushIconSmallButtonStyle();
     ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
       if(ImGui::SmallButton("[New geometry]"))
       {
@@ -362,7 +362,7 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
       ImGui::SameLine();
       ImGui::SmallButton("[New light]");  
     ImGui::PopStyleColor();
-    popIconButtonStyle();
+    popIconSmallButtonStyle();
 
     ImGui::Separator();    
   }

@@ -163,6 +163,7 @@
             2.4.11 Search textfield
             2.4.12 Scene settings button
             2.4.12 Changing combination function of a geometry
+            2.4.13 Show/hide button (or enable/disable)
 
         2.5 Console window
 [DONE]      2.5.1 Logging messages handling

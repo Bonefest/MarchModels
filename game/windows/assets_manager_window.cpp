@@ -141,7 +141,7 @@ static void drawAssetsCategory(Window* window, const AssetsCategoryData& categor
   
   if(ImGui::TreeNode(categoryData.dataName, "%s assets", categoryData.categoryName))
   {
-    pushIconButtonStyle();    
+    pushIconSmallButtonStyle();    
 
     char createButtonName[128];
     sprintf(createButtonName, "[Create new %s asset]", categoryData.dataName);
@@ -182,9 +182,9 @@ static void drawAssetsCategory(Window* window, const AssetsCategoryData& categor
 
         if(ImGui::IsPopupOpen(renamePopupName))
         {
-          popIconButtonStyle();
+          popIconSmallButtonStyle();
             ImGuiUtilsButtonsFlags button = textInputPopup(renamePopupName, "Enter new name");
-          pushIconButtonStyle();
+          pushIconSmallButtonStyle();
 
 
           if(button == ImGuiUtilsButtonsFlags_Accept)
@@ -218,7 +218,7 @@ static void drawAssetsCategory(Window* window, const AssetsCategoryData& categor
       idx++;
     }
     
-    popIconButtonStyle();   
+    popIconSmallButtonStyle();   
     ImGui::TreePop();
   }
 }

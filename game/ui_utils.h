@@ -13,6 +13,9 @@ enum ImGuiUtilsButtonsFlags_
 
 typedef int ImGuiUtilsButtonsFlags;
 
+void pushIconSmallButtonStyle();
+void popIconSmallButtonStyle();
+
 void pushIconButtonStyle();
 void popIconButtonStyle();
 

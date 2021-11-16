@@ -5,9 +5,20 @@
 static const uint32 textInputPopupBufSize = 1024;
 static char textInputPopupBuf[textInputPopupBufSize];
 
-void pushIconButtonStyle()
+void pushIconSmallButtonStyle()
 {
   ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, float2(0.0f, 0.0f));
+  pushIconButtonStyle();
+}
+
+void popIconSmallButtonStyle()
+{
+  ImGui::PopStyleVar();
+  popIconButtonStyle();
+}
+
+void pushIconButtonStyle()
+{
   ImGui::PushStyleColor(ImGuiCol_Button, (float4)ImColor(0, 0, 0, 0));
   ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (float4)ImColor(0, 0, 0, 0));    
 }
@@ -15,7 +26,6 @@ void pushIconButtonStyle()
 void popIconButtonStyle()
 {
   ImGui::PopStyleColor(2);
-  ImGui::PopStyleVar();
 }
 
 char* textInputPopupGetBuffer()

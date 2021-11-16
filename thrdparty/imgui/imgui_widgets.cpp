@@ -314,6 +314,8 @@ void ImGui::TextColoredV(const char* fmt, va_list args)
       
       ImU32 scanned_length = 0, hex_color;
       IM_ASSERT(sscanf(text_head, "_<C>%x</C>_%n", &hex_color, &scanned_length) == 1);
+      IM_ASSERT(scanned_length > 0 && "You probably have missed a character '_' in the color format!");
+      
       if(hex_color == 1)
       {
         hex_color = 0xFFFFFFFF;

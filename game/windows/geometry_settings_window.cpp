@@ -1,4 +1,6 @@
+#include "utils.h"
 #include "ui_utils.h"
+#include "ui_styles.h"
 #include "geometry_settings_window.h"
 
 using std::string;
@@ -48,10 +50,6 @@ string geometrySettingsWindowIdentifier(Asset* geometry)
 
 bool8 geometrySettingsWindowInitialize(Window* window)
 {
-  ImGuiWindowFlags flags = windowGetFlags(window);
-  flags |= ImGuiWindowFlags_MenuBar;
-  windowSetFlags(window, flags);
-  
   return TRUE;
 }
 
@@ -70,57 +68,91 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
 {
   GeometrySettingsWindowData* data = (GeometrySettingsWindowData*)windowGetInternalData(window);
 
-  if(ImGui::BeginMenuBar())
-  {
-    if(ImGui::BeginMenu("Reset"))
+  const char* geometryTypeLabel = geometryIsRoot(data->geometry)   ? "root" :
+                                  geometryIsBranch(data->geometry) ? "branch" :
+                                                                     "leaf";
+
+  pushIconSmallButtonStyle();
+    if(ImGui::SmallButton("[?]"))
     {
-      if(ImGui::MenuItem("All"))
-      {
+      ImGui::BeginTooltip();
+        ImGui::TextColored("_<C>%#010x</C>_[%s] _<C>%#010x</C>_'%s'_<C>0x1</C>_ was created on_<C>%#010x</C>_ 12.12.2021",
+                           revbytes((ImU32)HighlightPrimaryClr),
+                           geometryTypeLabel,
+                           revbytes((ImU32)HighlightSecondaryClr),
+                           assetGetName(data->geometry).c_str(),
+                           revbytes((uint32)HighlightSecondaryClr));
 
-      }
-      else if(ImGui::MenuItem("Position"))
-      {
-
-      }
-      else if(ImGui::MenuItem("Orientation"))
-      {
-
-      }      
-      ImGui::EndMenu();
+      ImGui::EndTooltip();
     }
 
-    ImGui::EndMenuBar();
-  }
+    ImGui::SameLine();
+    
+    ImGui::SmallButton("[Export]");
+    ImGui::SameLine();
+    ImGui::SmallButton("[Import]");
+    ImGui::SameLine();
+    ImGui::SmallButton("[Load]");
+    ImGui::SameLine();
+    ImGui::SmallButton("[Save as]");
+    ImGui::SameLine();
+    ImGui::SmallButton("[Delete]");
+  popIconSmallButtonStyle();
   
-  ImGui::Button("[Reset]");
+  // [type] 'name' was created on 'date'
+
+  ImGui::Spacing();
   
   // Position input
+  float3 geometryPosition = geometryGetPosition(data->geometry);
+  
   const char* relModePositionIcon = data->positionRelativeToParent == TRUE ?
     ICON_KI_USER"##PositionRelMode" : ICON_KI_USERS"##PositionRelMode";
-  
-  if(ImGui::Button(relModePositionIcon))
-  {
-    data->positionRelativeToParent = !data->positionRelativeToParent;
-  }
 
+  pushIconButtonStyle();
+    if(ImGui::Button(relModePositionIcon))
+    {
+      data->positionRelativeToParent = !data->positionRelativeToParent;
+    }
+
+    ImGui::SameLine();
+
+    if(ImGui::Button(ICON_KI_RELOAD_INVERSE"##ReloadPosition"))
+    {
+      geometryPosition = float3();
+    }
+  popIconButtonStyle();
+    
   ImGui::SameLine();
   
-  float3 geometryPosition = geometryGetPosition(data->geometry);
+
   ImGui::SliderFloat3("Position##Geometry", &geometryPosition.x, -10.0, 10.0);
   geometrySetPosition(data->geometry, geometryPosition);
 
   // Orientation input
+  quat geometryOrientation = geometryGetOrientation(data->geometry);
+  
   const char* relModeOrientationIcon = data->orientationRelativeToParent == TRUE ?
     ICON_KI_USER"##OrientationRelMode" : ICON_KI_USERS"##OrientationRelMode";
 
-  if(ImGui::Button(relModeOrientationIcon))
-  {
-    data->orientationRelativeToParent = !data->orientationRelativeToParent;
-  }
+  pushIconButtonStyle();  
+    if(ImGui::Button(relModeOrientationIcon))
+    {
+      data->orientationRelativeToParent = !data->orientationRelativeToParent;
+    }
+
+    ImGui::SameLine();
+
+
+    if(ImGui::Button(ICON_KI_RELOAD_INVERSE"##ReloadOrientation"))
+    {
+      geometryOrientation = rotation_quat(float3(0.0f, 0.0f, 1.0f), (float32)ONE_PI);
+    }
+  popIconButtonStyle();
 
   ImGui::SameLine();
   
-  quat geometryOrientation = geometryGetOrientation(data->geometry);
+
   float3 axis = qaxis(geometryOrientation);
   float32 angle = qangle(geometryOrientation);
 
@@ -138,6 +170,11 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
                        ImGuiSliderFlags_MultiRange);
 
   geometrySetOrientation(data->geometry, rotation_quat(normalize(axisAngle.xyz()), toRad(axisAngle.w)));
+
+  // combination function
+  // sdf, idfs, odfs
+  // meta information (creation date)
+  // list of children
 }
 
 void geometrySettingsWindowProcessInput(Window* window, const EventData& eventData, void* sender)

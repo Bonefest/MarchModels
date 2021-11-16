@@ -100,7 +100,7 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
   ImGui::SameLine();
 
   ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
-  pushIconButtonStyle();
+  pushIconSmallButtonStyle();
 
     char typeButton[32];
     sprintf(typeButton, "[%s]", scriptFunctionTypeLabel(sfType));
@@ -139,7 +139,7 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
     }
 
     
-  popIconButtonStyle();
+  popIconSmallButtonStyle();
   ImGui::PopStyleColor();
 
   ImGui::Separator();
