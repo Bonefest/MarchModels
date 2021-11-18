@@ -60,19 +60,19 @@ T revbytes(T data)
 
 // Reverting function specializations
 template <>
-uint8 revbytes<uint8>(uint8 data)
+inline uint8 revbytes<uint8>(uint8 data)
 {
   return data;
 }
 
 template <>
-uint16 revbytes<uint16>(uint16 data)
+inline uint16 revbytes<uint16>(uint16 data)
 {
   return (data >> 8) | (data << 8);
 }
 
 template <>
-uint32 revbytes<uint32>(uint32 data)
+inline uint32 revbytes<uint32>(uint32 data)
 {
   return (data >> 24) |
          ((data & 0x00FF0000) >> 8)  |
@@ -80,9 +80,8 @@ uint32 revbytes<uint32>(uint32 data)
          (data << 24);
 }
 
-
 template <>
-uint64 revbytes<uint64>(uint64 data)
+inline uint64 revbytes<uint64>(uint64 data)
 {
   return (data >> 56) |
          ((data & 0x00FF000000000000) >> 40) |

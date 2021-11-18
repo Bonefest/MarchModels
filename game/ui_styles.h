@@ -23,7 +23,7 @@
 
 #define SuccessClr ImColor(92, 184, 92, 255)
 #define BrightSuccessClr ImColor(115, 230, 115, 255)
-#define DarkSuccessClr ImColor(46, 92, 46, 25)
+#define DarkSuccessClr ImColor(46, 92, 46, 255)
 
 #define InfoClr ImColor(91, 192, 222, 255)
 #define BrightInfoClr ImColor(114, 220, 245, 255)

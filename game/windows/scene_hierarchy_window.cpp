@@ -95,49 +95,9 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
   pushIconSmallButtonStyle();
 
     // Geometry-related action buttons ----------------------------------------
-    if(ImGui::SmallButton(ICON_KI_PENCIL"##GeometryChangeName"))
-    {
-      ImGui::OpenPopup("Change geometry name");
-      strcpy(textInputPopupGetBuffer(), geometryName);
-    }
 
-    popIconSmallButtonStyle();
-      ImGuiUtilsButtonsFlags pressedButton = textInputPopup("Change geometry name", "Enter a new name");
-
-      if(ImGuiUtilsButtonsFlags_Accept == pressedButton)
-      {
-        assetSetName(geometry, textInputPopupGetBuffer());
-      }
-    pushIconSmallButtonStyle();
-
-    ImGui::SameLine();       
-    ImGui::SmallButton(ICON_KI_LIST"##GeometryChoose");
-    
-    ImGui::SameLine();
-    if(ImGui::SmallButton(ICON_KI_COG"##GeometryEdit"))
-    {
-      WindowPtr geometrySettingsWindow = windowManagerGetWindow(geometrySettingsWindowIdentifier(geometry));
-      if(geometrySettingsWindow == nullptr)
-      {
-        Window* newSettingsWindow = nullptr;        
-        assert(createGeometrySettingsWindow(currentScene, geometry, &newSettingsWindow));
-        windowSetSize(newSettingsWindow, float2(480.0f, 180.0f));
-        windowManagerAddWindow(WindowPtr(newSettingsWindow));
-      }
-      else
-      {
-        windowSetFocused(geometrySettingsWindow, TRUE);
-      }      
-    }
-    
-    ImGui::SameLine();
-    ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
-      if(ImGui::SmallButton(ICON_KI_TRASH"##GeometryRemove"))
-      {
-        processedNormally = FALSE;
-      }
-    ImGui::PopStyleColor();
-
+    processedNormally = drawGeometryItemActionButtons(currentScene, geometry) == TRUE ? FALSE : TRUE;
+  
     // Geometry content -------------------------------------------------------
     if(treeOpen)
     {

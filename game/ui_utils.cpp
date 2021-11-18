@@ -1,5 +1,6 @@
 #include <imgui/imgui.h>
 
+#include <utils.h>
 #include <assets/geometry.h>
 #include <assets/assets_manager.h>
 #include <assets/script_function.h>
@@ -8,6 +9,7 @@
 #include "ui_styles.h"
 #include "windows/list_window.h"
 #include "windows/window_manager.h"
+#include "windows/geometry_settings_window.h"
 #include "windows/script_function_settings_window.h"
 
 static const uint32 textInputPopupBufSize = 1024;
@@ -118,7 +120,8 @@ void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function)
     ScriptFunctionType type = scriptFunctionGetType(function);  
     const char* functionTypeLabel = scriptFunctionTypeLabel(type);
 
-    ImGui::TextColored("_<C>0x4bcc4bff</C>_[%s] _<C>0x1</C>_'%s'",
+    ImGui::TextColored("_<C>%#010x</C>_[%s] _<C>0x1</C>_'%s'",
+                       revbytes((uint32)SuccessClr),
                        functionTypeLabel,
                        assetGetName(function).c_str());
 
@@ -216,4 +219,58 @@ void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function)
 
   ImGui::PopID();
   popIconSmallButtonStyle();
+}
+
+bool8 drawGeometryItemActionButtons(Scene* scene, AssetPtr geometry)
+{
+  bool8 removeIsPressed = FALSE;
+
+  ImGui::PushID(geometry);
+  pushIconSmallButtonStyle();
+    if(ImGui::SmallButton(ICON_KI_PENCIL"##GeometryChangeName"))
+    {
+      ImGui::OpenPopup("Change geometry name");
+      strcpy(textInputPopupGetBuffer(), assetGetName(geometry).c_str());
+    }
+
+  popIconSmallButtonStyle();
+      ImGuiUtilsButtonsFlags pressedButton = textInputPopup("Change geometry name", "Enter a new name");
+
+      if(ImGuiUtilsButtonsFlags_Accept == pressedButton)
+      {
+        assetSetName(geometry, textInputPopupGetBuffer());
+      }
+      
+  pushIconSmallButtonStyle();
+    ImGui::SameLine();       
+    ImGui::SmallButton(ICON_KI_LIST"##GeometryChoose");
+    
+    ImGui::SameLine();
+    if(ImGui::SmallButton(ICON_KI_COG"##GeometryEdit"))
+    {
+      WindowPtr geometrySettingsWindow = windowManagerGetWindow(geometrySettingsWindowIdentifier(geometry));
+      if(geometrySettingsWindow == nullptr)
+      {
+        Window* newSettingsWindow = nullptr;        
+        assert(createGeometrySettingsWindow(scene, geometry, &newSettingsWindow));
+        windowSetSize(newSettingsWindow, float2(480.0f, 180.0f));
+        windowManagerAddWindow(WindowPtr(newSettingsWindow));
+      }
+      else
+      {
+        windowSetFocused(geometrySettingsWindow, TRUE);
+      }      
+    }
+    
+    ImGui::SameLine();
+    ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
+      if(ImGui::SmallButton(ICON_KI_TRASH"##GeometryRemove"))
+      {
+        removeIsPressed = TRUE;
+      }
+    ImGui::PopStyleColor();
+  popIconSmallButtonStyle();
+  ImGui::PopID();
+  
+  return removeIsPressed;
 }

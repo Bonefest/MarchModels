@@ -122,7 +122,7 @@ void listWindowDraw(Window* window, float64 delta)
 
   if(data->tip.size() > 0)
   {
-    ImGui::PushStyleColor(ImGuiCol_Text, (float4)HighlightSecondaryClr);
+    ImGui::PushStyleColor(ImGuiCol_Text, (float4)SecondaryClr);
       ImGui::Text("%s", data->tip.c_str());
     ImGui::PopStyleColor();
     ImGui::Spacing();

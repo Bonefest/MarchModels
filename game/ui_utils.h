@@ -2,6 +2,7 @@
 
 #include <defines.h>
 
+#include <scene.h>
 #include <assets/asset.h>
 
 enum ImGuiUtilsButtonsFlags_
@@ -36,3 +37,4 @@ ImGuiUtilsButtonsFlags textInputPopupCustom(const char* name,
                                             ImGuiUtilsButtonsFlags buttons = ImGuiUtilsButtonsFlags_Default);
 
 void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function);
+bool8 drawGeometryItemActionButtons(Scene* scene, AssetPtr geometry);

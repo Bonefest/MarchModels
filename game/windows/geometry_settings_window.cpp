@@ -81,9 +81,9 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
     {
       ImGui::BeginTooltip();
       ImGui::TextColored("_<C>%#010x</C>_[%s] _<C>%#010x</C>_'%s'_<C>0x1</C>_ was created on_<C>%#010x</C>_ 12.12.2021",
-                         revbytes((ImU32)PrimaryClr),
+                         revbytes((uint32)PrimaryClr),
                          geometryTypeLabel,
-                         revbytes((ImU32)SecondaryClr),
+                         revbytes((uint32)SecondaryClr),
                          assetGetName(data->geometry).c_str(),
                          revbytes((uint32)SecondaryClr));
 
@@ -94,6 +94,8 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
   ImGui::PopStyleColor();
 
   ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
+    ImGui::SmallButton("[Rename]");
+    ImGui::SameLine();
     ImGui::SmallButton("[Export]");
     ImGui::SameLine();
     ImGui::SmallButton("[Import]");
@@ -122,9 +124,7 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
   
   popIconSmallButtonStyle();
   
-  // [type] 'name' was created on 'date'
-
-  ImGui::Spacing();
+  ImGui::Separator();
   
   // Position input
   float3 geometryPosition = geometryGetPosition(data->geometry);
@@ -183,7 +183,7 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
   const static float32 axisAngleMinRange[] = {-1.0, -1.0, -1.0, 1.0};
   const static float32 axisAngleMaxRange[] = { 1.0,  1.0,  1.0, 359.0};
   
-  ImGui::SliderScalarN("Axis, angle",
+  ImGui::SliderScalarN("Orientation",
                        ImGuiDataType_Float,
                        &axisAngle,
                        4,
@@ -194,11 +194,22 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
 
   geometrySetOrientation(data->geometry, rotation_quat(normalize(axisAngle.xyz()), toRad(axisAngle.w)));
 
+  // Script functions list
+  if(ImGui::TreeNode("Attached script functions"))
+  {
+    std::vector<AssetPtr> functions = geometryGetScriptFunctions(data->geometry); ;
+    for(AssetPtr asset: functions)
+    {
+      drawScriptFunctionItem(data->geometry, asset);
+    }
 
-  // Script functions list switch
-  bool showFunctions = ImGui::TreeNode("Attached script functions");
-  ImGui::SameLine();
+    ImGui::TreePop();
+  }
   
+  // Children list switch
+  bool showChildren = ImGui::TreeNode("Children");
+  ImGui::SameLine();
+
   // Combination function
   pushIconSmallButtonStyle();
 
@@ -234,22 +245,67 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
   ImGui::SameLine();
   ImGui::Text(")");
 
-  // Script functions list
-  if(showFunctions)
+  // List of children  
+  if(showChildren)
   {
-    std::vector<AssetPtr> functions = geometryGetScriptFunctions(data->geometry); ;
-    for(AssetPtr asset: functions)
+    std::vector<AssetPtr>& children = geometryGetChildren(data->geometry);
+    for(uint32 idx = 0; idx < children.size();)
     {
-      drawScriptFunctionItem(data->geometry, asset);
+      AssetPtr child = children[idx];
+
+      ImGui::PushID(child);
+      pushIconSmallButtonStyle();
+
+        float4 downButtonClr = (float4)SecondaryClr;
+        downButtonClr.w = idx > 0 ? 1.0f : 0.1f;
+        ImGui::PushStyleColor(ImGuiCol_Text, downButtonClr);
+
+          if(ImGui::SmallButton(ICON_KI_CARET_TOP) && idx > 0)
+          {
+            AssetPtr prevChild = children[idx - 1];
+            children[idx - 1] = child;
+            children[idx] = prevChild;
+          }
+
+          ImGui::SameLine();
+        
+        ImGui::PopStyleColor();
+
+        float4 topButtonClr = (float4)SecondaryClr;
+        topButtonClr.w = children.size() - idx > 1 ? 1.0f : 0.1f;
+        ImGui::PushStyleColor(ImGuiCol_Text, topButtonClr);
+
+          if(ImGui::SmallButton(ICON_KI_CARET_BOTTOM) && children.size() - idx > 1)
+          {
+            AssetPtr nextChild = children[idx + 1];
+            children[idx + 1] = child;
+            children[idx] = nextChild;
+          }
+
+          ImGui::SameLine();
+          
+        ImGui::PopStyleColor();
+          
+      popIconSmallButtonStyle();
+
+        ImGui::Text("%s", assetGetName(child).c_str());
+        ImGui::SameLine();
+
+        bool8 removeRequested = drawGeometryItemActionButtons(data->scene, child);
+
+        if(removeRequested == TRUE)
+        {
+          children.erase(children.begin() + idx);
+        }
+        else
+        {
+          idx++;
+        }
+      ImGui::PopID();
     }
 
     ImGui::TreePop();
   }
-
-  ImGui::SameLine();
-  
-  // meta information (creation date)
-  // list of children
 }
 
 void geometrySettingsWindowProcessInput(Window* window, const EventData& eventData, void* sender)
