@@ -120,7 +120,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
       if(geometrySettingsWindow == nullptr)
       {
         Window* newSettingsWindow = nullptr;        
-        assert(createGeometrySettingsWindow(geometry, &newSettingsWindow));
+        assert(createGeometrySettingsWindow(currentScene, geometry, &newSettingsWindow));
         windowSetSize(newSettingsWindow, float2(480.0f, 180.0f));
         windowManagerAddWindow(WindowPtr(newSettingsWindow));
       }

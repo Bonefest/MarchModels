@@ -13,10 +13,10 @@ const static uint32 MAX_BUF_SIZE = 255;
 
 const static ImColor mapLogMessageTypeToColor[] =
 {
-  ErrorClr,
-  WarningClr,
-  VerboseClr,
-  InfoClr
+  LogErrorClr,
+  LogWarningClr,
+  LogVerboseClr,
+  LogInfoClr
 };
 
 struct LogMessage

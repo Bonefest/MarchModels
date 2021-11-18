@@ -7,6 +7,7 @@ using std::string;
 
 struct GeometrySettingsWindowData
 {
+  Scene* scene;
   AssetPtr geometry;
   bool8 positionRelativeToParent;
   bool8 orientationRelativeToParent;
@@ -18,7 +19,7 @@ static void geometrySettingsWindowUpdate(Window* window, float64 delta);
 static void geometrySettingsWindowDraw(Window* window, float64 delta);
 static void geometrySettingsWindowProcessInput(Window* window, const EventData& eventData, void* sender);
 
-bool8 createGeometrySettingsWindow(AssetPtr geometry, Window** outWindow)
+bool8 createGeometrySettingsWindow(Scene* scene, AssetPtr geometry, Window** outWindow)
 {
   WindowInterface interface = {};
   interface.initialize = geometrySettingsWindowInitialize;
@@ -33,6 +34,7 @@ bool8 createGeometrySettingsWindow(AssetPtr geometry, Window** outWindow)
   }
 
   GeometrySettingsWindowData* data = engineAllocObject<GeometrySettingsWindowData>(MEMORY_TYPE_GENERAL);
+  data->scene = scene;
   data->geometry = geometry;
 
   windowSetInternalData(*outWindow, data);
@@ -73,21 +75,25 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
                                                                      "leaf";
 
   pushIconSmallButtonStyle();
-    if(ImGui::SmallButton("[?]"))
+  ImGui::PushStyleColor(ImGuiCol_Text, (float4)WarningClr);
+    ImGui::SmallButton("[?]");
+    if(ImGui::IsItemHovered())
     {
       ImGui::BeginTooltip();
-        ImGui::TextColored("_<C>%#010x</C>_[%s] _<C>%#010x</C>_'%s'_<C>0x1</C>_ was created on_<C>%#010x</C>_ 12.12.2021",
-                           revbytes((ImU32)HighlightPrimaryClr),
-                           geometryTypeLabel,
-                           revbytes((ImU32)HighlightSecondaryClr),
-                           assetGetName(data->geometry).c_str(),
-                           revbytes((uint32)HighlightSecondaryClr));
+      ImGui::TextColored("_<C>%#010x</C>_[%s] _<C>%#010x</C>_'%s'_<C>0x1</C>_ was created on_<C>%#010x</C>_ 12.12.2021",
+                         revbytes((ImU32)PrimaryClr),
+                         geometryTypeLabel,
+                         revbytes((ImU32)SecondaryClr),
+                         assetGetName(data->geometry).c_str(),
+                         revbytes((uint32)SecondaryClr));
 
       ImGui::EndTooltip();
     }
-
-    ImGui::SameLine();
     
+    ImGui::SameLine();
+  ImGui::PopStyleColor();
+
+  ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
     ImGui::SmallButton("[Export]");
     ImGui::SameLine();
     ImGui::SmallButton("[Import]");
@@ -96,7 +102,16 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
     ImGui::SameLine();
     ImGui::SmallButton("[Save as]");
     ImGui::SameLine();
-    ImGui::SmallButton("[Delete]");
+  ImGui::PopStyleColor();
+  
+  ImGui::PushStyleColor(ImGuiCol_Text, (float4)BrightDeleteClr);  
+    if(ImGui::SmallButton("[Delete]"))
+    {
+      sceneRemoveGeometry(data->scene, data->geometry);
+      windowClose(window);
+    }
+  ImGui::PopStyleColor();
+  
   popIconSmallButtonStyle();
   
   // [type] 'name' was created on 'date'
