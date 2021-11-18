@@ -194,10 +194,17 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
 
   geometrySetOrientation(data->geometry, rotation_quat(normalize(axisAngle.xyz()), toRad(axisAngle.w)));
 
-  ImGui::Text("Combination function:");
-  ImGui::SameLine();
 
+  // Script functions list switch
+  bool showFunctions = ImGui::TreeNode("Attached script functions");
+  ImGui::SameLine();
+  
+  // Combination function
   pushIconSmallButtonStyle();
+
+  ImGui::Text("( Combination type");
+  ImGui::SameLine();
+  
   ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
 
     static const char* combFuncIcon[] =
@@ -223,7 +230,24 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
 
   ImGui::PopStyleColor();
   popIconSmallButtonStyle();
-  // sdf, idfs, odfs
+
+  ImGui::SameLine();
+  ImGui::Text(")");
+
+  // Script functions list
+  if(showFunctions)
+  {
+    std::vector<AssetPtr> functions = geometryGetScriptFunctions(data->geometry); ;
+    for(AssetPtr asset: functions)
+    {
+      drawScriptFunctionItem(data->geometry, asset);
+    }
+
+    ImGui::TreePop();
+  }
+
+  ImGui::SameLine();
+  
   // meta information (creation date)
   // list of children
 }

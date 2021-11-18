@@ -1,6 +1,14 @@
 #include <imgui/imgui.h>
 
+#include <assets/geometry.h>
+#include <assets/assets_manager.h>
+#include <assets/script_function.h>
+
 #include "ui_utils.h"
+#include "ui_styles.h"
+#include "windows/list_window.h"
+#include "windows/window_manager.h"
+#include "windows/script_function_settings_window.h"
 
 static const uint32 textInputPopupBufSize = 1024;
 static char textInputPopupBuf[textInputPopupBufSize];
@@ -102,3 +110,110 @@ ImGuiUtilsButtonsFlags textInputPopupCustom(const char* name,
   return pressedButton;
 }
 
+void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function)
+{
+  pushIconSmallButtonStyle();
+  ImGui::PushID(function);
+  
+    ScriptFunctionType type = scriptFunctionGetType(function);  
+    const char* functionTypeLabel = scriptFunctionTypeLabel(type);
+
+    ImGui::TextColored("_<C>0x4bcc4bff</C>_[%s] _<C>0x1</C>_'%s'",
+                       functionTypeLabel,
+                       assetGetName(function).c_str());
+
+    ImGui::SameLine();
+
+    // NOTE: Script functions list button
+    if(ImGui::SmallButton(ICON_KI_LIST))
+    {
+      float2 itemTopPos = ImGui::GetItemRectMin();
+
+      WindowPtr prevAssetsListWindow = windowManagerGetWindow("Script functions list");
+      if(prevAssetsListWindow != nullptr)
+      {
+        windowManagerRemoveWindow(prevAssetsListWindow);
+      }
+
+      std::vector<AssetPtr> assetsToDisplay = assetsManagerGetAssetsByType(ASSET_TYPE_SCRIPT_FUNCTION);
+
+      // NOTE: Remove all script functions that don't have similar type
+      auto removeIt = std::remove_if(assetsToDisplay.begin(),
+                                     assetsToDisplay.end(),
+                                     [function](AssetPtr asset) {
+                                       return scriptFunctionGetType(asset) != scriptFunctionGetType(function);
+                                     });
+
+      assetsToDisplay.erase(removeIt, assetsToDisplay.end());
+
+      std::vector<ListItem> items = {};
+      for(AssetPtr asset: assetsToDisplay)
+      {
+        items.push_back(ListItem{assetGetName(asset), asset});
+      }
+
+      auto onScriptFunctionIsSelected = [geometry](Window* window, void* selection, uint32 index, void* target)
+      {
+        AssetPtr assetFromManager = assetsManagerFindAsset(assetGetName((Asset*)selection));
+        if(assetFromManager != nullptr)
+        {
+          geometryRemoveFunction(geometry, (Asset*)target);
+          geometryAddFunction(geometry, assetFromManager);
+        }
+      };
+
+      Window* assetsListWindow;
+      assert(createListWindow("Script functions list",
+                              "Select a function",
+                              items,
+                              onScriptFunctionIsSelected,
+                              function,
+                              &assetsListWindow));
+
+      listWindowSetCloseOnLoseFocus(assetsListWindow, TRUE);
+      windowSetSize(assetsListWindow, float2(180.0, 100.0));
+      windowSetPosition(assetsListWindow, itemTopPos + float2(10, 10));
+      windowSetFocused(assetsListWindow, TRUE);
+
+      windowManagerAddWindow(WindowPtr(assetsListWindow));
+    }
+
+    ImGui::SameLine();
+
+    // NOTE: Script function settings button
+    if(ImGui::SmallButton(ICON_KI_COG))
+    {
+      WindowPtr scriptFunctionSettingsWindow = windowManagerGetWindow(scriptFunctionWindowIdentifier(function));
+      if(scriptFunctionSettingsWindow == nullptr)
+      {
+        Window* newSettingsWindow = nullptr;
+        assert(createScriptFunctionSettingsWindow(geometry, function, &newSettingsWindow));
+        windowSetSize(newSettingsWindow, float2(640.0f, 360.0f));
+        windowManagerAddWindow(WindowPtr(newSettingsWindow));
+      }
+      else
+      {
+        windowSetFocused(scriptFunctionSettingsWindow, TRUE);
+      }
+    }
+
+    ImGui::SameLine();
+
+    // NOTE: Script function removing button
+    ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
+      if(ImGui::SmallButton(ICON_KI_TRASH))
+      {
+        // If settings window is opened - close it manually
+        if(windowManagerHasWindow(scriptFunctionWindowIdentifier(function)) == TRUE)
+        {
+          Window* scriptFunctionSettingsWindow = windowManagerGetWindow(scriptFunctionWindowIdentifier(function));
+          windowClose(scriptFunctionSettingsWindow);
+        }
+
+        geometryRemoveFunction(geometry, function);
+      }
+    ImGui::PopStyleColor();
+
+  ImGui::PopID();
+  popIconSmallButtonStyle();
+}

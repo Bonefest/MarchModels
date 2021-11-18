@@ -178,127 +178,35 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
       
       // Script functions -----------------------------------------------------
 
-      std::vector<AssetPtr> functions = geometryGetScriptFunctions(geometry);
-
-      for(AssetPtr function: functions)
-      {
-        ScriptFunctionType type = scriptFunctionGetType(function);
-
-        if(type == SCRIPT_FUNCTION_TYPE_SDF && !data->listGeometrySDF)
-        {
-          continue;
-        }
-        else if(type == SCRIPT_FUNCTION_TYPE_IDF && !data->listGeometryIDF)
-        {
-          continue;
-        }
-        else if(type == SCRIPT_FUNCTION_TYPE_ODF && !data->listGeometryODF)
-        {
-          continue;
-        }
-
-        const char* functionTypeLabel = scriptFunctionTypeLabel(type);
-        
-        ImGui::PushID(function);
-          
-          ImGui::TextColored("_<C>0x4bcc4bff</C>_[%s] _<C>0x1</C>_'%s'",
-                             functionTypeLabel,
-                             assetGetName(function).c_str());
-
-          ImGui::SameLine();
-          if(ImGui::SmallButton(ICON_KI_LIST))
-          {
-            float2 itemTopPos = ImGui::GetItemRectMin();
-            
-            WindowPtr prevAssetsListWindow = windowManagerGetWindow("Script functions list");
-            if(prevAssetsListWindow != nullptr)
-            {
-              windowManagerRemoveWindow(prevAssetsListWindow);
-            }
-
-            std::vector<AssetPtr> assetsToDisplay = assetsManagerGetAssetsByType(ASSET_TYPE_SCRIPT_FUNCTION);
-
-            // NOTE: Remove all script functions that don't have similar type
-            auto removeIt = std::remove_if(assetsToDisplay.begin(),
-                                           assetsToDisplay.end(),
-                                           [function](AssetPtr asset) {
-                                             return scriptFunctionGetType(asset) != scriptFunctionGetType(function);
-                                           });
-            
-            assetsToDisplay.erase(removeIt, assetsToDisplay.end());
-
-            std::vector<ListItem> items = {};
-            for(AssetPtr asset: assetsToDisplay)
-            {
-              items.push_back(ListItem{assetGetName(asset), asset});
-            }
-
-
-            auto onScriptFunctionIsSelected = [geometry](Window* window, void* selection, uint32 index, void* target)
-            {
-              AssetPtr assetFromManager = assetsManagerFindAsset(assetGetName((Asset*)selection));
-              if(assetFromManager != nullptr)
-              {
-                geometryRemoveFunction(geometry, (Asset*)target);
-                geometryAddFunction(geometry, assetFromManager);
-              }
-            };
-            
-            Window* assetsListWindow;
-            assert(createListWindow("Script functions list",
-                                    "Select a function",
-                                    items,
-                                    onScriptFunctionIsSelected,
-                                    function,
-                                    &assetsListWindow));
-            
-            listWindowSetCloseOnLoseFocus(assetsListWindow, TRUE);
-            windowSetSize(assetsListWindow, float2(180.0, 100.0));
-            windowSetPosition(assetsListWindow, itemTopPos + float2(10, 10));
-            windowSetFocused(assetsListWindow, TRUE);
-            
-            windowManagerAddWindow(WindowPtr(assetsListWindow));
-          }
-
-          ImGui::SameLine();        
-          if(ImGui::SmallButton(ICON_KI_COG))
-          {
-            WindowPtr scriptFunctionSettingsWindow = windowManagerGetWindow(scriptFunctionWindowIdentifier(function));
-            if(scriptFunctionSettingsWindow == nullptr)
-            {
-              Window* newSettingsWindow = nullptr;
-              assert(createScriptFunctionSettingsWindow(geometry, function, &newSettingsWindow));
-              windowSetSize(newSettingsWindow, float2(640.0f, 360.0f));
-              windowManagerAddWindow(WindowPtr(newSettingsWindow));
-            }
-            else
-            {
-              windowSetFocused(scriptFunctionSettingsWindow, TRUE);
-            }
-          }
-
-          ImGui::SameLine();
-          ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
-            if(ImGui::SmallButton(ICON_KI_TRASH))
-            {
-              // If settings window is opened - close it manually (otherwise it will use dangling pointer)
-              if(windowManagerHasWindow(scriptFunctionWindowIdentifier(function)) == TRUE)
-              {
-                Window* scriptFunctionSettingsWindow = windowManagerGetWindow(scriptFunctionWindowIdentifier(function));
-                windowClose(scriptFunctionSettingsWindow);
-              }
-              
-              geometryRemoveFunction(geometry, function);
-            }
-          ImGui::PopStyleColor();
-
-        ImGui::PopID();
-      }
-      
-      // Children geometry ----------------------------------------------------
       popIconSmallButtonStyle();
+      
+        std::vector<AssetPtr> functions = geometryGetScriptFunctions(geometry);
+
+        for(AssetPtr function: functions)
+        {
+          ScriptFunctionType type = scriptFunctionGetType(function);
+
+          if(type == SCRIPT_FUNCTION_TYPE_SDF && !data->listGeometrySDF)
+          {
+            continue;
+          }
+          else if(type == SCRIPT_FUNCTION_TYPE_IDF && !data->listGeometryIDF)
+          {
+            continue;
+          }
+          else if(type == SCRIPT_FUNCTION_TYPE_ODF && !data->listGeometryODF)
+          {
+            continue;
+          }
+
+          drawScriptFunctionItem(geometry, function);
+        }
+
+      // Children geometry ----------------------------------------------------
+
         std::vector<AssetPtr>& children = geometryGetChildren(geometry);
         sceneHierarchyProcessGeometryArray(window, children, data, currentScene);
+        
       pushIconSmallButtonStyle();
       ImGui::TreePop();
     }

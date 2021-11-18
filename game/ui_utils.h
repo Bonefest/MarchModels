@@ -2,6 +2,8 @@
 
 #include <defines.h>
 
+#include <assets/asset.h>
+
 enum ImGuiUtilsButtonsFlags_
 {
   ImGuiUtilsButtonsFlags_None   = 0,
@@ -33,3 +35,4 @@ ImGuiUtilsButtonsFlags textInputPopupCustom(const char* name,
                                             uint32 textSize,
                                             ImGuiUtilsButtonsFlags buttons = ImGuiUtilsButtonsFlags_Default);
 
+void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function);
