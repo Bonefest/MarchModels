@@ -14,8 +14,12 @@ enum CombinationFunction
 {
   COMBINATION_INTERSECTION,
   COMBINATION_UNION,
-  COMBINATION_SUBTRACTION
+  COMBINATION_SUBTRACTION,
+
+  COMBINATION_COUNT
 };
+
+ENGINE_API const char* combinationFunctionLabel(CombinationFunction function);
 
 static const AssetType ASSET_TYPE_GEOMETRY = 0xe6593c2d;
 
@@ -46,6 +50,7 @@ ENGINE_API std::vector<AssetPtr>& geometryGetODFs(Asset* geometry);
 ENGINE_API std::vector<AssetPtr> geometryGetScriptFunctions(Asset* geometry);
 
 ENGINE_API void geometrySetParent(Asset* geometry, AssetPtr parent);
+ENGINE_API bool8 geometryHasParent(Asset* geometry);
 ENGINE_API AssetPtr geometryGetParent(Asset* geometry);
 ENGINE_API Asset* geometryGetRoot(Asset* geometry);
 
@@ -72,7 +77,9 @@ ENGINE_API float3 geometryCalculateNormal(Asset* geometry, float3 p);
 // Branch geometry-related interface
 // ----------------------------------------------------------------------------
 
-ENGINE_API void geometryAddChild(Asset* geometry, AssetPtr child);
+// NOTE: We need an AssetPtr because we need to set a parent for a child, hence,
+// we cannot use a raw pointer as a parent ptr.
+ENGINE_API void geometryAddChild(AssetPtr geometry, AssetPtr child);
 ENGINE_API bool8 geometryRemoveChild(Asset* geometry, Asset* child);
 ENGINE_API std::vector<AssetPtr>& geometryGetChildren(Asset* geometry);
 

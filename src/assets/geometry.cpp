@@ -37,6 +37,18 @@ static bool8 geometrySerialize(Asset* geometry) { /** TODO */ }
 static bool8 geometryDeserialize(Asset* geometry) { /** TODO */ }
 static uint32 geometryGetSize(Asset* geometry) { /** TODO */ }
 
+const char* combinationFunctionLabel(CombinationFunction function)
+{
+  static const char* labels[] =
+  {
+    "Intersection",
+    "Union",
+    "Subtraction"
+  };
+
+  return labels[(uint32)function];
+}
+
 // ----------------------------------------------------------------------------
 // Helper functions
 // ----------------------------------------------------------------------------
@@ -355,6 +367,13 @@ void geometrySetParent(Asset* geometry, AssetPtr parent)
   geometryData->parent = parent;
 }
 
+bool8 geometryHasParent(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  
+  return geometryData->parent != nullptr;
+}
+
 AssetPtr geometryGetParent(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
@@ -533,11 +552,12 @@ float3 geometryCalculateNormal(Asset* geometry, float3 p)
 // Branch geometry-related interface
 // ----------------------------------------------------------------------------
 
-void geometryAddChild(Asset* geometry, AssetPtr child)
+void geometryAddChild(AssetPtr geometry, AssetPtr child)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);  
   
   geometryData->children.push_back(child);
+  geometrySetParent(child, geometry);
 }
 
 bool8 geometryRemoveChild(Asset* geometry, Asset* child)

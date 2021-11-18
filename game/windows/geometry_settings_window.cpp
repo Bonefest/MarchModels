@@ -107,7 +107,15 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
   ImGui::PushStyleColor(ImGuiCol_Text, (float4)BrightDeleteClr);  
     if(ImGui::SmallButton("[Delete]"))
     {
-      sceneRemoveGeometry(data->scene, data->geometry);
+      if(geometryHasParent(data->geometry))
+      {
+        geometryRemoveChild(geometryGetParent(data->geometry), data->geometry);
+      }
+      else
+      {
+        sceneRemoveGeometry(data->scene, data->geometry);
+      }
+      
       windowClose(window);
     }
   ImGui::PopStyleColor();
@@ -186,7 +194,35 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
 
   geometrySetOrientation(data->geometry, rotation_quat(normalize(axisAngle.xyz()), toRad(axisAngle.w)));
 
-  // combination function
+  ImGui::Text("Combination function:");
+  ImGui::SameLine();
+
+  pushIconSmallButtonStyle();
+  ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
+
+    static const char* combFuncIcon[] =
+    {
+      ICON_KI_STAR_HALF,
+      ICON_KI_STAR,
+      ICON_KI_STAR_O
+    };
+    
+    CombinationFunction combinationFunc = geometryGetCombinationFunction(data->geometry);
+  
+    char combFuncLabel[32];
+    sprintf(combFuncLabel, "%s %s",
+            combinationFunctionLabel(combinationFunc),
+            combFuncIcon[(uint32)combinationFunc]);
+    
+
+    if(ImGui::SmallButton(combFuncLabel))
+    {
+      combinationFunc = (CombinationFunction)(((uint32)combinationFunc + 1) % (uint32)COMBINATION_COUNT);
+      geometrySetCombinationFunction(data->geometry, combinationFunc);
+    }
+
+  ImGui::PopStyleColor();
+  popIconSmallButtonStyle();
   // sdf, idfs, odfs
   // meta information (creation date)
   // list of children
