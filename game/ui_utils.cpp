@@ -114,10 +114,12 @@ ImGuiUtilsButtonsFlags textInputPopupCustom(const char* name,
 
 void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function)
 {
+  ScriptFunctionType type = scriptFunctionGetType(function);  
+  
   pushIconSmallButtonStyle();
   ImGui::PushID(function);
-  
-    ScriptFunctionType type = scriptFunctionGetType(function);  
+  ImGui::BeginDisabled(type == SCRIPT_FUNCTION_TYPE_SDF && geometryIsLeaf(geometry) == FALSE);
+
     const char* functionTypeLabel = scriptFunctionTypeLabel(type);
 
     ImGui::TextColored("_<C>%#010x</C>_[%s] _<C>0x1</C>_'%s'",
@@ -202,6 +204,9 @@ void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function)
 
     ImGui::SameLine();
 
+  // NOTE: We do not want to disable removing button, so we end disabling here
+  ImGui::EndDisabled();
+  
     // NOTE: Script function removing button
     ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
       if(ImGui::SmallButton(ICON_KI_TRASH))
@@ -216,6 +221,7 @@ void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function)
         geometryRemoveFunction(geometry, function);
       }
     ImGui::PopStyleColor();
+
 
   ImGui::PopID();
   popIconSmallButtonStyle();
@@ -269,6 +275,7 @@ bool8 drawGeometryItemActionButtons(Scene* scene, AssetPtr geometry)
         removeIsPressed = TRUE;
       }
     ImGui::PopStyleColor();
+
   popIconSmallButtonStyle();
   ImGui::PopID();
   

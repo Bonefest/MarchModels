@@ -6,6 +6,7 @@
 #include "ui_utils.h"
 #include "ui_styles.h"
 #include "list_window.h"
+#include "editor_utils.h"
 #include "scene_hierarchy_window.h"
 #include "geometry_settings_window.h"
 #include "script_function_settings_window.h"
@@ -44,40 +45,6 @@ static void sceneHierarchyUpdate(Window* window, float64 delta)
 
 }
 
-static AssetPtr createNewScriptFunction(const std::string& name)
-{
-  AssetPtr sfPrototype = assetsManagerFindAsset(name);
-  assert(sfPrototype != nullptr);
-  
-  return sfPrototype;
-}
-
-static AssetPtr createNewSDF()
-{
-  return createNewScriptFunction("sphereSDF");
-}
-
-static AssetPtr createNewIDF()
-{
-  return createNewScriptFunction("emptyIDF");
-}
-
-static AssetPtr createNewODF()
-{
-  return createNewScriptFunction("emptyODF");  
-}
-
-static AssetPtr createNewGeometry()
-{
-
-  Asset* newGeometry;
-  assert(createGeometry("sphere", &newGeometry));
-  geometrySetSDF(newGeometry, createNewSDF());
-
-  return AssetPtr(newGeometry);
-}
-
-
 static bool8 sceneHierarchyDrawGeometryData(Window* window,
                                            AssetPtr geometry,
                                            SceneHierarchyData* data,
@@ -111,20 +78,20 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
           {
             if(ImGui::SmallButton("[New SDF]"))
             {
-              geometrySetSDF(geometry, createNewSDF());
+              geometrySetSDF(geometry, createDefaultSDF());
             }
             ImGui::SameLine();
           }
 
           if(ImGui::SmallButton("[New IDF]"))
           {
-            geometryAddIDF(geometry, createNewIDF());
+            geometryAddIDF(geometry, createDefaultIDF());
           }
 
           ImGui::SameLine();
           if(ImGui::SmallButton("[New ODF]"))
           {
-            geometryAddODF(geometry, createNewODF());
+            geometryAddODF(geometry, createDefaultODF());
           }
 
           ImGui::SameLine();

@@ -1,6 +1,7 @@
 #include "utils.h"
 #include "ui_utils.h"
 #include "ui_styles.h"
+#include "editor_utils.h"
 #include "geometry_settings_window.h"
 
 using std::string;
@@ -197,6 +198,32 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
   // Script functions list
   if(ImGui::TreeNode("Attached script functions"))
   {
+    pushIconSmallButtonStyle();
+    ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
+      if(geometryIsLeaf(data->geometry) && geometryHasSDF(data->geometry) == FALSE)
+      {
+        if(ImGui::SmallButton("[New SDF]"))
+        {
+          geometrySetSDF(data->geometry, createDefaultSDF());
+        }
+
+        ImGui::SameLine();
+      }
+
+      if(ImGui::SmallButton("[New IDF]"))
+      {
+        geometryAddIDF(data->geometry, createDefaultIDF());
+      }
+      ImGui::SameLine();
+
+      if(ImGui::SmallButton("[New ODF]"))
+      {
+        geometryAddODF(data->geometry, createDefaultODF());
+      }
+
+    ImGui::PopStyleColor();
+    popIconSmallButtonStyle();
+      
     std::vector<AssetPtr> functions = geometryGetScriptFunctions(data->geometry); ;
     for(AssetPtr asset: functions)
     {
@@ -248,6 +275,15 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
   // List of children  
   if(showChildren)
   {
+    pushIconSmallButtonStyle();
+    ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
+      if(ImGui::SmallButton("[New child]"))
+      {
+        geometryAddChild(data->geometry, createNewGeometry());
+      }
+    ImGui::PopStyleColor();
+    popIconSmallButtonStyle();
+    
     std::vector<AssetPtr>& children = geometryGetChildren(data->geometry);
     for(uint32 idx = 0; idx < children.size();)
     {
@@ -306,6 +342,9 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
 
     ImGui::TreePop();
   }
+
+  // new child
+  // new sdf, new odf, new idf
 }
 
 void geometrySettingsWindowProcessInput(Window* window, const EventData& eventData, void* sender)
