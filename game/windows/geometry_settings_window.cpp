@@ -224,7 +224,7 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
     ImGui::PopStyleColor();
     popIconSmallButtonStyle();
       
-    std::vector<AssetPtr> functions = geometryGetScriptFunctions(data->geometry); ;
+    std::vector<AssetPtr> functions = geometryGetScriptFunctions(data->geometry);
     for(AssetPtr asset: functions)
     {
       drawScriptFunctionItem(data->geometry, asset);
