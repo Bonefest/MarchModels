@@ -105,7 +105,7 @@ struct EventData
 
 /**
  * @return TRUE if message was processed and it should not be passed to other listeners,
- * FALSE if message was processed but it can be passed to other listeners too
+ * FALSE if message was/wasn't processed but it can be passed to other listeners too
  */
 typedef bool8(*fpListenerCallback)(EventData eventData, void* sender, void* listener);
 

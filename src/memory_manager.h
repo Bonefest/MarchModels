@@ -11,8 +11,10 @@ struct MemoryAllocator;
 struct MemoryAllocatorInterface
 {
   bool8 (*initialize)(MemoryAllocator* allocator);
-  void (*shutdown)(MemoryAllocator* allocator);
+  void (*destroy)(MemoryAllocator* allocator);
 
+  // NOTE: Allocation/Freeing functions accept memory type which in order allows a single allocator
+  // to manage several memory types
   void* (*allocMem)(MemoryAllocator* allocator, uint32 memorySize, MemoryType memoryType);
   void (*freeMem)(MemoryAllocator* allocator, void* memory, uint32 memorySize, MemoryType memoryType);
 
@@ -26,7 +28,7 @@ struct MemoryAllocatorInterface
 
 ENGINE_API bool8 memoryAllocatorAlloc(MemoryAllocatorInterface interface, MemoryAllocator** outAllocator);
 ENGINE_API bool8 memoryAllocatorInitialize(MemoryAllocator* allocator);
-ENGINE_API void memoryAllocatorShutdown(MemoryAllocator* allocator);
+ENGINE_API void memoryAllocatorDestroy(MemoryAllocator* allocator);
 ENGINE_API void* memoryAllocatorAllocateMem(MemoryAllocator* allocator,
                                             uint32 memorySize,
                                             MemoryType memoryType);
@@ -49,8 +51,8 @@ ENGINE_API void* memoryAllocatorGetInternalData(MemoryAllocator* allocator);
 // ----------------------------------------------------------------------------
 
 const static MemoryType MEMORY_TYPE_UNDEFINED = 0;
-const static MemoryType MEMORY_TYPE_APPLICATION = 1;
-const static MemoryType MEMORY_TYPE_GENERAL = 2;
+const static MemoryType MEMORY_TYPE_GENERAL = 1; // NOTE: Now it's basically a wrapper of malloc
+const static MemoryType MEMORY_TYPE_APPLICATION = 2;
 const static MemoryType MEMORY_TYPE_PER_FRAME = 3;
 const static MemoryType MEMORY_TYPE_FILM = 4;
 

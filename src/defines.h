@@ -30,4 +30,8 @@ using float64 = double;
 #define TRUE 1
 #define FALSE 0
 
+#define KIBIBYTE 1024
+#define MEBIBYTE 1048576
+#define GIBIBYTE 1073741824
+
 #define ENGINE_API

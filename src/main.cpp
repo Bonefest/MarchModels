@@ -5,9 +5,17 @@
 #if TEST_COMPILE_PATH
   #include <gtest/gtest.h>
   #include "memory_manager_unit_tests.h"
+
+  #include "event_system.h"
+
   int initTests(int argc, char** argv)
   {
     ::testing::InitGoogleTest(&argc, argv);
+
+    initLoggingSystem(2048);
+    engineInitMemoryManager();
+    initEventSystem();
+    
     return RUN_ALL_TESTS();
   }
 #endif

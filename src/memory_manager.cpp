@@ -1,3 +1,4 @@
+#include <set>
 #include <cstring>
 #include <cstdlib>
 #include <unordered_map>
@@ -31,9 +32,9 @@ bool8 memoryAllocatorInitialize(MemoryAllocator* allocator)
 }
 
 
-void memoryAllocatorShutdown(MemoryAllocator* allocator)
+void memoryAllocatorDestroy(MemoryAllocator* allocator)
 {
-  allocator->interface.shutdown(allocator);
+  allocator->interface.destroy(allocator);
   engineFreeObject(allocator, MEMORY_TYPE_GENERAL);
 }
 
@@ -83,23 +84,128 @@ void* memoryAllocatorGetInternalData(MemoryAllocator* allocator)
 }
 
 // ----------------------------------------------------------------------------
+// General allocator implementation
+// ----------------------------------------------------------------------------
+
+struct GeneralMemoryAllocatorData
+{
+  uint32 maxAllowedMemorySize = 0;
+  uint32 usedMemorySize = 0;
+};
+
+static bool8 initializeGeneralMemoryAllocator(MemoryAllocator* allocator)
+{
+  return TRUE;
+}
+
+static void destroyGeneralMemoryAllocator(MemoryAllocator* allocator)
+{
+  free(memoryAllocatorGetInternalData(allocator));
+}
+
+static void* generalMemoryAllocatorAllocMem(MemoryAllocator* allocator, uint32 memorySize, MemoryType memoryType)
+{
+  GeneralMemoryAllocatorData* data = (GeneralMemoryAllocatorData*)memoryAllocatorGetInternalData(allocator);
+  data->usedMemorySize += memorySize;
+  
+  assert(data->usedMemorySize < data->maxAllowedMemorySize);
+
+  return calloc(1, memorySize);
+}
+
+static void generalMemoryAllocatorFreeMem(MemoryAllocator* allocator,
+                                          void* memory,
+                                          uint32 memorySize,
+                                          MemoryType memoryType)
+{
+  GeneralMemoryAllocatorData* data = (GeneralMemoryAllocatorData*)memoryAllocatorGetInternalData(allocator);
+  assert(data->usedMemorySize >= memorySize);
+
+  free(memory);
+}
+
+uint32 generalMemoryAllocatorGetBankSize(MemoryAllocator* allocator)
+{
+  GeneralMemoryAllocatorData* data = (GeneralMemoryAllocatorData*)memoryAllocatorGetInternalData(allocator);
+  return data->maxAllowedMemorySize;
+}
+
+uint32 generalMemoryAllocatorGetUsedMemorySize(MemoryAllocator* allocator)
+{
+  GeneralMemoryAllocatorData* data = (GeneralMemoryAllocatorData*)memoryAllocatorGetInternalData(allocator);
+  return data->usedMemorySize;
+}
+
+const char* generalMemoryAllocatorGetName(MemoryAllocator* allocator)
+{
+  return "General Memory Allocator";
+}
+
+static MemoryAllocator* createGeneralMemoryAllocator(uint32 maxAllowedMemorySize)
+{
+  MemoryAllocatorInterface interface = {};
+  interface.initialize = initializeGeneralMemoryAllocator;
+  interface.destroy = destroyGeneralMemoryAllocator;
+  interface.allocMem = generalMemoryAllocatorAllocMem;
+  interface.freeMem = generalMemoryAllocatorFreeMem;
+  interface.getBankSize = generalMemoryAllocatorGetBankSize;
+  interface.getUsedMemorySize = generalMemoryAllocatorGetUsedMemorySize;
+  interface.getName = generalMemoryAllocatorGetName;
+  interface.type = MEMORY_TYPE_GENERAL;
+  
+  // NOTE: We are force to use malloc instead of memoryAllocatorAlloc, because the latter
+  // function internally relies on the general allocator
+  MemoryAllocator* allocator = (MemoryAllocator*)malloc(sizeof(MemoryAllocator));
+  allocator->interface = interface;
+
+  GeneralMemoryAllocatorData* data = (GeneralMemoryAllocatorData*)malloc(sizeof(GeneralMemoryAllocatorData));
+  *data = GeneralMemoryAllocatorData{};
+  data->maxAllowedMemorySize = maxAllowedMemorySize;
+
+  memoryAllocatorSetInternalData(allocator, data);
+
+  return allocator;
+}
+
+// ----------------------------------------------------------------------------
 // Memory manager
 // ----------------------------------------------------------------------------
 
-using std::unordered_map;
-static unordered_map<MemoryType, MemoryAllocator*> registeredAllocators;
-static bool8 managerIsInitialized = FALSE;
+static std::unordered_map<MemoryType, MemoryAllocator*> registeredAllocators;
 
 bool8 engineInitMemoryManager()
 {
-  /** Allocate memory for each memory type */
-  managerIsInitialized = TRUE;
+  MemoryAllocator* allocator = createGeneralMemoryAllocator(1 * GIBIBYTE);
+  if(allocator == nullptr)
+  {
+    return FALSE;
+  }
+
+  // NOTE: Now we do not need to implement custom allocator for each type - use a general for everything
+  registeredAllocators[MEMORY_TYPE_UNDEFINED] = allocator;  
+  registeredAllocators[MEMORY_TYPE_GENERAL] = allocator;
+  registeredAllocators[MEMORY_TYPE_APPLICATION] = allocator;
+  registeredAllocators[MEMORY_TYPE_PER_FRAME] = allocator;
+  registeredAllocators[MEMORY_TYPE_FILM] = allocator;    
+  
   return TRUE;
 }
 
 void engineShutdownMemoryManager()
 {
+  // NOTE: Collect unique memory allocators
+  std::set<MemoryAllocator*> uniqueAllocators;
+  for(auto allocPair: registeredAllocators)
+  {
+    uniqueAllocators.insert(allocPair.second);
+  }
+  
+  for(MemoryAllocator* allocator: uniqueAllocators)
+  {
+    memoryAllocatorDestroy(allocator);
+  }
 
+  registeredAllocators.clear();
 }
 
 void* engineAllocMem(uint32 memorySize, MemoryType memoryType)
@@ -108,28 +214,15 @@ void* engineAllocMem(uint32 memorySize, MemoryType memoryType)
   {
     LOG_WARNING("Allocation with undefined memory is undesired!");
   }
-
-  void* mem = nullptr;
-  if(TRUE)// NOTE: Everything now is allocated with malloc
-          // in the future it will be only for memoryType == MEMORY_TYPE_UNDEFINED || memoryType == MEMORY_TYPE_GENERAL)
+  
+  auto allocIt = registeredAllocators.find(memoryType);
+  if(allocIt == registeredAllocators.end())
   {
-    mem = malloc(memorySize);
-    memset(mem, 0, memorySize);
-  }
-  else
-  {
-    auto allocIt = registeredAllocators.find(memoryType);
-    if(allocIt == registeredAllocators.end())
-    {
-      LOG_ERROR("Allocation with type %u is requested but no associated allocator is found!", (uint32)memoryType);
-    }
-    else
-    {
-      return memoryAllocatorAllocateMem(allocIt->second, memorySize, memoryType);
-    }
+    LOG_ERROR("Allocation with type %u is requested but no associated allocator is found!", (uint32)memoryType);
+    return nullptr;
   }
 
-  return mem;
+  return memoryAllocatorAllocateMem(allocIt->second, memorySize, memoryType);
 }
 
 void engineFreeMem(void* memory, uint32 memorySize, MemoryType memoryType)
@@ -149,6 +242,11 @@ void engineCopyMem(void* dst, void* src, uint32 memorySize)
 
 bool8 engineRegisterAllocator(MemoryAllocator* allocator)
 {
+  if(allocator == nullptr)
+  {
+    return FALSE;
+  }
+  
   MemoryType type = memoryAllocatorGetType(allocator);
   if(engineHasAllocatorWithType(type) == TRUE)
   {

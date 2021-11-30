@@ -8,16 +8,19 @@ template <typename T, void(*destroyFunc)(T*) = nullptr>
 class SharedPtr
 {
 public:
-  SharedPtr(): SharedPtr(nullptr) { }
-
+  SharedPtr() = default;
+  
   // NOTE: We make it explicit in order to avoid situations, where a function/method accepts a
   // shared pointer and a raw data is passed (as result, raw data will be destroyed as soon as
   // function is over)
   explicit SharedPtr(T* rawPtr)
   {
-    m_ptr = rawPtr;
-    m_refCounter = engineAllocObject<uint32>(MEMORY_TYPE_GENERAL);
-    retain();    
+    if(rawPtr != nullptr)
+    {
+      m_ptr = rawPtr;
+      m_refCounter = engineAllocObject<uint32>(MEMORY_TYPE_GENERAL);
+      retain();          
+    }
   }
   
   SharedPtr(const SharedPtr& sharedPtr)
@@ -70,6 +73,11 @@ public:
   
   void retain()
   {
+    if(m_ptr == nullptr && m_refCounter == nullptr)
+    {
+      return; // NOTE: It's nullptr - do nothing
+    }
+    
     if(m_refCounter != nullptr)
     {
       (*m_refCounter)++;
@@ -84,6 +92,11 @@ public:
   {
     if(m_refCounter == nullptr)
     {
+      if(m_ptr == nullptr)
+      {
+        return; // NOTE: It's a nullptr shared ptr - do nothing
+      }
+      
       LOG_WARNING("Attempt to release already released SharedPtr?");
       return;
     }
