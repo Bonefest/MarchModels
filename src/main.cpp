@@ -8,6 +8,7 @@
   #include "shared_ptr_unit_tests.h"
   #include "event_system_unit_tests.h"
   #include "image_integrator_integration_tests.h"
+  #include "window_manager_integration_tests.h"
 
   #include "event_system.h"
   #include "lua/lua_system.h"

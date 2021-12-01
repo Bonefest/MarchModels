@@ -29,7 +29,8 @@ bool8 initWindowManager()
 void shutdownWindowManager()
 {
   assert(data.initialized == TRUE);
-
+  data.initialized = FALSE;
+  
   data.windowsMap.clear();
 }
 
