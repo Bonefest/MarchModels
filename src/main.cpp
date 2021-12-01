@@ -7,8 +7,10 @@
   #include "memory_manager_unit_tests.h"
   #include "shared_ptr_unit_tests.h"
   #include "event_system_unit_tests.h"
+  #include "image_integrator_integration_tests.h"
 
   #include "event_system.h"
+  #include "lua/lua_system.h"
 
   int initTests(int argc, char** argv)
   {
@@ -17,6 +19,7 @@
     initLoggingSystem(2048);
     engineInitMemoryManager();
     initEventSystem();
+    initializeLuaSystem();
     
     return RUN_ALL_TESTS();
   }
