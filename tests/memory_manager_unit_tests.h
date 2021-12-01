@@ -1,3 +1,5 @@
+#pragma once
+
 #include <gtest/gtest.h>
 #include <memory_manager.h>
 
@@ -73,6 +75,15 @@ TEST(MemoryManagerTests, AccessInternalAllocatorExists)
 TEST(MemoryManagerTests, RegisterUnexistingAllocatorIsImpossible)
 {
   EXPECT_EQ(engineRegisterAllocator(nullptr), FALSE);
+}
+
+TEST(MemoryManagerTests, EngineMemoryTypesHaveSameAllocator)
+{
+  MemoryAllocator* generalAllocator = engineGetAllocatorByType(MEMORY_TYPE_GENERAL);
+  EXPECT_EQ(generalAllocator, engineGetAllocatorByType(MEMORY_TYPE_UNDEFINED));
+  EXPECT_EQ(generalAllocator, engineGetAllocatorByType(MEMORY_TYPE_APPLICATION));
+  EXPECT_EQ(generalAllocator, engineGetAllocatorByType(MEMORY_TYPE_PER_FRAME));
+  EXPECT_EQ(generalAllocator, engineGetAllocatorByType(MEMORY_TYPE_FILM));
 }
 
 // shared_ptr tests (e.g correct allocation function is called)

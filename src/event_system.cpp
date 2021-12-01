@@ -1,11 +1,11 @@
-#include <queue>
+#include <deque>
 #include <vector>
 
 #include "logging.h"
 
 #include "event_system.h"
 
-using std::queue;
+using std::deque;
 using std::vector;
 
 struct Listener
@@ -21,7 +21,7 @@ struct PollEventData
 };
 
 static vector<Listener> listeners[EVENT_TYPE_MAX];
-static queue<PollEventData> polledEvents;
+static deque<PollEventData> polledEvents;
 
 bool8 initEventSystem()
 {
@@ -31,12 +31,22 @@ bool8 initEventSystem()
 
 void shutdownEventSystem()
 {
+  for(uint32 i = 0; i < EVENT_TYPE_MAX; i++)
+  {
+    listeners[i].clear();
+  }
 
+  polledEvents.clear();
 }
 
 bool8 registerListener(EventType eventType, void* plistener, fpListenerCallback callback)
 {
-  assert((uint32)eventType < EVENT_TYPE_MAX);
+  if((uint32)eventType >= EVENT_TYPE_MAX)
+  {
+    LOG_ERROR("Attempt to register a custom type with an ID higher than maximal allowed (%u >= %u)",
+              (uint32)eventType, EVENT_TYPE_MAX);
+    return FALSE;
+  }
 
   for(Listener& listener: listeners[eventType])
   {
@@ -93,7 +103,7 @@ void pushEvent(EventData eventData, void* sender)
 {
   assert((uint32)eventData.type < EVENT_TYPE_MAX);
   
-  polledEvents.push(PollEventData{eventData, sender});
+  polledEvents.push_back(PollEventData{eventData, sender});
 }
 
 void pushEvent(EventType eventType, void* sender)
@@ -110,7 +120,7 @@ bool8 pollEvent(EventData* outEventData, void** outSender)
 
   PollEventData pollEventData = polledEvents.front();
   *outEventData = pollEventData.data;
-  polledEvents.pop();
+  polledEvents.pop_front();
 
   if(outSender != nullptr)
   {

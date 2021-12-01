@@ -5,6 +5,8 @@
 #if TEST_COMPILE_PATH
   #include <gtest/gtest.h>
   #include "memory_manager_unit_tests.h"
+  #include "shared_ptr_unit_tests.h"
+  #include "event_system_unit_tests.h"
 
   #include "event_system.h"
 
