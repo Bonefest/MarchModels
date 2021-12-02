@@ -24,6 +24,8 @@
             0.7.5 Set custom code
             0.7.6 Set uniform/storage block/variable
             0.7.7 Set input/output
+            0.7.8 Set named insertion point
+            0.7.9 Combine several shader declarations
 
         0.8 SDF/IDF/ODF scripts collapser
             0.8.1 Given a geometry produces a single glsl shader (with metainfo such as what uniforms are used,
