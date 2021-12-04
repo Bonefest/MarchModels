@@ -1,7 +1,8 @@
 #include <sstream>
 
 #include "memory_manager.h"
-#include "shader_builder.h"
+
+#include "shader_build.h"
 
 using std::endl;
 using std::string;

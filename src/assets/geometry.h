@@ -73,6 +73,10 @@ ENGINE_API float32 geometryCalculateDistanceToPoint(Asset* geometry,
 // WARNING: Highly unoptimized!
 ENGINE_API float3 geometryCalculateNormal(Asset* geometry, float3 p);
 
+
+ENGINE_API bool8 geometryNeedRebuild(Asset* geometry);
+ENGINE_API GLuint geometryGetProgram(Asset* geometry);
+
 // ----------------------------------------------------------------------------
 // Branch geometry-related interface
 // ----------------------------------------------------------------------------

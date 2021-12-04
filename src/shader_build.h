@@ -19,6 +19,7 @@ ENGINE_API void shaderBuildAddFunction(ShaderBuild* build,
                                        const char* arguments,
                                        const char* functionBody);
 ENGINE_API void shaderBuildConcatenate(ShaderBuild* build, ShaderBuild* src);
+ENGINE_API void shaderBuildIncludeFile(ShaderBuild* build, const char* filename);
 ENGINE_API void shaderBuildClear(ShaderBuild* build);
 
 ENGINE_API std::string shaderBuildGetCode(ShaderBuild* build);

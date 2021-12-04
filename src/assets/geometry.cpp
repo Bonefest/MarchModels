@@ -1,3 +1,5 @@
+#include "logging.h"
+#include "shader_build.h"
 #include "memory_manager.h"
 
 #include "geometry.h"
@@ -20,7 +22,10 @@ struct Geometry
   
   float4x4 transformToLocalFromParent;
   float4x4 transformToParentFromLocal;
+
+  GLuint program;
   
+  bool8 needRebuild;
   bool8 dirty;
   
   // Branch geometry data
@@ -166,7 +171,81 @@ static void geometryRecalculateTransforms(Asset* geometry)
   geometryRecalculateFullTransforms(geometryGetRoot(geometry));
 }
 
-// ----------------------------------------------------p------------------------
+// NOTE: Leaf geometry uses IDFs, SDF and ODFs (only related to the geometry)
+static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
+{
+  // collect all parents (in order from the root to the leaf)
+  // register IDFs (in same order), parameters should be replaced via corresponding constant values (special function does that)
+  // register SDF, parameters should be replaced via corresponding constant values
+  // register ODFs (only of the geometry), parameters should be replaced via corresponding constant values
+  // register combination function (if needed)
+
+  // generate a transform function:
+  // 1. Transform point p with all IDFs
+  // 2. Transform point p by geometry transform
+  // 3. Transform point into distance via SDF
+  // 4. Transform distance via ODFs
+  // 5. return distance
+  //
+  // generate a main function:
+  // 1. Extract point p from ray map
+  // 2. Pass point p to the transform function
+  // 3. Check whether it's the first leaf in group:
+  //   Yes: Simply push distance to the stack
+  //   No:  Extract previous distance, apply combination function, push new distance
+}
+
+// NOTE: Branch geometry uses only ODFs (realted to the branch itself)
+static void geometryGenerateBranchCode(Asset* geometry, ShaderBuild* build)
+{
+  // register ODFs (only of the geometry)
+
+  // generate a main function:
+  // 1. Extract distance from the stack
+  // 2. Apply IDFs to the distance
+  // 3. push new distance back
+}
+
+static void geometryRebuild(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+
+  ShaderBuild* build = nullptr;
+  assert(createShaderBuild(&build));
+
+  shaderBuildAddVersion(build, 430, "core");
+  // shaderBuildIncludeFile(build, "shaders/geometry_common.glsl");
+
+  if(geometryIsLeaf(geometry))
+  {
+    geometryGenerateLeafCode(geometry, build);
+  }
+  else
+  {
+    geometryGenerateBranchCode(geometry, build);
+  }
+
+  GLuint fragmentShader;
+  if(shaderBuildGenerateShader(build, GL_FRAGMENT_SHADER, &fragmentShader) == FALSE)
+  {
+    LOG_ERROR("Cannot generate a shader for geometry!");
+    return;
+  }
+
+  GLuint vertexShader;
+  //assert(shaderManagerLoadShader("shaders/triangle.glsl", GL_VERTEX_SHADER, &vertexShader) == TRUE);
+  // createAndLinkShaderProgram(vertexShader, fragmentShader)
+  
+  destroyShaderBuild(build);
+
+  if(geometryData->program != 0)
+  {
+    glDeleteProgram(geometryData->program);
+    geometryData->program = 0;
+  }
+}
+
+// ----------------------------------------------------------------------------
 // Geometry common interface
 // ----------------------------------------------------------------------------
 bool8 createGeometry(const std::string& name, Asset** outGeometry)
@@ -185,8 +264,9 @@ bool8 createGeometry(const std::string& name, Asset** outGeometry)
   geometryData->scale = 1.0f;
   geometryData->position = float3(0.0f, 0.0f, 0.0f);
   geometryData->orientation = quat(0.0f, 0.0f, 1.0f, 0.0f);
+  geometryData->needRebuild = TRUE;  
   geometryData->dirty = TRUE;
-
+  
   assetSetInternalData(*outGeometry, geometryData);
   
   return TRUE;
@@ -546,6 +626,17 @@ float3 geometryCalculateNormal(Asset* geometry, float3 p)
   float32 z = geometryCalculateDistanceToPoint(geometry, p + float3(0.0f, 0.0f, step)) - distance;    
 
   return normalize(float3(x, y, z) / step);
+}
+
+bool8 geometryNeedRebuild(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  return geometryData->needRebuild;
+}
+
+GLuint geometryGetProgram(Asset* geometry)
+{
+
 }
 
 // ----------------------------------------------------------------------------
