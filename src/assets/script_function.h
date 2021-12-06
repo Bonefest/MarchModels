@@ -50,7 +50,21 @@ ENGINE_API void scriptFunctionSetType(Asset* asset, ScriptFunctionType type);
 ENGINE_API ScriptFunctionType scriptFunctionGetType(Asset* asset);
 
 ENGINE_API void scriptFunctionSetCode(Asset* asset, const std::string& code);
-ENGINE_API const std::string& scriptFunctionGetCode(Asset* asset);
+
+/**
+ * @return code string with working symbols (parameter names, built-in parameters)
+ * represents a string how it looks from user point of view.
+ */
+ENGINE_API const std::string& scriptFunctionGetRawCode(Asset* asset);
+
+/**
+ * @return code string prepapred for integration in GLSL code (parameters are replaced
+ * by float constats
+ *
+ * @warning It's a costly function. It's better to save the result somewhere if you
+ * need to reuse it often.
+ */
+ENGINE_API std::string scriptFunctionGetGLSLCode(Asset* asset);
 
 ENGINE_API float3 executeIDF(Asset* idf, float3 p);
 ENGINE_API float32 executeSDF(Asset* sdf, float3 p);

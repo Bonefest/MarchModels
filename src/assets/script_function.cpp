@@ -129,11 +129,31 @@ void scriptFunctionSetCode(Asset* asset, const std::string& code)
   lua.script(fullCodeBuf);
 }
 
-const std::string& scriptFunctionGetCode(Asset* asset)
+const std::string& scriptFunctionGetRawCode(Asset* asset)
 {
   ScriptFunction* data = (ScriptFunction*)assetGetInternalData(asset);
   
   return data->code;
+}
+
+std::string scriptFunctionGetGLSLCode(Asset* asset)
+{
+  ScriptFunction* data = (ScriptFunction*)assetGetInternalData(asset);
+  
+  std::string result = data->code;
+
+  for(auto arg : data->args)
+  {
+    std::string argStrRepr = std::to_string(arg.second);
+    uint32 argSize = arg.first.size() + 1;
+    uint32 pos = result.find("$" + arg.first);
+    while(pos != std::string::npos)
+    {
+      result.replace(pos, argSize, argStrRepr);
+    }
+  }
+
+  return result;
 }
 
 float3 executeIDF(Asset* idf, float3 p)
@@ -208,5 +228,5 @@ float32 executeODF(Asset* odf, float32 distance)
 void scriptFunctionOnNameChanged(Asset* asset, const std::string& prevName, const std::string& newName)
 {
   // NOTE: Re-register code: it will save the same code in lua but with a new name
-  scriptFunctionSetCode(asset, scriptFunctionGetCode(asset));
+  scriptFunctionSetCode(asset, scriptFunctionGetRawCode(asset));
 }

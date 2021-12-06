@@ -1,3 +1,8 @@
+#include <string>
+#include <vector>
+using std::string;
+using std::vector;
+
 #include "logging.h"
 #include "shader_build.h"
 #include "memory_manager.h"
@@ -171,14 +176,62 @@ static void geometryRecalculateTransforms(Asset* geometry)
   geometryRecalculateFullTransforms(geometryGetRoot(geometry));
 }
 
+static void geometryCollectParents(Asset* geometry, vector<Asset*>& collection)
+{
+  if(geometry == nullptr)
+  {
+    return;
+  }
+  
+  if(geometryIsRoot(geometry) == FALSE)
+  {
+    geometryCollectParents(geometryGetParent(geometry), collection);
+  }
+
+  collection.push_back(geometry);
+}
+
 // NOTE: Leaf geometry uses IDFs, SDF and ODFs (only related to the geometry)
 static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
 {
   // collect all parents (in order from the root to the leaf)
+  vector<Asset*> parents;
+  geometryCollectParents(geometry, parents);
+
   // register IDFs (in same order), parameters should be replaced via corresponding constant values (special function does that)
-  // register SDF, parameters should be replaced via corresponding constant values
-  // register ODFs (only of the geometry), parameters should be replaced via corresponding constant values
+  uint32 registeredIDFCount = 0;
+  for(Asset* parent: parents)
+  {
+    const std::vector<AssetPtr>& idfs = geometryGetIDFs(parent);
+    for(AssetPtr idf: idfs)
+    {
+      string functionName = "IDF" + std::to_string(registeredIDFCount);
+      string functionBody = scriptFunctionGetGLSLCode(idf);
+      shaderBuildAddFunction(build, "vec3", functionName.c_str(), "vec3 p", functionBody.c_str());
+      registeredIDFCount = registeredIDFCount + 1;
+    }
+  }
+
+  // register SDF
+  shaderBuildAddFunction(build,
+                         "float",
+                         "SDF",
+                         "vec3 p",
+                         scriptFunctionGetGLSLCode(geometryGetSDF(geometry)).c_str());
+  
+  // register ODFs (only of the geometry)
+  const std::vector<AssetPtr>& odfs = geometryGetODFs(geometry);
+  for(uint32 i = 0; i < odfs.size(); i++)
+  {
+    string functionName = "ODF" + std::to_string(i);
+    string functionBody = scriptFunctionGetGLSLCode(odfs[i]);
+    shaderBuildAddFunction(build, "float", functionName.c_str(), "float d", functionBody.c_str());
+  }
+
+  // detect whether its number in branch
+  
   // register combination function (if needed)
+  // register a geometry ID (as macro)
 
   // generate a transform function:
   // 1. Transform point p with all IDFs
@@ -248,7 +301,7 @@ static void geometryRebuild(Asset* geometry)
 // ----------------------------------------------------------------------------
 // Geometry common interface
 // ----------------------------------------------------------------------------
-bool8 createGeometry(const std::string& name, Asset** outGeometry)
+bool8 createGeometry(const string& name, Asset** outGeometry)
 {
   AssetInterface interface = {};
   interface.destroy = geometryDestroy;

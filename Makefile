@@ -11,7 +11,7 @@ CC = g++
 INCLUDE_DIRS = -Isrc -Ithrdparty -Igame -I/usr/include/lua5.3 -Itests
 
 # Defines C-macros defines
-DEFINES = -DDEBUG -DENABLE_EDITOR_GAME -DTEST_COMPILE_PATH
+DEFINES = -DDEBUG -DENABLE_EDITOR_GAME #-DTEST_COMPILE_PATH
 
 # Compiler flags
 CFLAGS = -g -O0 -fPIC -std=c++1z ${DEFINES} $(INCLUDE_DIRS)
