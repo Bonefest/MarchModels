@@ -35,9 +35,9 @@ void shaderBuildAddExtension(ShaderBuild* build, const char* extName)
   build->code << "#extension " << extName << " : require" << endl;
 }
 
-void shaderBuildAddMacro(ShaderBuild* build, const char* macro)
+void shaderBuildAddMacro(ShaderBuild* build, const char* macroName, const char* macroValue)
 {
-  build->code << "#define " << macro << endl;
+  build->code << "#define " << macroName << " " << macroValue << endl;
 }
 
 void shaderBuildAddCode(ShaderBuild* build, const char* code, bool8 addNewLine)

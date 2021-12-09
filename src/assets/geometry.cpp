@@ -228,24 +228,65 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
     shaderBuildAddFunction(build, "float", functionName.c_str(), "float d", functionBody.c_str());
   }
 
-  // detect whether its number in branch
+  // detect whether its number in branch (TODO)
+  bool8 firstInGroup = TRUE;
   
-  // register combination function (if needed)
-  // register a geometry ID (as macro)
-
+  // register a geometry ID (as macro) (TODO)
+  uint32 ID = 777;
+  shaderBuildAddMacro(build, "GEOMETRY_ID", std::to_string(ID).c_str());
+  
   // generate a transform function:
+  // ------------------------------
+  shaderBuildAddCode(build, "float transform(vec3 p) {");
+  char linecode[255] = {};
   // 1. Transform point p with all IDFs
-  // 2. Transform point p by geometry transform
-  // 3. Transform point into distance via SDF
-  // 4. Transform distance via ODFs
-  // 5. return distance
-  //
+  for(uint32 i = 0; i < registeredIDFCount; i++)
+  {
+    sprintf(linecode, "\tp = IDF%d(p);", i);
+    shaderBuildAddCode(build, linecode);
+  }
+  
+  // 2. Transform point p by geometry transform, transform point into distance via SDF
+  shaderBuildAddCode(build, "\tfloat d = SDF(geometryTransform * p);");
+  
+  // 3. Transform distance via ODFs
+  for(uint32 i = 0; i < odfs.size(); i++)
+  {
+    sprintf(linecode, "\td = ODF%d(d);");
+    shaderBuildAddCode(build, linecode);
+  }
+  
+  // 4. return distance
+  shaderBuildAddCode(build, "return d;");
+  shaderBuildAddCode(build, "}");
+
   // generate a main function:
-  // 1. Extract point p from ray map
-  // 2. Pass point p to the transform function
-  // 3. Check whether it's the first leaf in group:
-  //   Yes: Simply push distance to the stack
-  //   No:  Extract previous distance, apply combination function, push new distance
+  // -------------------------
+  shaderBuildAddCode(build, "void main() {");
+  shaderBuildAddCode(build, "\tvec2i ifragCoord = vec2i(gl_FragCoord.x, gl_FragCoord.y);");
+
+  // 1. Extract point p from ray map  
+  shaderBuildAddCode(build, "\tvec3 p = rayMap[ifragCoord].xyz * rayMap[ifragCoord].w + cameraPosition;");
+
+  // 2. Transform point into distance
+  shaderBuildAddCode(build, "\tfloat d = transform(p);");
+
+  // (TODO: geometry ID should pushed/popped with distance into stack)
+  // This is the first leaf in group - just push distance to the stack
+  if(firstInGroup == TRUE)
+  {
+    shaderBuildAddCode(build, "\tstackPushDistance(ifragCoord, d);");
+  }
+  // This is not the first leaf in group - pop previous distance from stack, combine, push new distance back
+  else
+  {
+    shaderBuildAddCode(build, "\tfloat prevDistance = stackPopDistance(ifragCoord);");
+
+    // Order of combination is important
+    shaderBuildAddCode(build, "\tstackPushDistance(ifragCoord, combineFunction(prevDistance, d)");
+  }
+
+  shaderBuildAddCode(build, "}");
 }
 
 // NOTE: Branch geometry uses only ODFs (realted to the branch itself)
@@ -255,7 +296,7 @@ static void geometryGenerateBranchCode(Asset* geometry, ShaderBuild* build)
 
   // generate a main function:
   // 1. Extract distance from the stack
-  // 2. Apply IDFs to the distance
+  // 2. Apply ODFs to the distance
   // 3. push new distance back
 }
 
