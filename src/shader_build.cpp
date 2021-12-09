@@ -1,5 +1,6 @@
 #include <sstream>
 
+#include "fileio.h"
 #include "memory_manager.h"
 
 #include "shader_build.h"
@@ -104,22 +105,11 @@ bool8 shaderBuildGenerateShader(ShaderBuild* build, GLenum shaderType, GLuint* r
 
 bool8 shaderBuildIncludeFile(ShaderBuild* build, const char* filename)
 {
-  FILE* file = fopen(filename, "r");
-  if(file == NULL)
-  {
-    return FALSE;
-  }
-  
-  fseek(file, 0, SEEK_END);
-  uint32 fileSize = ftell(file);
-  fseek(file, 0, SEEK_SET);
-
-  char* fileContent = (char*)malloc(fileSize + 1);
-  fread(fileContent, fileSize, 1, file);
-
+  uint32 fileSize = 0;
+  char* fileContent = nullptr;
+  assert(readWholeFile(filename, &fileSize, &fileContent));
   shaderBuildAddCode(build, fileContent);
-
-  free(fileContent);
-
+  freeFileContent(fileSize, fileContent);
+  
   return TRUE;
 }

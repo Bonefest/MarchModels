@@ -235,7 +235,7 @@ void engineSetZeroMem(void* memory, uint32 memorySize)
   memset(memory, 0, memorySize);
 }
 
-void engineCopyMem(void* dst, void* src, uint32 memorySize)
+void engineCopyMem(void* dst, const void* src, uint32 memorySize)
 {
   memcpy(dst, src, memorySize);
 }

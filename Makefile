@@ -14,7 +14,7 @@ INCLUDE_DIRS = -Isrc -Ithrdparty -Igame -I/usr/include/lua5.3 -Itests
 DEFINES = -DDEBUG -DENABLE_EDITOR_GAME #-DTEST_COMPILE_PATH
 
 # Compiler flags
-CFLAGS = -g -O0 -fPIC -std=c++1z ${DEFINES} $(INCLUDE_DIRS)
+CFLAGS = -g -Wall -O0 -fPIC -std=c++1z ${DEFINES} $(INCLUDE_DIRS)
 
 # Linker flags
 LDFLAGS =-lXxf86vm -lxkbcommon-x11 -L/usr/lib/X11

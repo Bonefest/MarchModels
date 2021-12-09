@@ -15,6 +15,7 @@ struct Asset
 bool8 allocateAsset(AssetInterface interface, const string& name, Asset** outAsset)
 {
   *outAsset = engineAllocObject<Asset>(MEMORY_TYPE_GENERAL);
+  
   Asset* asset = *outAsset;
   asset->interface = interface;
   asset->name = name;

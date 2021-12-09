@@ -1,5 +1,7 @@
 #pragma once
 
+#include <new>
+
 #include "defines.h"
 
 using MemoryType = uint32;
@@ -61,7 +63,7 @@ ENGINE_API void engineShutdownMemoryManager();
 ENGINE_API void* engineAllocMem(uint32 memorySize, MemoryType memoryType = MEMORY_TYPE_UNDEFINED);
 ENGINE_API void engineFreeMem(void* memory, uint32 memorySize, MemoryType memoryType = MEMORY_TYPE_UNDEFINED);
 ENGINE_API void engineSetZeroMem(void* memory, uint32 memorySize);
-ENGINE_API void engineCopyMem(void* dst, void* src, uint32 memorySize);
+ENGINE_API void engineCopyMem(void* dst, const void* src, uint32 memorySize);
 
 ENGINE_API bool8 engineRegisterAllocator(MemoryAllocator* allocator);
 ENGINE_API bool8 engineHasAllocatorWithType(MemoryType type);
