@@ -102,3 +102,24 @@ bool8 shaderBuildGenerateShader(ShaderBuild* build, GLenum shaderType, GLuint* r
   return TRUE;
 }
 
+bool8 shaderBuildIncludeFile(ShaderBuild* build, const char* filename)
+{
+  FILE* file = fopen(filename, "r");
+  if(file == NULL)
+  {
+    return FALSE;
+  }
+  
+  fseek(file, 0, SEEK_END);
+  uint32 fileSize = ftell(file);
+  fseek(file, 0, SEEK_SET);
+
+  char* fileContent = (char*)malloc(fileSize + 1);
+  fread(fileContent, fileSize, 1, file);
+
+  shaderBuildAddCode(build, fileContent);
+
+  free(fileContent);
+
+  return TRUE;
+}

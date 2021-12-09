@@ -207,7 +207,7 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
     {
       string functionName = "IDF" + std::to_string(registeredIDFCount);
       string functionBody = scriptFunctionGetGLSLCode(idf);
-      shaderBuildAddFunction(build, "vec3", functionName.c_str(), "vec3 p", functionBody.c_str());
+      shaderBuildAddFunction(build, "float3", functionName.c_str(), "float3 p", functionBody.c_str());
       registeredIDFCount = registeredIDFCount + 1;
     }
   }
@@ -216,7 +216,7 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   shaderBuildAddFunction(build,
                          "float",
                          "SDF",
-                         "vec3 p",
+                         "float3 p",
                          scriptFunctionGetGLSLCode(geometryGetSDF(geometry)).c_str());
   
   // register ODFs (only of the geometry)
@@ -231,13 +231,9 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   // detect whether its number in branch (TODO)
   bool8 firstInGroup = TRUE;
   
-  // register a geometry ID (as macro) (TODO)
-  uint32 ID = 777;
-  shaderBuildAddMacro(build, "GEOMETRY_ID", std::to_string(ID).c_str());
-  
   // generate a transform function:
   // ------------------------------
-  shaderBuildAddCode(build, "float transform(vec3 p) {");
+  shaderBuildAddCode(build, "float transform(float3 p) {");
   char linecode[255] = {};
   // 1. Transform point p with all IDFs
   for(uint32 i = 0; i < registeredIDFCount; i++)
@@ -252,7 +248,7 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   // 3. Transform distance via ODFs
   for(uint32 i = 0; i < odfs.size(); i++)
   {
-    sprintf(linecode, "\td = ODF%d(d);");
+    sprintf(linecode, "\td = ODF%u(d);", i);
     shaderBuildAddCode(build, linecode);
   }
   
@@ -263,10 +259,10 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   // generate a main function:
   // -------------------------
   shaderBuildAddCode(build, "void main() {");
-  shaderBuildAddCode(build, "\tvec2i ifragCoord = vec2i(gl_FragCoord.x, gl_FragCoord.y);");
+  shaderBuildAddCode(build, "\tint2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);");
 
   // 1. Extract point p from ray map  
-  shaderBuildAddCode(build, "\tvec3 p = rayMap[ifragCoord].xyz * rayMap[ifragCoord].w + cameraPosition;");
+  shaderBuildAddCode(build, "\tfloat3 p = rayMap[ifragCoord].xyz * rayMap[ifragCoord].w + cameraPosition;");
 
   // 2. Transform point into distance
   shaderBuildAddCode(build, "\tfloat d = transform(p);");
@@ -293,11 +289,32 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
 static void geometryGenerateBranchCode(Asset* geometry, ShaderBuild* build)
 {
   // register ODFs (only of the geometry)
+  const std::vector<AssetPtr>& odfs = geometryGetODFs(geometry);
+  for(uint32 i = 0; i < odfs.size(); i++)
+  {
+    string functionName = "ODF" + std::to_string(i);
+    string functionBody = scriptFunctionGetGLSLCode(odfs[i]);
+    shaderBuildAddFunction(build, "float", functionName.c_str(), "float d", functionBody.c_str());
+  }
 
   // generate a main function:
+  shaderBuildAddCode(build, "void main() {");
+  shaderBuildAddCode(build, "\tint2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);");  
+
   // 1. Extract distance from the stack
-  // 2. Apply ODFs to the distance
+  shaderBuildAddCode(build, "\tfloat d = stackPopDistance(ifragCoord);");
+
+  // 2. Apply ODFs to the distance  
+  char linecode[255] = {};
+  for(uint32 i = 0; i < odfs.size(); i++)
+  {
+    sprintf(linecode, "d = ODF%u(d);", i);
+    shaderBuildAddCode(build, linecode);
+  }
+
   // 3. push new distance back
+  shaderBuildAddCode(build, "stackPushDistance(ifragCoord, d);");
+  shaderBuildAddCode(build, "}");
 }
 
 static void geometryRebuild(Asset* geometry)
@@ -308,7 +325,10 @@ static void geometryRebuild(Asset* geometry)
   assert(createShaderBuild(&build));
 
   shaderBuildAddVersion(build, 430, "core");
-  // shaderBuildIncludeFile(build, "shaders/geometry_common.glsl");
+  shaderBuildAddMacro(build, "GEOMETRY_ID", std::to_string(777).c_str());
+
+  assert(shaderBuildIncludeFile(build, "shaders/defines.glsl") == TRUE);
+  assert(shaderBuildIncludeFile(build, "shaders/geometry_common.glsl") == TRUE);
 
   if(geometryIsLeaf(geometry))
   {
