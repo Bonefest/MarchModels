@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "shader.h"
 #include "defines.h"
 
 struct ShaderBuild;
@@ -23,4 +24,4 @@ ENGINE_API bool8 shaderBuildIncludeFile(ShaderBuild* build, const char* filename
 ENGINE_API void shaderBuildClear(ShaderBuild* build);
 
 ENGINE_API std::string shaderBuildGetCode(ShaderBuild* build);
-ENGINE_API bool8 shaderBuildGenerateShader(ShaderBuild* build, GLenum shaderType, GLuint* result);
+ENGINE_API ShaderPtr shaderBuildGenerateShader(ShaderBuild* build, GLenum shaderType);

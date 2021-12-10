@@ -4,7 +4,9 @@ using std::string;
 using std::vector;
 
 #include "logging.h"
+#include "program.h"
 #include "shader_build.h"
+#include "shader_manager.h"
 #include "memory_manager.h"
 
 #include "geometry.h"
@@ -28,7 +30,7 @@ struct Geometry
   float4x4 transformToLocalFromParent;
   float4x4 transformToParentFromLocal;
 
-  GLuint program;
+  ShaderProgram* program;
   
   bool8 needRebuild;
   bool8 dirty;
@@ -339,24 +341,36 @@ static void geometryRebuild(Asset* geometry)
     geometryGenerateBranchCode(geometry, build);
   }
 
-  GLuint fragmentShader;
-  if(shaderBuildGenerateShader(build, GL_FRAGMENT_SHADER, &fragmentShader) == FALSE)
+  ShaderPtr fragmentShader = shaderBuildGenerateShader(build, GL_FRAGMENT_SHADER);
+  if(fragmentShader == nullptr)
   {
     LOG_ERROR("Cannot generate a shader for geometry!");
     return;
   }
 
-  GLuint vertexShader;
-  //assert(shaderManagerLoadShader("shaders/triangle.glsl", GL_VERTEX_SHADER, &vertexShader) == TRUE);
-  // createAndLinkShaderProgram(vertexShader, fragmentShader)
+  ShaderPtr vertexShader = shaderManagerGetShader("triangle_vert");
+  if(vertexShader == nullptr)
+  {
+    LOG_ERROR("Cannot load a triangle vertex shader!");
+    return;
+  }
   
   destroyShaderBuild(build);
 
-  if(geometryData->program != 0)
+  if(geometryData->program != nullptr)
   {
-    glDeleteProgram(geometryData->program);
-    geometryData->program = 0;
+    destroyShaderProgram(geometryData->program);
   }
+
+  ShaderProgram* shaderProgram = nullptr;
+  assert(createShaderProgram(&shaderProgram));
+
+  shaderProgramAttachShader(shaderProgram, vertexShader);  
+  shaderProgramAttachShader(shaderProgram, fragmentShader);
+
+  assert(shaderProgramLink(shaderProgram));
+  
+  geometryData->program = shaderProgram;
 }
 
 // ----------------------------------------------------------------------------
@@ -380,6 +394,7 @@ bool8 createGeometry(const string& name, Asset** outGeometry)
   geometryData->orientation = quat(0.0f, 0.0f, 1.0f, 0.0f);
   geometryData->needRebuild = TRUE;  
   geometryData->dirty = TRUE;
+  geometryData->program = nullptr;
   
   assetSetInternalData(*outGeometry, geometryData);
   
@@ -395,6 +410,12 @@ void geometryDestroy(Asset* geometry)
   geometryData->idfs.clear();
   geometryData->odfs.clear();
   geometryData->sdf = AssetPtr(nullptr);
+
+  if(geometryData->program != nullptr)
+  {
+    destroyShaderProgram(geometryData->program);
+    geometryData->program = nullptr;
+  }
   
   engineFreeObject(geometryData, MEMORY_TYPE_GENERAL);
 }

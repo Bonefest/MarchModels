@@ -77,30 +77,20 @@ string shaderBuildGetCode(ShaderBuild* build)
   return build->code.str();
 }
 
-bool8 shaderBuildGenerateShader(ShaderBuild* build, GLenum shaderType, GLuint* result)
+ShaderPtr shaderBuildGenerateShader(ShaderBuild* build, GLenum shaderType)
 {
-  *result = glCreateShader(shaderType);
-  if(*result == 0 || *result == GL_INVALID_ENUM)
+  Shader* shader = nullptr;
+  if(createShaderFromMemory(shaderType, shaderBuildGetCode(build).c_str(), &shader) == FALSE)
   {
-    return FALSE;
+    return ShaderPtr(nullptr);
   }
 
-  string code = build->code.str();
-  const char* ccode = code.c_str();
-  GLint length = 1;
-  glShaderSource(*result, 1, &ccode, &length);
-  glCompileShader(shaderType);
-
-  GLint compileStatus;
-  glGetShaderiv(*result, GL_COMPILE_STATUS, &compileStatus);
-
-  if(compileStatus == GL_FALSE)
+  if(compileShader(shader) == FALSE)
   {
-    glDeleteShader(*result);
-    return FALSE;
+    return ShaderPtr(nullptr);
   }
-  
-  return TRUE;
+
+  return ShaderPtr(shader);
 }
 
 bool8 shaderBuildIncludeFile(ShaderBuild* build, const char* filename)
