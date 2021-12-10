@@ -51,7 +51,7 @@ void shutdownLoggingSystem()
   }
 }
 
-void log(LogMessageType type, const char* format, ...)
+void _log(LogMessageType type, const char* format, ...)
 {
   char buf[4096] = {};
 

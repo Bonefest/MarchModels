@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ptr.h"
 #include "defines.h"
 
 struct Shader;
@@ -15,5 +16,6 @@ ENGINE_API bool8 shaderIsCompiled(Shader* shader);
 ENGINE_API void shaderAttachSource(Shader* shader, const char* source);
 
 ENGINE_API GLuint shaderGetType(Shader* shader);
+ENGINE_API GLuint shaderGetGLShader(Shader* shader);
 
-
+using ShaderPtr = SharedPtr<Shader, &destroyShader>;

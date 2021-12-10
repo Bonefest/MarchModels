@@ -1,6 +1,7 @@
 #include <cstring>
 
 #include "fileio.h"
+#include "logging.h"
 #include "memory_manager.h"
 
 #include "shader.h"
@@ -67,15 +68,19 @@ void destroyShader(Shader* shader)
   if(shader->shader != 0)
   {
     glDeleteShader(shader->shader);
+    shader->shader = 0;
   }
 
   shaderFreeSource(shader);
+
+  engineFreeObject(shader, MEMORY_TYPE_GENERAL);
 }
 
 bool8 compileShader(Shader* shader)
 {
   if(shader->source == nullptr || shader->sourceSize == 0)
   {
+    LOG_ERROR("Attempt to compile a shader without an attached source!");
     return FALSE;
   }
 
@@ -88,6 +93,11 @@ bool8 compileShader(Shader* shader)
 
   if(compileStatus == GL_FALSE)
   {
+    char log[255];
+    glGetShaderInfoLog(shader->shader, 255, NULL, log);
+
+    LOG_ERROR("Shader compile has failed with message: '%s'", log);
+    
     return FALSE;
   }
 
@@ -114,4 +124,9 @@ void shaderAttachSource(Shader* shader, const char* source)
 GLuint shaderGetType(Shader* shader)
 {
   return shader->type;
+}
+
+GLuint shaderGetGLShader(Shader* shader)
+{
+  return shader->shader;
 }
