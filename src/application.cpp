@@ -4,6 +4,7 @@
 
 #include "stopwatch.h"
 #include "event_system.h"
+#include "shader_manager.h"
 #include "memory_manager.h"
 #include "lua/lua_system.h"
 
@@ -180,6 +181,16 @@ static void shutdownImGUI()
   ImGui::DestroyContext();
 }
 
+static bool8 preloadDefaultShaders()
+{
+  if(shaderManagerLoadShader(GL_VERTEX_SHADER, "shaders/triangle.vert", TRUE, "triangle.vert") == FALSE)
+  {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static bool8 initApplication()
 {
   if(application.initialized)
@@ -235,6 +246,27 @@ static bool8 initApplication()
     LOG_INFO("ImGUI has been initialized successfully!");
   }
 
+  /** --- Shader manager initialization ----------------------------------- */
+  if(initShaderManager() == FALSE)
+  {
+    LOG_ERROR("Cannot initialize shader manager!");
+    return FALSE;
+  }
+  else
+  {
+    LOG_INFO("Shader manager has been initialized successfully!");
+  }
+
+  if(preloadDefaultShaders() == FALSE)
+  {
+    LOG_ERROR("Cannot preload default shaders!");
+    return FALSE;
+  }
+  else
+  {
+    LOG_INFO("Default shaders were preloaded successfully!");
+  }
+  
   /** --- Lua system initialization ---------------------------------------- */
   if(initializeLuaSystem() == FALSE)
   {
@@ -245,7 +277,6 @@ static bool8 initApplication()
   {
     LOG_INFO("Lua system has been initialized successfully!");
   }
-
   
   /** --- Game initialization ---------------------------------------------- */
 

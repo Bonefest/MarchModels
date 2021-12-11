@@ -38,7 +38,11 @@ bool8 createShaderFromFile(GLuint shaderType, const char* filename, Shader** out
   uint32 fileSize;
   char* fileContent;
 
-  assert(readWholeFile(filename, &fileSize, &fileContent));
+  if(readWholeFile(filename, &fileSize, &fileContent) == FALSE)
+  {
+    return FALSE;
+  }
+  
   shaderAttachSource(*outShader, fileContent);
   freeFileContent(fileSize, fileContent);
   

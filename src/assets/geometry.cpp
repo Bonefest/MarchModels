@@ -231,7 +231,8 @@ static const char* getCombinationFunctionShaderName(CombinationFunction function
 static void geometryGenerateDistancesCombinationCode(Asset* geometry, ShaderBuild* build)
 {
   // Root and non-root leafs/branches have a bit different code because root geometry doesn't have a direct parent
-  // (they are part of a scene's hierarchy), so we cannot deduce their position in branch from c++ code.
+  // (they are part of a scene's hierarchy), so we cannot deduce their position in branch from c++ code, additionally
+  // for root objects we implicitly use a union distance.
   if(geometryIsRoot(geometry) == FALSE)
   {
     // Detect its number in parent's branch
@@ -400,7 +401,7 @@ static void geometryRebuild(Asset* geometry)
     return;
   }
 
-  ShaderPtr vertexShader = shaderManagerGetShader("triangle_vert");
+  ShaderPtr vertexShader = shaderManagerGetShader("triangle.vert");
   if(vertexShader == nullptr)
   {
     LOG_ERROR("Cannot load a triangle vertex shader!");
