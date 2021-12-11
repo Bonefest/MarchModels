@@ -228,6 +228,41 @@ static const char* getCombinationFunctionShaderName(CombinationFunction function
   return "";
 }
 
+static void geometryGenerateDistancesCombinationCode(Asset* geometry, ShaderBuild* build)
+{
+  // Root and non-root leafs/branches have a bit different code because root geometry doesn't have a direct parent
+  // (they are part of a scene's hierarchy), so we cannot deduce their position in branch from c++ code.
+  if(geometryIsRoot(geometry) == FALSE)
+  {
+    // Detect its number in parent's branch
+    bool8 firstInBranch = geometryGetIndexInBranch(geometry) == 0 ? TRUE : FALSE;
+
+    // (TODO: geometry ID should pushed/popped along with distance into stack)
+    // This is the first leaf/branch in group - just push distance to the stack
+    if(firstInBranch == TRUE)
+    {
+      shaderBuildAddCode(build, "\tstackPushDistance(ifragCoord, d);");
+    }
+    // This is not the first leaf/branch in group - pop previous distance from stack, combine, push new distance back
+    else
+    {
+      shaderBuildAddCode(build, "\tfloat32 prevDistance = stackPopDistance(ifragCoord);");
+
+      // Order of combination is important      
+      shaderBuildAddCodefln(build, "\tstackPushDistance(ifragCoord, %s(prevDistance, d));",
+                            getCombinationFunctionShaderName(geometryGetCombinationFunction(geometry)));
+    }
+  }
+  else
+  {
+    shaderBuildAddCode(build, "\tuint32 stackLength = getStackLength(ifragCoord);");
+    shaderBuildAddCode(build, "\tif(stackLength > 0) {");
+    shaderBuildAddCode(build, "\t\tfloat32 prevDistance = stackPopDistance(ifragCoord);");
+    shaderBuildAddCode(build, "\t\tstackPushDistance(ifragCoord, unionDistances(prevDistance, d);");
+    shaderBuildAddCode(build, "\t}");
+  }
+}
+
 // NOTE: Leaf geometry uses IDFs, SDF and ODFs (only related to the geometry)
 static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
 {
@@ -299,37 +334,9 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   // 2. Transform point into distance
   shaderBuildAddCode(build, "\tfloat32 d = transform(p);");
 
-  // Root and non-root leafs have a bit different code because root leafs doesn't have a direct parent
-  // (they are part of a scene's hierarchy), so we cannot deduce their position in group from c++ code.
-  if(geometryIsRoot(geometry) == FALSE)
-  {
-    // Detect its number in parent's branch
-    bool8 firstInBranch = geometryGetIndexInBranch(geometry) == 0 ? TRUE : FALSE;
-
-    // (TODO: geometry ID should pushed/popped with distance into stack)
-    // This is the first leaf in group - just push distance to the stack
-    if(firstInBranch == TRUE)
-    {
-      shaderBuildAddCode(build, "\tstackPushDistance(ifragCoord, d);");
-    }
-    // This is not the first leaf in group - pop previous distance from stack, combine, push new distance back
-    else
-    {
-      shaderBuildAddCode(build, "\tfloat32 prevDistance = stackPopDistance(ifragCoord);");
-
-      // Order of combination is important      
-      shaderBuildAddCodefln(build, "\tstackPushDistance(ifragCoord, %s(prevDistance, d));",
-                            getCombinationFunctionShaderName(geometryGetCombinationFunction(geometry)));
-    }
-  }
-  else
-  {
-    shaderBuildAddCode(build, "\tuint32 stackLength = getStackLength(ifragCoord);");
-    shaderBuildAddCode(build, "\tif(stackLength > 0) {");
-    shaderBuildAddCode(build, "\t\tfloat32 prevDistance = stackPopDistance(ifragCoord);");
-    shaderBuildAddCode(build, "\t\tstackPushDistance(ifragCoord, unionDistances(prevDistance, d);");
-    shaderBuildAddCode(build, "\t}");
-  }
+  // 3. Combine distance with last distance on stack (if needed)
+  geometryGenerateDistancesCombinationCode(geometry, build);
+  
   shaderBuildAddCode(build, "}");
 }
 
@@ -358,8 +365,9 @@ static void geometryGenerateBranchCode(Asset* geometry, ShaderBuild* build)
     shaderBuildAddCode(build, "d = ODF%u(d);");
   }
 
-  // 3. push new distance back
-  shaderBuildAddCode(build, "stackPushDistance(ifragCoord, d);");
+  // 3. Combine distance with last distance on stack (if needed)
+  geometryGenerateDistancesCombinationCode(geometry, build);
+
   shaderBuildAddCode(build, "}");
 }
 
