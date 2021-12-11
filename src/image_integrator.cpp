@@ -3,6 +3,8 @@
 
 #include "image_integrator.h"
 
+#include <../bin/shaders/stack.h>
+
 struct ImageIntegrator
 {
   Scene* scene;
@@ -13,6 +15,9 @@ struct ImageIntegrator
 
   uint2 pixelGap;
   uint2 initialOffset;
+
+  GLuint stackSSBO;
+  GLuint globalParamsUBO;
   
   void* internalData;
 };
@@ -32,6 +37,7 @@ static bool8 imageIntegratorShouldIntegratePixelLocation(ImageIntegrator* integr
   return (loc.x + offset.x) % gap.x == 0 && (loc.y + offset.y) % gap.y == 0;  
 }
 
+
 bool8 createImageIntegrator(Scene* scene,
                             Sampler* sampler,
                             RayIntegrator* rayIntegrator,
@@ -50,6 +56,13 @@ bool8 createImageIntegrator(Scene* scene,
   integrator->pixelGap = uint2(1, 1);
   integrator->initialOffset = uint2(0, 0);
   integrator->internalData = nullptr;
+
+  glGenBuffers(1, &integrator->stackSSBO);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, integrator->stackSSBO);
+  // TODO: We should be able to resize SSBO whenever we want. Now we simply preallocate as maximum
+  // as we may want
+  glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(DistancesStack) * 1280 * 720, NULL, GL_DYNAMIC_COPY);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
   
   return TRUE;
 }
@@ -57,6 +70,17 @@ bool8 createImageIntegrator(Scene* scene,
 void destroyImageIntegrator(ImageIntegrator* integrator)
 {
   engineFreeObject(integrator, MEMORY_TYPE_GENERAL);
+  glDeleteBuffers(1, &integrator->stackSSBO);
+}
+
+void imageIntegratorExecute2(ImageIntegrator* integrator, float32 time)
+{
+  // setup shader common parameters
+  // fill ray map
+  // generate a stencil mask (determines which pixels to render) based on imageIntegrator's function
+  // bind stack SSBO
+  // traverse geometry of scene inorder
+  // translate distances of stacks into colors
 }
 
 void imageIntegratorExecute(ImageIntegrator* integrator, float32 time)
@@ -71,6 +95,7 @@ void imageIntegratorExecute(ImageIntegrator* integrator, float32 time)
       int2 pixelLocation(x, y);
 
       float3 radiance(0.0f, 0.0f, 0.0f);
+      // TODO: imageIntegratorShouldIntegratePixelLocation's function should be integrated in shader
       if(imageIntegratorShouldIntegratePixelLocation(integrator, pixelLocation))
       {
         samplerStartSamplingPixel(integrator->sampler, pixelLocation);

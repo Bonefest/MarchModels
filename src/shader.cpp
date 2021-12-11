@@ -88,8 +88,7 @@ bool8 compileShader(Shader* shader)
     return FALSE;
   }
 
-  GLint length = 1;
-  glShaderSource(shader->shader, 1, &shader->source, &length);
+  glShaderSource(shader->shader, 1, &shader->source, NULL);
   glCompileShader(shader->shader);
 
   GLint compileStatus;
@@ -100,7 +99,7 @@ bool8 compileShader(Shader* shader)
     char log[255];
     glGetShaderInfoLog(shader->shader, 255, NULL, log);
 
-    LOG_ERROR("Shader compile has failed with message: '%s'", log);
+    LOG_ERROR("Shader compilation has failed with message: '%s'", log);
     
     return FALSE;
   }

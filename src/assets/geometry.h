@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "program.h"
 #include "maths/common.h"
 #include "assets/script_function.h"
 
@@ -75,7 +76,7 @@ ENGINE_API float3 geometryCalculateNormal(Asset* geometry, float3 p);
 
 
 ENGINE_API bool8 geometryNeedRebuild(Asset* geometry);
-ENGINE_API GLuint geometryGetProgram(Asset* geometry);
+ENGINE_API ShaderProgram* geometryGetProgram(Asset* geometry);
 
 // ----------------------------------------------------------------------------
 // Branch geometry-related interface

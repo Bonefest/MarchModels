@@ -57,6 +57,12 @@ bool8 shaderManagerLoadShader(GLuint shaderType,
     return FALSE;
   }
 
+  if(compileShader(shader) == FALSE)
+  {
+    LOG_ERROR("Cannot compile a shader '%s'!", filename);
+    return FALSE;
+  }
+  
   ShaderPtr shaderPtr = ShaderPtr(shader);
   
   if(autoreload == TRUE)

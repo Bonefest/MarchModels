@@ -17,7 +17,7 @@ std::string samplerTypeToString(SamplerType type)
 {
   switch(type)
   {
-    case SAMPLER_TYPE_CENTER_SAMPLER: "CenterSampler";
+    case SAMPLER_TYPE_CENTER_SAMPLER: return "CenterSampler";
   }
 
   LOG_ERROR("Samplers factory cannot convert type '%d' to a string!", type);

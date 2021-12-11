@@ -4,7 +4,6 @@ using std::string;
 using std::vector;
 
 #include "logging.h"
-#include "program.h"
 #include "shader_build.h"
 #include "shader_manager.h"
 #include "memory_manager.h"
@@ -256,8 +255,8 @@ static void geometryGenerateDistancesCombinationCode(Asset* geometry, ShaderBuil
   }
   else
   {
-    shaderBuildAddCode(build, "\tuint32 stackLength = getStackLength(ifragCoord);");
-    shaderBuildAddCode(build, "\tif(stackLength > 0) {");
+    shaderBuildAddCode(build, "\tuint32 stackSize = getStackSize(ifragCoord);");
+    shaderBuildAddCode(build, "\tif(stackSize > 0) {");
     shaderBuildAddCode(build, "\t\tfloat32 prevDistance = stackPopDistance(ifragCoord);");
     shaderBuildAddCode(build, "\t\tstackPushDistance(ifragCoord, unionDistances(prevDistance, d);");
     shaderBuildAddCode(build, "\t}");
@@ -330,7 +329,7 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   shaderBuildAddCode(build, "\tint2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);");
 
   // 1. Extract point p from ray map  
-  shaderBuildAddCode(build, "\tfloat3 p = rayMap[ifragCoord].xyz * rayMap[ifragCoord].w + cameraPosition;");
+  shaderBuildAddCode(build, "\tfloat3 p = rayMap[ifragCoord].xyz * rayMap[ifragCoord].w + cameraPos;");
 
   // 2. Transform point into distance
   shaderBuildAddCode(build, "\tfloat32 d = transform(p);");
@@ -383,6 +382,7 @@ static void geometryRebuild(Asset* geometry)
   shaderBuildAddMacro(build, "GEOMETRY_ID", std::to_string(777).c_str());
 
   assert(shaderBuildIncludeFile(build, "shaders/defines.glsl") == TRUE);
+  assert(shaderBuildIncludeFile(build, "shaders/common.glsl") == TRUE);  
   assert(shaderBuildIncludeFile(build, "shaders/geometry_common.glsl") == TRUE);
 
   if(geometryIsLeaf(geometry))
@@ -822,9 +822,15 @@ bool8 geometryNeedRebuild(Asset* geometry)
   return geometryData->needRebuild;
 }
 
-GLuint geometryGetProgram(Asset* geometry)
+ShaderProgram* geometryGetProgram(Asset* geometry)
 {
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  if(geometryData->needRebuild == TRUE)
+  {
+    geometryRebuild(geometry);
+  }
 
+  return geometryData->program;
 }
 
 // ----------------------------------------------------------------------------
