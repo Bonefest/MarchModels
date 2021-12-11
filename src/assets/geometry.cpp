@@ -193,6 +193,41 @@ static void geometryCollectParents(Asset* geometry, vector<Asset*>& collection)
   collection.push_back(geometry);
 }
 
+static uint32 geometryGetIndexInBranch(Asset* geometry)
+{
+  AssetPtr parent = geometryGetParent(geometry);
+  if(parent == nullptr)
+  {
+    return (uint32)-1;
+  }
+  
+  const std::vector<AssetPtr>& children = geometryGetChildren(parent);
+
+  for(uint32 i = 0; i < children.size(); i++)
+  {
+    if(children[i] == geometry)
+    {
+      return i;
+    }
+  }
+
+  assert(FALSE);
+  return 0;
+}
+
+static const char* getCombinationFunctionShaderName(CombinationFunction function)
+{
+  switch(function)
+  {
+    case COMBINATION_INTERSECTION: return "intersectDistances";
+    case COMBINATION_UNION: return "unionDistances";
+    case COMBINATION_SUBTRACTION: return "subtractDistances";
+    default: assert(FALSE); return "";
+  }
+
+  return "";
+}
+
 // NOTE: Leaf geometry uses IDFs, SDF and ODFs (only related to the geometry)
 static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
 {
@@ -227,31 +262,26 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   {
     string functionName = "ODF" + std::to_string(i);
     string functionBody = scriptFunctionGetGLSLCode(odfs[i]);
-    shaderBuildAddFunction(build, "float", functionName.c_str(), "float d", functionBody.c_str());
+    shaderBuildAddFunction(build, "float32", functionName.c_str(), "float32 d", functionBody.c_str());
   }
 
-  // detect whether its number in branch (TODO)
-  bool8 firstInGroup = TRUE;
   
   // generate a transform function:
   // ------------------------------
-  shaderBuildAddCode(build, "float transform(float3 p) {");
-  char linecode[255] = {};
+  shaderBuildAddCode(build, "float32 transform(float3 p) {");
   // 1. Transform point p with all IDFs
   for(uint32 i = 0; i < registeredIDFCount; i++)
   {
-    sprintf(linecode, "\tp = IDF%d(p);", i);
-    shaderBuildAddCode(build, linecode);
+    shaderBuildAddCodefln(build, "\tp = IDF%d(p);", i);
   }
   
   // 2. Transform point p by geometry transform, transform point into distance via SDF
-  shaderBuildAddCode(build, "\tfloat d = SDF(geometryTransform * p);");
+  shaderBuildAddCode(build, "\tfloat32 d = SDF(geometryTransform * p);");
   
   // 3. Transform distance via ODFs
   for(uint32 i = 0; i < odfs.size(); i++)
   {
-    sprintf(linecode, "\td = ODF%u(d);", i);
-    shaderBuildAddCode(build, linecode);
+    shaderBuildAddCode(build, "\td = ODF%u(d);");
   }
   
   // 4. return distance
@@ -267,23 +297,39 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   shaderBuildAddCode(build, "\tfloat3 p = rayMap[ifragCoord].xyz * rayMap[ifragCoord].w + cameraPosition;");
 
   // 2. Transform point into distance
-  shaderBuildAddCode(build, "\tfloat d = transform(p);");
+  shaderBuildAddCode(build, "\tfloat32 d = transform(p);");
 
-  // (TODO: geometry ID should pushed/popped with distance into stack)
-  // This is the first leaf in group - just push distance to the stack
-  if(firstInGroup == TRUE)
+  // Root and non-root leafs have a bit different code because root leafs doesn't have a direct parent
+  // (they are part of a scene's hierarchy), so we cannot deduce their position in group from c++ code.
+  if(geometryIsRoot(geometry) == FALSE)
   {
-    shaderBuildAddCode(build, "\tstackPushDistance(ifragCoord, d);");
+    // Detect its number in parent's branch
+    bool8 firstInBranch = geometryGetIndexInBranch(geometry) == 0 ? TRUE : FALSE;
+
+    // (TODO: geometry ID should pushed/popped with distance into stack)
+    // This is the first leaf in group - just push distance to the stack
+    if(firstInBranch == TRUE)
+    {
+      shaderBuildAddCode(build, "\tstackPushDistance(ifragCoord, d);");
+    }
+    // This is not the first leaf in group - pop previous distance from stack, combine, push new distance back
+    else
+    {
+      shaderBuildAddCode(build, "\tfloat32 prevDistance = stackPopDistance(ifragCoord);");
+
+      // Order of combination is important      
+      shaderBuildAddCodefln(build, "\tstackPushDistance(ifragCoord, %s(prevDistance, d));",
+                            getCombinationFunctionShaderName(geometryGetCombinationFunction(geometry)));
+    }
   }
-  // This is not the first leaf in group - pop previous distance from stack, combine, push new distance back
   else
   {
-    shaderBuildAddCode(build, "\tfloat prevDistance = stackPopDistance(ifragCoord);");
-
-    // Order of combination is important
-    shaderBuildAddCode(build, "\tstackPushDistance(ifragCoord, combineFunction(prevDistance, d)");
+    shaderBuildAddCode(build, "\tuint32 stackLength = getStackLength(ifragCoord);");
+    shaderBuildAddCode(build, "\tif(stackLength > 0) {");
+    shaderBuildAddCode(build, "\t\tfloat32 prevDistance = stackPopDistance(ifragCoord);");
+    shaderBuildAddCode(build, "\t\tstackPushDistance(ifragCoord, unionDistances(prevDistance, d);");
+    shaderBuildAddCode(build, "\t}");
   }
-
   shaderBuildAddCode(build, "}");
 }
 
@@ -296,7 +342,7 @@ static void geometryGenerateBranchCode(Asset* geometry, ShaderBuild* build)
   {
     string functionName = "ODF" + std::to_string(i);
     string functionBody = scriptFunctionGetGLSLCode(odfs[i]);
-    shaderBuildAddFunction(build, "float", functionName.c_str(), "float d", functionBody.c_str());
+    shaderBuildAddFunction(build, "float32", functionName.c_str(), "float32 d", functionBody.c_str());
   }
 
   // generate a main function:
@@ -304,14 +350,12 @@ static void geometryGenerateBranchCode(Asset* geometry, ShaderBuild* build)
   shaderBuildAddCode(build, "\tint2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);");  
 
   // 1. Extract distance from the stack
-  shaderBuildAddCode(build, "\tfloat d = stackPopDistance(ifragCoord);");
+  shaderBuildAddCode(build, "\tfloat32 d = stackPopDistance(ifragCoord);");
 
   // 2. Apply ODFs to the distance  
-  char linecode[255] = {};
   for(uint32 i = 0; i < odfs.size(); i++)
   {
-    sprintf(linecode, "d = ODF%u(d);", i);
-    shaderBuildAddCode(build, linecode);
+    shaderBuildAddCode(build, "d = ODF%u(d);");
   }
 
   // 3. push new distance back

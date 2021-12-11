@@ -14,6 +14,8 @@ ENGINE_API void shaderBuildAddVersion(ShaderBuild* build, int32 version, const c
 ENGINE_API void shaderBuildAddExtension(ShaderBuild* build, const char* extName);
 ENGINE_API void shaderBuildAddMacro(ShaderBuild* build, const char* macroName, const char* macroValue);
 ENGINE_API void shaderBuildAddCode(ShaderBuild* build, const char* code, bool8 addNewLine = TRUE);
+ENGINE_API void shaderBuildAddCodef(ShaderBuild* build, const char* format, ...);
+ENGINE_API void shaderBuildAddCodefln(ShaderBuild* build, const char* format, ...);
 ENGINE_API void shaderBuildAddFunction(ShaderBuild* build,
                                        const char* returnType,
                                        const char* functionName,

@@ -48,10 +48,25 @@ void pushDistance(int2 pixelCoord, float32 distance)
   stacks[stackID].length = stackLen + 1;
 }
 
-float popDistance(int2 pixelCoord)
+float32 popDistance(int2 pixelCoord)
 {
   uint32 stackID = getStackID(pixelCoord);
   uint32 stackLen = stacks[stackID].length;
 
   return stacks[stackID].distances[stackLen - 1];
+}
+
+float32 unionDistances(float32 d1, float32 d2)
+{
+  return min(d1, d2);
+}
+
+float32 intersectDistances(float32 d1, float32 d2)
+{
+  return max(d1, d2);
+}
+
+float32 subtractDistances(float32 d1, float32 d2)
+{
+  return max(d1, -d2);
 }

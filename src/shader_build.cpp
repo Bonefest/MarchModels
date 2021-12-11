@@ -1,3 +1,5 @@
+#include <stdarg.h>
+
 #include <sstream>
 
 #include "fileio.h"
@@ -48,6 +50,30 @@ void shaderBuildAddCode(ShaderBuild* build, const char* code, bool8 addNewLine)
   {
     build->code << endl;
   }
+}
+
+void shaderBuildAddCodef(ShaderBuild* build, const char* format, ...)
+{
+  char buf[4096]{};
+
+  va_list args;
+  va_start(args, format);
+  vsprintf(buf, format, args);
+  va_end(args);
+
+  shaderBuildAddCode(build, format, FALSE);
+}
+
+void shaderBuildAddCodefln(ShaderBuild* build, const char* format, ...)
+{
+  char buf[4096]{};
+
+  va_list args;
+  va_start(args, format);
+  vsprintf(buf, format, args);
+  va_end(args);
+
+  shaderBuildAddCode(build, format, TRUE);
 }
 
 void shaderBuildAddFunction(ShaderBuild* build,
