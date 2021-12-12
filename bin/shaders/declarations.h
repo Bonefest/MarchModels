@@ -1,4 +1,10 @@
+#if !defined(__cplusplus)
+  #include "defines.glsl"
+#endif
+
 #define MAX_STACK_SIZE 8
+#define GLOBAL_PARAMS_UBO_BINDING 0
+#define STACKS_SSBO_BINDING 1
 
 struct DistancesStack
 {

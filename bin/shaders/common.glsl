@@ -1,4 +1,6 @@
-layout(std140, binding = 0) uniform GlobalParametersUBO
+#include "declarations.h"
+
+layout(std140, binding = GLOBAL_PARAMS_UBO_BINDING) uniform GlobalParametersUBO
 {
   GlobalParameters parameters;
 };

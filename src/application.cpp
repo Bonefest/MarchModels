@@ -120,7 +120,12 @@ static bool8 initGLFW()
   }
 
   glfwMakeContextCurrent(application.window);
-  gladLoadGL();
+  if(gladLoadGL() == 0)
+  {
+    LOG_ERROR("gladLoadGL() returned false (0)!");
+    glfwTerminate();
+    return FALSE;
+  }
   
   glfwSetKeyCallback(application.window, gkeyCallback);
   glfwSetCursorPosCallback(application.window, gcursorPosCallback);
@@ -182,7 +187,12 @@ static void shutdownImGUI()
 }
 
 static bool8 preloadDefaultShaders()
-{
+{ 
+  if(shaderManagerAddInclude("shaders/declarations.h") == FALSE) return FALSE;
+  if(shaderManagerAddInclude("shaders/defines.glsl") == FALSE) return FALSE;
+  if(shaderManagerAddInclude("shaders/common.glsl") == FALSE) return FALSE;
+  if(shaderManagerAddInclude("shaders/geometry_common.glsl") == FALSE) return FALSE;
+  
   if(shaderManagerLoadShader(GL_VERTEX_SHADER, "shaders/triangle.vert", TRUE, "triangle.vert") == FALSE)
   {
     return FALSE;

@@ -1,7 +1,7 @@
 uniform sampler2D raysMap;
 uniform float4x4 modelTransform;
 
-layout(std140, binding = 1) buffer StacksSSBO
+layout(std140, binding = STACKS_SSBO_BINDING) buffer StacksSSBO
 {
     DistancesStack stacks[];
 };

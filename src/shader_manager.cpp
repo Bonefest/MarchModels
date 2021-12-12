@@ -7,6 +7,7 @@ using std::string;
 using std::vector;
 using std::unordered_map;
 
+#include "fileio.h"
 #include "shader_manager.h"
 
 struct ShaderReloadData
@@ -38,6 +39,28 @@ void shutdownShaderManager()
 void shaderManagerUpdate()
 {
   // TODO: reload shaders if needed
+}
+
+bool8 shaderManagerAddInclude(const char* filename)
+{
+  uint32 fileSize = 0;
+  char* fileContent = nullptr;
+  if(readWholeFile(filename, &fileSize, &fileContent) == FALSE)
+  {
+    return FALSE;
+  }
+
+  string fmtFilename = filename;
+  if(fmtFilename[0] != '/')
+  {
+    fmtFilename = "/" + fmtFilename;
+  }
+  
+  glad_glNamedStringARB(GL_SHADER_INCLUDE_ARB, -1, fmtFilename.c_str(), -1, fileContent);
+  
+  freeFileContent(fileSize, fileContent);
+
+  return TRUE;
 }
 
 bool8 shaderManagerLoadShader(GLuint shaderType,

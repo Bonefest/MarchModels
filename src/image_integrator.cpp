@@ -93,12 +93,14 @@ bool8 createImageIntegrator(Scene* scene,
   // as we may want
   glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(DistancesStack) * 1280 * 720, NULL, GL_DYNAMIC_COPY);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, STACKS_SSBO_BINDING, integrator->stackSSBO);  
 
   // Global parameters UBO
   glGenBuffers(1, &integrator->globalParamsUBO);
   glBindBuffer(GL_UNIFORM_BUFFER, integrator->globalParamsUBO);
   glBufferData(GL_UNIFORM_BUFFER, sizeof(GlobalParameters), NULL, GL_DYNAMIC_DRAW);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  glBindBufferBase(GL_UNIFORM_BUFFER, GLOBAL_PARAMS_UBO_BINDING, integrator->globalParamsUBO);
 
   // Ray map texture
   glGenTextures(1, &integrator->rayMapTexture);
@@ -117,12 +119,13 @@ void destroyImageIntegrator(ImageIntegrator* integrator)
   engineFreeObject(integrator, MEMORY_TYPE_GENERAL);
   glDeleteBuffers(1, &integrator->stackSSBO);
   glDeleteBuffers(1, &integrator->globalParamsUBO);
+  glDeleteTextures(1, &integrator->rayMapTexture);
 }
 
 void imageIntegratorExecute2(ImageIntegrator* integrator, float32 time)
 {
   imageIntegratorSetupGlobalParameters(integrator, time);
-
+  
   // fill ray map
   // generate a stencil mask (determines which pixels to render) based on imageIntegrator's function
   // bind stack SSBO
