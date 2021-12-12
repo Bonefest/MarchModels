@@ -1,4 +1,9 @@
+#include <string>
 #include <cstring>
+
+using std::string;
+
+#include <glsl_include/shadinclude.hpp>
 
 #include "fileio.h"
 #include "logging.h"
@@ -32,19 +37,15 @@ bool8 createEmptyShader(GLuint shaderType, Shader** outShader)
 
 bool8 createShaderFromFile(GLuint shaderType, const char* filename, Shader** outShader)
 {
-
   assert(createEmptyShader(shaderType, outShader));
 
-  uint32 fileSize;
-  char* fileContent;
-
-  if(readWholeFile(filename, &fileSize, &fileContent) == FALSE)
+  string fileContent = Shadinclude::load(filename);
+  if(fileContent.empty())
   {
     return FALSE;
   }
   
-  shaderAttachSource(*outShader, fileContent);
-  freeFileContent(fileSize, fileContent);
+  shaderAttachSource(*outShader, fileContent.c_str());
   
   return TRUE;
 }

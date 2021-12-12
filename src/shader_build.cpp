@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+#include <glsl_include/shadinclude.hpp>
+
 #include "fileio.h"
 #include "memory_manager.h"
 
@@ -121,11 +123,13 @@ ShaderPtr shaderBuildGenerateShader(ShaderBuild* build, GLenum shaderType)
 
 bool8 shaderBuildIncludeFile(ShaderBuild* build, const char* filename)
 {
-  uint32 fileSize = 0;
-  char* fileContent = nullptr;
-  assert(readWholeFile(filename, &fileSize, &fileContent));
-  shaderBuildAddCode(build, fileContent);
-  freeFileContent(fileSize, fileContent);
+  string fileContent = Shadinclude::load(filename);
+  if(fileContent.empty())
+  {
+    return FALSE;
+  }
+
+  shaderBuildAddCode(build, fileContent.c_str());
   
   return TRUE;
 }

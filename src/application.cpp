@@ -188,11 +188,6 @@ static void shutdownImGUI()
 
 static bool8 preloadDefaultShaders()
 { 
-  if(shaderManagerAddInclude("shaders/declarations.h") == FALSE) return FALSE;
-  if(shaderManagerAddInclude("shaders/defines.glsl") == FALSE) return FALSE;
-  if(shaderManagerAddInclude("shaders/common.glsl") == FALSE) return FALSE;
-  if(shaderManagerAddInclude("shaders/geometry_common.glsl") == FALSE) return FALSE;
-  
   if(shaderManagerLoadShader(GL_VERTEX_SHADER, "shaders/triangle.vert", TRUE, "triangle.vert") == FALSE)
   {
     return FALSE;

@@ -1,5 +1,3 @@
-#include "defines.h"
-
 #version 330 core
 
 void main()

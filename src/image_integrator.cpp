@@ -41,8 +41,8 @@ static void imageIntegratorSetupGlobalParameters(ImageIntegrator* integrator, fl
   parameters.tone = 0;
   parameters.pixelGapX = 0;
   parameters.pixelGapY = 0;    
-  parameters.resX = filmGetSize(integrator->film).x;
-  parameters.resY = filmGetSize(integrator->film).y;
+  parameters.resolution = filmGetSize(integrator->film);
+  parameters.invResolution = float2(1.0f / parameters.resolution.x, 1.0f / parameters.resolution.y);
   
   parameters.camPosition = float4(cameraGetPosition(integrator->camera), 0.0);
   parameters.camOrientation = cameraGetOrientation(integrator->camera);

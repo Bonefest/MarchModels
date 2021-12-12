@@ -7,8 +7,6 @@ ENGINE_API void shutdownShaderManager();
 
 ENGINE_API void shaderManagerUpdate();
 
-ENGINE_API bool8 shaderManagerAddInclude(const char* filename);
-
 ENGINE_API bool8 shaderManagerLoadShader(GLuint shaderType,
                                          const char* filename,
                                          bool8 autoreload = TRUE,

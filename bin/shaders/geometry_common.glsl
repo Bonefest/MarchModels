@@ -1,3 +1,5 @@
+#include declarations.h
+
 uniform sampler2D raysMap;
 uniform float4x4 modelTransform;
 
@@ -21,7 +23,7 @@ uint32 getStackSize(uint2 pixelCoord)
   stacks[getStackID(pixelCoord)].size;
 }
 
-void pushDistance(int2 pixelCoord, float32 distance)
+void stackPushDistance(int2 pixelCoord, float32 distance)
 {
   uint32 stackID = getStackID(pixelCoord);
   uint32 stackSize = stacks[stackID].size;
@@ -30,12 +32,18 @@ void pushDistance(int2 pixelCoord, float32 distance)
   stacks[stackID].length = stackSize + 1;
 }
 
-float32 popDistance(int2 pixelCoord)
+float32 stackPopDistance(int2 pixelCoord)
 {
   uint32 stackID = getStackID(pixelCoord);
   uint32 stackSize = stacks[stackID].size;
 
   return stacks[stackID].distances[stackSize - 1];
+}
+
+void stackClear(int2 pixelCoord)
+{
+  uint32 stackID = getStackID(pixelCoord);
+  stacks[stackID].length = 0;
 }
 
 float32 unionDistances(float32 d1, float32 d2)

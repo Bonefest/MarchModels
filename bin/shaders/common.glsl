@@ -1,6 +1,11 @@
-#include "declarations.h"
+#ifndef COMMON_GLSL_INCLUDED
+#define COMMON_GLSL_INCLUDED
 
-layout(std140, binding = GLOBAL_PARAMS_UBO_BINDING) uniform GlobalParametersUBO
-{
-  GlobalParameters parameters;
-};
+  #include declarations.h
+
+  layout(std140, binding = GLOBAL_PARAMS_UBO_BINDING) uniform GlobalParametersUBO
+  {
+    GlobalParameters parameters;
+  };
+
+#endif

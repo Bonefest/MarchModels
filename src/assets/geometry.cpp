@@ -381,8 +381,6 @@ static void geometryRebuild(Asset* geometry)
   shaderBuildAddVersion(build, 430, "core");
   shaderBuildAddMacro(build, "GEOMETRY_ID", std::to_string(777).c_str());
 
-  assert(shaderBuildIncludeFile(build, "shaders/defines.glsl") == TRUE);
-  assert(shaderBuildIncludeFile(build, "shaders/declarations.h") == TRUE);
   assert(shaderBuildIncludeFile(build, "shaders/common.glsl") == TRUE);  
   assert(shaderBuildIncludeFile(build, "shaders/geometry_common.glsl") == TRUE);
 
