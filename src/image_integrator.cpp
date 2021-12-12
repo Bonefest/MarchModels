@@ -3,7 +3,7 @@
 
 #include "image_integrator.h"
 
-#include <../bin/shaders/stack.h>
+#include <../bin/shaders/declarations.h>
 
 struct ImageIntegrator
 {
@@ -17,7 +17,11 @@ struct ImageIntegrator
   uint2 initialOffset;
 
   GLuint stackSSBO;
+
+  GlobalParameters parameters;
   GLuint globalParamsUBO;
+
+  GLuint rayMapTexture;
   
   void* internalData;
 };
@@ -27,6 +31,31 @@ static void imageIntegratorSetupCommonScriptData(ImageIntegrator* integrator, fl
   sol::state& lua = luaGetMainState();
   lua["args"]["time"] = time;
   // lua["args"]["camera"] = cameraGetLuaTable(integrator->camera);
+}
+
+static void imageIntegratorSetupGlobalParameters(ImageIntegrator* integrator, float32 time)
+{
+  GlobalParameters& parameters = integrator->parameters;
+  
+  parameters.time = time;
+  parameters.tone = 0;
+  parameters.pixelGapX = 0;
+  parameters.pixelGapY = 0;    
+  parameters.resX = filmGetSize(integrator->film).x;
+  parameters.resY = filmGetSize(integrator->film).y;
+  
+  parameters.camPosition = float4(cameraGetPosition(integrator->camera), 0.0);
+  parameters.camOrientation = cameraGetOrientation(integrator->camera);
+  parameters.camNDCCameraMat = cameraGetNDCCameraMat(integrator->camera);
+  parameters.camCameraNDCMat = cameraGetCameraNDCMat(integrator->camera);
+  parameters.camNDCWorldMat = cameraGetNDCWorldMat(integrator->camera);
+  parameters.camWorldNDCMat = cameraGetWorldNDCMat(integrator->camera);
+  parameters.camCameraWorldMat = cameraGetCameraWorldMat(integrator->camera);
+  parameters.camWorldCameraMat = cameraGetWorldCameraMat(integrator->camera);
+
+  glBindBuffer(GL_UNIFORM_BUFFER, integrator->globalParamsUBO);
+  glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(GlobalParameters), &parameters);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);                  
 }
 
 static bool8 imageIntegratorShouldIntegratePixelLocation(ImageIntegrator* integrator, int2 loc)
@@ -57,12 +86,28 @@ bool8 createImageIntegrator(Scene* scene,
   integrator->initialOffset = uint2(0, 0);
   integrator->internalData = nullptr;
 
+  // Stack SSBO
   glGenBuffers(1, &integrator->stackSSBO);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, integrator->stackSSBO);
   // TODO: We should be able to resize SSBO whenever we want. Now we simply preallocate as maximum
   // as we may want
   glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(DistancesStack) * 1280 * 720, NULL, GL_DYNAMIC_COPY);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+  // Global parameters UBO
+  glGenBuffers(1, &integrator->globalParamsUBO);
+  glBindBuffer(GL_UNIFORM_BUFFER, integrator->globalParamsUBO);
+  glBufferData(GL_UNIFORM_BUFFER, sizeof(GlobalParameters), NULL, GL_DYNAMIC_DRAW);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+  // Ray map texture
+  glGenTextures(1, &integrator->rayMapTexture);
+  glBindTexture(GL_TEXTURE_2D, integrator->rayMapTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  // TODO: We should be able to resize raymap texture
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 1280, 720, 0, GL_RGBA, GL_FLOAT, NULL);
+  glBindTexture(GL_TEXTURE_2D, 0);
   
   return TRUE;
 }
@@ -71,11 +116,13 @@ void destroyImageIntegrator(ImageIntegrator* integrator)
 {
   engineFreeObject(integrator, MEMORY_TYPE_GENERAL);
   glDeleteBuffers(1, &integrator->stackSSBO);
+  glDeleteBuffers(1, &integrator->globalParamsUBO);
 }
 
 void imageIntegratorExecute2(ImageIntegrator* integrator, float32 time)
 {
-  // setup shader common parameters
+  imageIntegratorSetupGlobalParameters(integrator, time);
+
   // fill ray map
   // generate a stencil mask (determines which pixels to render) based on imageIntegrator's function
   // bind stack SSBO

@@ -190,6 +190,35 @@ float3 cameraToWorld(Camera* camera, float3 localPosition)
   return mul(camera->transformCameraToWorld, localPosition);
 }
 
+float4x4 cameraGetNDCCameraMat(Camera* camera)
+{
+  return camera->transformNDCToCamera;
+}
+
+float4x4 cameraGetCameraNDCMat(Camera* camera)
+{
+  return camera->transformCameraToNDC;
+}
+
+float4x4 cameraGetCameraWorldMat(Camera* camera)
+{
+  return camera->transformCameraToWorld;
+}
+
+float4x4 cameraGetWorldCameraMat(Camera* camera)
+{
+  return camera->transformWorldToCamera;
+}
+
+float4x4 cameraGetNDCWorldMat(Camera* camera)
+{
+  return camera->transformNDCToWorld;
+}
+float4x4 cameraGetWorldNDCMat(Camera* camera)
+{
+  return camera->transformWorldToNDC;
+}
+
 Ray cameraGenerateCameraRay(Camera* camera, float2 ndc)
 {
   cameraRecalculateTransforms(camera);

@@ -41,6 +41,15 @@ ENGINE_API float3 cameraUnproject(Camera* camera, float3 ndc);
 ENGINE_API float3 cameraToLocal(Camera* camera, float3 worldPosition);
 ENGINE_API float3 cameraToWorld(Camera* camera, float3 localPosition);
 
+ENGINE_API float4x4 cameraGetNDCCameraMat(Camera* camera);
+ENGINE_API float4x4 cameraGetCameraNDCMat(Camera* camera);
+
+ENGINE_API float4x4 cameraGetCameraWorldMat(Camera* camera);
+ENGINE_API float4x4 cameraGetWorldCameraMat(Camera* camera);
+
+ENGINE_API float4x4 cameraGetNDCWorldMat(Camera* camera);
+ENGINE_API float4x4 cameraGetWorldNDCMat(Camera* camera);
+
 ENGINE_API Ray cameraGenerateCameraRay(Camera* camera, float2 ndc);
 ENGINE_API Ray cameraGenerateWorldRay(Camera* camera, float2 ndc);
 

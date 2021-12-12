@@ -5,6 +5,7 @@
 #define float2 vec2
 #define float3 vec3
 #define float4 vec4
+#define quat vec4
 
 #define int2 vec2i
 #define int3 vec3i
@@ -18,4 +19,3 @@
 #define float3x3 mat3
 #define float4x4 mat4
 
-#define MAX_STACK_LENGTH 8
