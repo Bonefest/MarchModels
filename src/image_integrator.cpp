@@ -1,6 +1,7 @@
 #include "lua/lua_system.h"
 #include "memory_manager.h"
 
+#include "shader_manager.h"
 #include "image_integrator.h"
 
 #include <../bin/shaders/declarations.h>
@@ -21,7 +22,12 @@ struct ImageIntegrator
   GlobalParameters parameters;
   GLuint globalParamsUBO;
 
+  GLuint drawingMaskTexture;
   GLuint rayMapTexture;
+
+  GLuint rayMapInitFramebuffer;
+
+  ShaderProgram* prepareFrameProgram;
   
   void* internalData;
 };
@@ -110,6 +116,32 @@ bool8 createImageIntegrator(Scene* scene,
   // TODO: We should be able to resize raymap texture
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 1280, 720, 0, GL_RGBA, GL_FLOAT, NULL);
   glBindTexture(GL_TEXTURE_2D, 0);
+
+  // Ray map init framebuffer
+  glGenFramebuffers(1, &integrator->rayMapInitFramebuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, integrator->rayMapInitFramebuffer);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, integrator->rayMapTexture, 0);
+  // TODO: attach stencil too
+  if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+  {
+    return FALSE;
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  // Prepare frame program
+  createShaderProgram(&integrator->prepareFrameProgram);
+  
+  shaderProgramAttachShader(integrator->prepareFrameProgram,
+                            shaderManagerGetShader("triangle.vert"));
+  
+  shaderProgramAttachShader(integrator->prepareFrameProgram,
+                            shaderManagerLoadShader(GL_FRAGMENT_SHADER, "shaders/frame_preparer.frag"));
+
+  if(linkShaderProgram(integrator->prepareFrameProgram) == FALSE)
+  {
+    return FALSE;
+  }
+  
   
   return TRUE;
 }
@@ -120,12 +152,18 @@ void destroyImageIntegrator(ImageIntegrator* integrator)
   glDeleteBuffers(1, &integrator->stackSSBO);
   glDeleteBuffers(1, &integrator->globalParamsUBO);
   glDeleteTextures(1, &integrator->rayMapTexture);
+  glDeleteFramebuffers(1, &integrator->rayMapInitFramebuffer);
+  destroyShaderProgram(integrator->prepareFrameProgram);
 }
 
 void imageIntegratorExecute2(ImageIntegrator* integrator, float32 time)
 {
   imageIntegratorSetupGlobalParameters(integrator, time);
-  
+
+  shaderProgramUse(integrator->prepareFrameProgram);
+  glBindFramebuffer(GL_FRAMEBUFFER, integrator->rayMapInitFramebuffer);
+  glDrawArrays(GL_TRIANGLES, 0, 3);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
   // fill ray map
   // generate a stencil mask (determines which pixels to render) based on imageIntegrator's function
   // bind stack SSBO
@@ -135,6 +173,8 @@ void imageIntegratorExecute2(ImageIntegrator* integrator, float32 time)
 
 void imageIntegratorExecute(ImageIntegrator* integrator, float32 time)
 {
+  imageIntegratorExecute2(integrator, time);
+  
   imageIntegratorSetupCommonScriptData(integrator, time);
   
   uint2 filmSize = filmGetSize(integrator->film);

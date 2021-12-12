@@ -11,7 +11,7 @@ ENGINE_API bool8 shaderProgramAttachShader(ShaderProgram* program, ShaderPtr sha
 ENGINE_API ShaderPtr shaderProgramGetShader(ShaderProgram* program, GLuint type);
 ENGINE_API bool8 shaderProgramHasShader(ShaderProgram* program, GLuint type);
 
-ENGINE_API bool8 shaderProgramLink(ShaderProgram* program);
+ENGINE_API bool8 linkShaderProgram(ShaderProgram* program);
 ENGINE_API bool8 shaderProgramIsLinked(ShaderProgram* program);
 
 ENGINE_API void shaderProgramUse(ShaderProgram* program);

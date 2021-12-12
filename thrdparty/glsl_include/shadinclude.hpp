@@ -114,7 +114,7 @@ public:
 		// Only add the null terminator at the end of the complete file,
 		// essentially skipping recursive function calls this way
 		if (!isRecursiveCall)
-			fullSourceCode += '\0';
+          fullSourceCode += '\0';
 
 		file.close();
 

@@ -420,7 +420,7 @@ static void geometryRebuild(Asset* geometry)
   shaderProgramAttachShader(shaderProgram, vertexShader);  
   shaderProgramAttachShader(shaderProgram, fragmentShader);
 
-  assert(shaderProgramLink(shaderProgram));
+  assert(linkShaderProgram(shaderProgram));
   
   geometryData->program = shaderProgram;
 }

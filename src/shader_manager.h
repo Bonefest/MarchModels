@@ -7,10 +7,10 @@ ENGINE_API void shutdownShaderManager();
 
 ENGINE_API void shaderManagerUpdate();
 
-ENGINE_API bool8 shaderManagerLoadShader(GLuint shaderType,
-                                         const char* filename,
-                                         bool8 autoreload = TRUE,
-                                         const char* alias = nullptr);
+ENGINE_API ShaderPtr shaderManagerLoadShader(GLuint shaderType,
+                                             const char* filename,
+                                             bool8 autoreload = TRUE,
+                                             const char* alias = nullptr);
 
 ENGINE_API void shaderManagerAddShader(ShaderPtr shader, const char* alias);
 ENGINE_API ShaderPtr shaderManagerGetShader(const char* name);

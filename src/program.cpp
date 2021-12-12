@@ -17,7 +17,7 @@ bool8 createShaderProgram(ShaderProgram** outProgram)
 {
   *outProgram = engineAllocObject<ShaderProgram>(MEMORY_TYPE_GENERAL);
   ShaderProgram* program = *outProgram;
-  program->program = 0;
+  program->program = glCreateProgram();
   program->linked = FALSE;
   
   return TRUE;
@@ -38,7 +38,7 @@ void destroyShaderProgram(ShaderProgram* program)
 
 bool8 shaderProgramAttachShader(ShaderProgram* program, ShaderPtr shader)
 {
-  assert(program->program != 0);
+  assert(shader != nullptr && program->program != 0);
 
   if(program->linked == TRUE)
   {
@@ -86,7 +86,7 @@ bool8 shaderProgramHasShader(ShaderProgram* program, GLuint type)
   return shaderProgramGetShader(program, type) != nullptr;
 }
 
-bool8 shaderProgramLink(ShaderProgram* program)
+bool8 linkShaderProgram(ShaderProgram* program)
 {
   if(program->linked == TRUE)
   {

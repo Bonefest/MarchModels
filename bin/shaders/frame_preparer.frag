@@ -1,6 +1,6 @@
 #version 450 core
 
-#include "geometry_common.glsl"
+#include geometry_common.glsl
 
 out vec4 outCameraRay;
 
@@ -15,11 +15,11 @@ float3 generateRayDir(float2 uv)
   float4 fullFNDC = float4(ndc.x, ndc.y, 1.0f, 1.0f);
 
   // Transform near ndc point back to camera frustum
-  float4 frustumNPoint = camera->camNDCCameraMat * fullNNDC;
+  float4 frustumNPoint = params.camNDCCameraMat * fullNNDC;
   frustumNPoint /= frustumNPoint.w;
 
   // Transform far ndc point back to camera frustum
-  float4 frustumFPoint = camNDCToCameraMat * fullFNDC;
+  float4 frustumFPoint = params.camNDCCameraMat * fullFNDC;
   frustumFPoint /= frustumFPoint.w;
   
   return normalize(frustumFPoint.xyz - frustumNPoint.xyz);
@@ -32,9 +32,9 @@ void main()
 
     // TODO: Now we generate a ray going through a center of a pixel. In future
     // we may want to use some sort of src/samplers/sampler.h
-    float2 uv = float2(gl_FragCoord.x * invResolution.x, gl_FragCoord.y * invResolution.y);
+    float2 uv = float2(gl_FragCoord.x * params.invResolution.x, gl_FragCoord.y * params.invResolution.y);
 
-    // TODO: Somehow generate stencil mask here (if possible)
+    // TODO: Somehow generate stencil mask here (if possible with GL_ARB_shader_stencil_export)
     
-    return float4(generateRayDir(uv), 0.0);
+    outCameraRay = float4(generateRayDir(uv), 0.0);
 }

@@ -188,7 +188,7 @@ static void shutdownImGUI()
 
 static bool8 preloadDefaultShaders()
 { 
-  if(shaderManagerLoadShader(GL_VERTEX_SHADER, "shaders/triangle.vert", TRUE, "triangle.vert") == FALSE)
+  if(shaderManagerLoadShader(GL_VERTEX_SHADER, "shaders/triangle.vert", TRUE, "triangle.vert") == nullptr)
   {
     return FALSE;
   }

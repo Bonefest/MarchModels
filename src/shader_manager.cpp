@@ -41,30 +41,32 @@ void shaderManagerUpdate()
   // TODO: reload shaders if needed
 }
 
-bool8 shaderManagerLoadShader(GLuint shaderType,
-                              const char* filename,
-                              bool8 autoreload,
-                              const char* alias)
+ShaderPtr shaderManagerLoadShader(GLuint shaderType,
+                                  const char* filename,
+                                  bool8 autoreload,
+                                  const char* alias)
 {
   // NOTE: Skip loading if already loaded
-  if(shaderManagerHasShader(filename) == TRUE)
+  ShaderPtr shaderPtr = shaderManagerGetShader(filename);
+  if(shaderPtr != nullptr)
   {
-    return TRUE;
+    return shaderPtr;
   }
   
   Shader* shader = nullptr;
   if(createShaderFromFile(shaderType, filename, &shader) == FALSE)
   {
-    return FALSE;
+    LOG_ERROR("Cannot create a shader from file '%s'!", filename);
+    return ShaderPtr(nullptr);
   }
 
   if(compileShader(shader) == FALSE)
   {
     LOG_ERROR("Cannot compile a shader '%s'!", filename);
-    return FALSE;
+    return ShaderPtr(nullptr);
   }
   
-  ShaderPtr shaderPtr = ShaderPtr(shader);
+  shaderPtr = ShaderPtr(shader);
   
   if(autoreload == TRUE)
   {
@@ -78,7 +80,7 @@ bool8 shaderManagerLoadShader(GLuint shaderType,
     data.shaderAliases[alias] = shaderPtr;
   }
 
-  return TRUE;
+  return shaderPtr;
 }
 
 

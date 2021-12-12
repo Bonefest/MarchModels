@@ -1,4 +1,4 @@
-#include declarations.h
+#include common.glsl
 
 uniform sampler2D raysMap;
 uniform float4x4 modelTransform;
@@ -10,17 +10,17 @@ layout(std140, binding = STACKS_SSBO_BINDING) buffer StacksSSBO
 
 uint32 getStackID(uint2 pixelCoord)
 {
-  return pixelCoord.y * resolution.x + pixelCoord.x;
+  return pixelCoord.y * params.resolution.x + pixelCoord.x;
 }
 
-Stack getStack(uint2 pixelCoord)
+DistancesStack getStack(uint2 pixelCoord)
 {
   return stacks[getStackID(pixelCoord)];
 }
 
 uint32 getStackSize(uint2 pixelCoord)
 {
-  stacks[getStackID(pixelCoord)].size;
+  return stacks[getStackID(pixelCoord)].size;
 }
 
 void stackPushDistance(int2 pixelCoord, float32 distance)
@@ -28,8 +28,8 @@ void stackPushDistance(int2 pixelCoord, float32 distance)
   uint32 stackID = getStackID(pixelCoord);
   uint32 stackSize = stacks[stackID].size;
   stacks[stackID].distances[stackSize] = distance;
-  stacks[stackID].geometry[stackSize] = GEOMETRY_ID;
-  stacks[stackID].length = stackSize + 1;
+  // TODO: stacks[stackID].geometry[stackSize] = GEOMETRY_ID;
+  stacks[stackID].size = stackSize + 1;
 }
 
 float32 stackPopDistance(int2 pixelCoord)
@@ -43,7 +43,7 @@ float32 stackPopDistance(int2 pixelCoord)
 void stackClear(int2 pixelCoord)
 {
   uint32 stackID = getStackID(pixelCoord);
-  stacks[stackID].length = 0;
+  stacks[stackID].size = 0;
 }
 
 float32 unionDistances(float32 d1, float32 d2)
