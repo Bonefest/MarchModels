@@ -28,6 +28,7 @@ struct ImageIntegrator
   GLuint rayMapInitFramebuffer;
 
   ShaderProgram* prepareFrameProgram;
+  ShaderProgram* raysMoverProgram;
   
   void* internalData;
 };
@@ -72,6 +73,19 @@ static bool8 imageIntegratorShouldIntegratePixelLocation(ImageIntegrator* integr
   return (loc.x + offset.x) % gap.x == 0 && (loc.y + offset.y) % gap.y == 0;  
 }
 
+static void drawGeometryInorder(AssetPtr geometry)
+{
+  std::vector<AssetPtr>& children = geometryGetChildren(geometry);
+  for(AssetPtr child: children)
+  {
+    drawGeometryInorder(geometry);
+  }
+  
+  ShaderProgram* geometryProgram = geometryGetProgram(geometry);
+  shaderProgramUse(geometryProgram);
+  glDrawArrays(GL_TRIANGLES, 0, 3);
+  shaderProgramUse(nullptr);
+}
 
 bool8 createImageIntegrator(Scene* scene,
                             Sampler* sampler,
@@ -141,7 +155,20 @@ bool8 createImageIntegrator(Scene* scene,
   {
     return FALSE;
   }
-  
+
+  // Rays mover program
+  createShaderProgram(&integrator->raysMoverProgram);
+
+  shaderProgramAttachShader(integrator->raysMoverProgram,
+                            shaderManagerGetShader("triangle.vert"));
+
+  shaderProgramAttachShader(integrator->raysMoverProgram,
+                            shaderManagerLoadShader(GL_FRAGMENT_SHADER, "shaders/rays_mover.frag"));
+
+  if(linkShaderProgram(integrator->raysMoverProgram) == FALSE)
+  {
+    return FALSE;
+  }
   
   return TRUE;
 }
@@ -160,15 +187,42 @@ void imageIntegratorExecute2(ImageIntegrator* integrator, float32 time)
 {
   imageIntegratorSetupGlobalParameters(integrator, time);
 
+  GLint previousViewport[4] = {};
+  glGetIntegerv(GL_VIEWPORT, previousViewport);
+  glViewport(0, 0, integrator->parameters.resolution.x, integrator->parameters.resolution.y);
+  
+  // Prepare ray map texture and clear stacks
   shaderProgramUse(integrator->prepareFrameProgram);
   glBindFramebuffer(GL_FRAMEBUFFER, integrator->rayMapInitFramebuffer);
   glDrawArrays(GL_TRIANGLES, 0, 3);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  // fill ray map
-  // generate a stencil mask (determines which pixels to render) based on imageIntegrator's function
-  // bind stack SSBO
+  shaderProgramUse(nullptr);
+  
+  // TODO: generate a stencil mask (determines which pixels to render) based on imageIntegrator's function
+
+  const uint32 MAX_ITERATIONS = 8;
+  std::vector<AssetPtr>& sceneGeometry = sceneGetGeometry(integrator->scene);
+  for(uint32 i = 0; i < MAX_ITERATIONS; i++)
+  {
+    for(AssetPtr geometry: sceneGeometry)
+    {
+      drawGeometryInorder(geometry);
+    }
+
+    glEnable(GL_BLEND);
+    glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+    glBlendFuncSeparate(GL_ZERO, GL_ONE, GL_ONE, GL_ONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, integrator->rayMapInitFramebuffer);
+    shaderProgramUse(integrator->raysMoverProgram);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    shaderProgramUse(nullptr);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDisable(GL_BLEND);
+  }
   // traverse geometry of scene inorder
   // translate distances of stacks into colors
+
+  glViewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
 }
 
 void imageIntegratorExecute(ImageIntegrator* integrator, float32 time)

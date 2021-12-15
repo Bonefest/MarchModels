@@ -2,7 +2,7 @@
 
 #include geometry_common.glsl
 
-out vec4 outCameraRay;
+out float4 outCameraRay;
 
 float3 generateRayDir(float2 uv)
 {

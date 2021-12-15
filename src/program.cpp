@@ -118,7 +118,13 @@ bool8 shaderProgramIsLinked(ShaderProgram* program)
 
 void shaderProgramUse(ShaderProgram* program)
 {
-  glUseProgram(program->program);
+  GLuint programHandle = 0;
+  if(program != nullptr)
+  {
+    programHandle = program->program;
+  }
+  
+  glUseProgram(programHandle);
 }
 
 GLuint shaderProgramGetGLProgram(ShaderProgram* program)
