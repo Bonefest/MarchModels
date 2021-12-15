@@ -146,10 +146,11 @@ std::string scriptFunctionGetGLSLCode(Asset* asset)
   {
     std::string argStrRepr = std::to_string(arg.second);
     uint32 argSize = arg.first.size() + 1;
-    uint32 pos = result.find("$" + arg.first);
+    std::size_t pos = result.find("$" + arg.first);
     while(pos != std::string::npos)
     {
       result.replace(pos, argSize, argStrRepr);
+      pos = result.find("$" + arg.first);
     }
   }
 

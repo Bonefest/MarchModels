@@ -58,17 +58,17 @@ static void declareDefaultScriptFunctions()
                        "sphereSDF",
                        &sphereSDFPrototype);
   scriptFunctionSetArgValue(sphereSDFPrototype, "radius", 1.0f);
-  scriptFunctionSetCode(sphereSDFPrototype, "return float3.length(args[\"p\"]) - args[\"radius\"]");
+  scriptFunctionSetCode(sphereSDFPrototype, "return 0; ");
     
   createScriptFunction(SCRIPT_FUNCTION_TYPE_IDF,
                        "emptyIDF",
                        &emptyIDFPrototype);  
-  scriptFunctionSetCode(emptyIDFPrototype, "return float3.new(args[\"p\"])");
+  scriptFunctionSetCode(emptyIDFPrototype, "return float3(0, 0, 0); ");
   
   createScriptFunction(SCRIPT_FUNCTION_TYPE_ODF,
                        "emptyODF", 
                        &emptyODFPrototype);
-  scriptFunctionSetCode(emptyODFPrototype, "return args[\"distance\"]");
+  scriptFunctionSetCode(emptyODFPrototype, "return 0");
 
   assetsManagerAddAsset(AssetPtr(sphereSDFPrototype));
   assetsManagerAddAsset(AssetPtr(emptyIDFPrototype));

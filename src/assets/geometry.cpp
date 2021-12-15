@@ -258,7 +258,7 @@ static void geometryGenerateDistancesCombinationCode(Asset* geometry, ShaderBuil
     shaderBuildAddCode(build, "\tuint32 stackSize = getStackSize(ifragCoord);");
     shaderBuildAddCode(build, "\tif(stackSize > 0) {");
     shaderBuildAddCode(build, "\t\tfloat32 prevDistance = stackPopDistance(ifragCoord);");
-    shaderBuildAddCode(build, "\t\tstackPushDistance(ifragCoord, unionDistances(prevDistance, d);");
+    shaderBuildAddCode(build, "\t\tstackPushDistance(ifragCoord, unionDistances(prevDistance, d));");
     shaderBuildAddCode(build, "\t}");
   }
 }
@@ -311,7 +311,7 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   }
   
   // 2. Transform point p by geometry transform, transform point into distance via SDF
-  shaderBuildAddCode(build, "\tfloat32 d = SDF(geometryTransform * p);");
+  shaderBuildAddCode(build, "\tfloat32 d = SDF((geometryTransform * float4(p, 1.0)).xyz);");
   
   // 3. Transform distance via ODFs
   for(uint32 i = 0; i < odfs.size(); i++)
@@ -320,7 +320,7 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   }
   
   // 4. return distance
-  shaderBuildAddCode(build, "return d;");
+  shaderBuildAddCode(build, "\treturn d;");
   shaderBuildAddCode(build, "}");
 
   // generate a main function:
@@ -328,8 +328,9 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   shaderBuildAddCode(build, "void main() {");
   shaderBuildAddCode(build, "\tint2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);");
 
-  // 1. Extract point p from ray map  
-  shaderBuildAddCode(build, "\tfloat3 p = rayMap[ifragCoord].xyz * rayMap[ifragCoord].w + cameraPos;");
+  // 1. Extract point p from ray map
+  shaderBuildAddCode(build, "\tfloat4 ray = texelFetch(raysMap, ifragCoord, 0);");
+  shaderBuildAddCode(build, "\tfloat3 p = ray.xyz * ray.w + params.camPosition.xyz;");
 
   // 2. Transform point into distance
   shaderBuildAddCode(build, "\tfloat32 d = transform(p);");

@@ -97,8 +97,8 @@ bool8 compileShader(Shader* shader)
 
   if(compileStatus == GL_FALSE)
   {
-    char log[512];
-    glGetShaderInfoLog(shader->shader, 512, NULL, log);
+    char log[1024];
+    glGetShaderInfoLog(shader->shader, 1024, NULL, log);
 
     LOG_ERROR("Shader compilation has failed with message: '%s'", log);
     LOG_ERROR("Shader code:\n%s", shader->source);
@@ -121,9 +121,9 @@ void shaderAttachSource(Shader* shader, const char* source)
 {
   shaderFreeSource(shader);
 
-  shader->sourceSize = strlen(source);
-  shader->source = (char*)engineAllocMem(shader->sourceSize, MEMORY_TYPE_GENERAL);
-  engineCopyMem(shader->source, source, shader->sourceSize);
+  shader->sourceSize = strlen(source) + 1;
+  shader->source = (char*)engineAllocMem(shader->sourceSize + 1, MEMORY_TYPE_GENERAL);
+  engineCopyMem(shader->source, source, shader->sourceSize - 1);
 }
 
 GLuint shaderGetType(Shader* shader)
