@@ -68,7 +68,7 @@ static void declareDefaultScriptFunctions()
   createScriptFunction(SCRIPT_FUNCTION_TYPE_ODF,
                        "emptyODF", 
                        &emptyODFPrototype);
-  scriptFunctionSetCode(emptyODFPrototype, "return 0");
+  scriptFunctionSetCode(emptyODFPrototype, "return 0;");
 
   assetsManagerAddAsset(AssetPtr(sphereSDFPrototype));
   assetsManagerAddAsset(AssetPtr(emptyIDFPrototype));

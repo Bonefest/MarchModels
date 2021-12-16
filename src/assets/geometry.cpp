@@ -316,7 +316,7 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   // 3. Transform distance via ODFs
   for(uint32 i = 0; i < odfs.size(); i++)
   {
-    shaderBuildAddCode(build, "\td = ODF%u(d);");
+    shaderBuildAddCodefln(build, "\td = ODF%u(d);", i);
   }
   
   // 4. return distance
@@ -424,6 +424,21 @@ static void geometryRebuild(Asset* geometry)
   assert(linkShaderProgram(shaderProgram));
   
   geometryData->program = shaderProgram;
+  geometryData->needRebuild = FALSE;
+}
+
+static void geometryMarkNeedRebuild(Asset* geometry, bool8 forwardToChildren)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  geometryData->needRebuild = TRUE;
+
+  if(forwardToChildren == TRUE)
+  {
+    for(AssetPtr child: geometryData->children)
+    {
+      geometryMarkNeedRebuild(child, forwardToChildren);
+    }
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -520,18 +535,23 @@ quat geometryGetOrientation(Asset* geometry)
 
 void geometryAddFunction(Asset* geometry, AssetPtr function)
 {
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   ScriptFunctionType type = scriptFunctionGetType(function);
   if(type == SCRIPT_FUNCTION_TYPE_SDF)
   {
-    geometrySetSDF(geometry, function);
+    geometryData->sdf = function;
+    geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);
   }
   else if(type == SCRIPT_FUNCTION_TYPE_IDF)
   {
-    geometryAddIDF(geometry, function);
+    geometryData->idfs.push_back(function);
+    // NOTE: Children also should be marked, because IDFs are integrated into leafs
+    geometryMarkNeedRebuild(geometry, TRUE);    
   }
   else if(type == SCRIPT_FUNCTION_TYPE_ODF)
   {
-    geometryAddODF(geometry, function);
+    geometryData->odfs.push_back(function);
+    geometryMarkNeedRebuild(geometry, FALSE);        
   }
 }
 
@@ -545,6 +565,7 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
     if(geometryData->sdf != nullptr)
     {
       geometryData->sdf = AssetPtr(nullptr);
+      geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);      
       return TRUE;
     }
 
@@ -556,6 +577,7 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
     if(idfIt != geometryData->idfs.end())
     {
       geometryData->idfs.erase(idfIt);
+      geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);            
       return TRUE;
     }
 
@@ -567,6 +589,7 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
     if(odfIt != geometryData->odfs.end())
     {
       geometryData->odfs.erase(odfIt);
+      geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);                  
       return TRUE;
     }
 
@@ -574,16 +597,6 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
   }
 
   return FALSE;
-}
-
-void geometryAddIDF(Asset* geometry, AssetPtr idf)
-{
-  assert(assetGetType(idf) == ASSET_TYPE_SCRIPT_FUNCTION &&
-         scriptFunctionGetType(idf) == SCRIPT_FUNCTION_TYPE_IDF);
-
-  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
-  
-  geometryData->idfs.push_back(idf);
 }
 
 std::vector<AssetPtr>& geometryGetIDFs(Asset* geometry)
@@ -631,8 +644,9 @@ std::vector<AssetPtr> geometryGetScriptFunctions(Asset* geometry)
 void geometrySetParent(Asset* geometry, AssetPtr parent)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
-  
   geometryData->parent = parent;
+
+  geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE); 
 }
 
 bool8 geometryHasParent(Asset* geometry)
@@ -843,6 +857,8 @@ void geometryAddChild(AssetPtr geometry, AssetPtr child)
   
   geometryData->children.push_back(child);
   geometrySetParent(child, geometry);
+
+  geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);  
 }
 
 bool8 geometryRemoveChild(Asset* geometry, Asset* child)
@@ -856,6 +872,8 @@ bool8 geometryRemoveChild(Asset* geometry, Asset* child)
   }
 
   geometryData->children.erase(childIt);
+
+  geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);    
   
   return TRUE;
 }
@@ -872,6 +890,8 @@ void geometrySetCombinationFunction(Asset* geometry, CombinationFunction functio
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);  
   
   geometryData->combinationFunction = function;
+
+  geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);    
 }
 
 CombinationFunction geometryGetCombinationFunction(Asset* geometry)

@@ -63,7 +63,7 @@ void shaderBuildAddCodef(ShaderBuild* build, const char* format, ...)
   vsprintf(buf, format, args);
   va_end(args);
 
-  shaderBuildAddCode(build, format, FALSE);
+  shaderBuildAddCode(build, buf, FALSE);
 }
 
 void shaderBuildAddCodefln(ShaderBuild* build, const char* format, ...)
@@ -75,7 +75,7 @@ void shaderBuildAddCodefln(ShaderBuild* build, const char* format, ...)
   vsprintf(buf, format, args);
   va_end(args);
 
-  shaderBuildAddCode(build, format, TRUE);
+  shaderBuildAddCode(build, buf, TRUE);
 }
 
 void shaderBuildAddFunction(ShaderBuild* build,

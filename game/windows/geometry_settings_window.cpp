@@ -204,7 +204,7 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
       {
         if(ImGui::SmallButton("[New SDF]"))
         {
-          geometrySetSDF(data->geometry, createDefaultSDF());
+          geometryAddFunction(data->geometry, createDefaultSDF());
         }
 
         ImGui::SameLine();
@@ -212,13 +212,13 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
 
       if(ImGui::SmallButton("[New IDF]"))
       {
-        geometryAddIDF(data->geometry, createDefaultIDF());
+        geometryAddFunction(data->geometry, createDefaultIDF());
       }
       ImGui::SameLine();
 
       if(ImGui::SmallButton("[New ODF]"))
       {
-        geometryAddODF(data->geometry, createDefaultODF());
+        geometryAddFunction(data->geometry, createDefaultODF());
       }
 
     ImGui::PopStyleColor();

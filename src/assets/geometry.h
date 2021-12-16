@@ -41,10 +41,7 @@ ENGINE_API quat geometryGetOrientation(Asset* geometry);
 ENGINE_API void geometryAddFunction(Asset* geometry, AssetPtr function);
 ENGINE_API bool8 geometryRemoveFunction(Asset* geometry, Asset* function);
 
-ENGINE_API void geometryAddIDF(Asset* geometry, AssetPtr idf);
 ENGINE_API std::vector<AssetPtr>& geometryGetIDFs(Asset* geometry);
-
-ENGINE_API void geometryAddODF(Asset* geometry, AssetPtr odf);
 ENGINE_API std::vector<AssetPtr>& geometryGetODFs(Asset* geometry);
 
 // Get SDF, IDFs and ODFs as a single array
@@ -95,7 +92,6 @@ ENGINE_API CombinationFunction geometryGetCombinationFunction(Asset* geometry);
 // Leaf geometry-related interface
 // ----------------------------------------------------------------------------
 
-ENGINE_API void geometrySetSDF(Asset* geometry, AssetPtr sdf);
 ENGINE_API AssetPtr geometryGetSDF(Asset* geometry);
 ENGINE_API bool8 geometryHasSDF(Asset* geometry);
 

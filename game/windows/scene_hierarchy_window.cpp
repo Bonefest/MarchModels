@@ -78,20 +78,20 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
           {
             if(ImGui::SmallButton("[New SDF]"))
             {
-              geometrySetSDF(geometry, createDefaultSDF());
+              geometryAddFunction(geometry, createDefaultSDF());
             }
             ImGui::SameLine();
           }
 
           if(ImGui::SmallButton("[New IDF]"))
           {
-            geometryAddIDF(geometry, createDefaultIDF());
+            geometryAddFunction(geometry, createDefaultIDF());
           }
 
           ImGui::SameLine();
           if(ImGui::SmallButton("[New ODF]"))
           {
-            geometryAddODF(geometry, createDefaultODF());
+            geometryAddFunction(geometry, createDefaultODF());
           }
 
           ImGui::SameLine();
