@@ -51,7 +51,7 @@ static void imageIntegratorSetupGlobalParameters(ImageIntegrator* integrator, fl
   parameters.resolution = filmGetSize(integrator->film);
   parameters.invResolution = float2(1.0f / parameters.resolution.x, 1.0f / parameters.resolution.y);
   
-  parameters.camPosition = float4(cameraGetPosition(integrator->camera), 0.0);
+  parameters.camPosition = float4(cameraGetPosition(integrator->camera), 1.0);
   parameters.camOrientation = cameraGetOrientation(integrator->camera);
   parameters.camNDCCameraMat = cameraGetNDCCameraMat(integrator->camera);
   parameters.camCameraNDCMat = cameraGetCameraNDCMat(integrator->camera);
@@ -82,7 +82,26 @@ static void drawGeometryInorder(AssetPtr geometry)
   }
   
   ShaderProgram* geometryProgram = geometryGetProgram(geometry);
+
+  GLuint geoPositionUniformPos = glGetUniformLocation(shaderProgramGetGLProgram(geometryProgram),
+                                                      "geoPosition");
+
+  GLuint geoGeoWorldMatUniformPos = glGetUniformLocation(shaderProgramGetGLProgram(geometryProgram),
+                                                         "geoGeoWorldMat");
+  
+  GLuint geoWorldGeoMatUniformPos = glGetUniformLocation(shaderProgramGetGLProgram(geometryProgram),
+                                                         "geoWorldGeoMat");
+
+  float4 geoPosition = float4(geometryGetPosition(geometry), 1.0);
+  float4x4 geoWorldMat = geometryGetGeoWorldMat(geometry);
+  float4x4 worldGeoMat = geometryGetWorldGeoMat(geometry);
+
   shaderProgramUse(geometryProgram);
+  
+  glUniform4fv(geoPositionUniformPos, 1, (float32*)&geoPosition);
+  glUniformMatrix4fv(geoGeoWorldMatUniformPos, 1, GL_FALSE, (float32*)&geoWorldMat[0]);
+  glUniformMatrix4fv(geoWorldGeoMatUniformPos, 1, GL_FALSE, (float32*)&worldGeoMat[0]);                     
+  
   glDrawArrays(GL_TRIANGLES, 0, 3);
   shaderProgramUse(nullptr);
 }
@@ -183,7 +202,7 @@ void destroyImageIntegrator(ImageIntegrator* integrator)
   destroyShaderProgram(integrator->prepareFrameProgram);
 }
 
-void imageIntegratorExecute2(ImageIntegrator* integrator, float32 time)
+void imageIntegratorExecute(ImageIntegrator* integrator, float32 time)
 {
   imageIntegratorSetupGlobalParameters(integrator, time);
 
@@ -200,6 +219,8 @@ void imageIntegratorExecute2(ImageIntegrator* integrator, float32 time)
   
   // TODO: generate a stencil mask (determines which pixels to render) based on imageIntegrator's function
 
+
+  // Traverse scene inorder, render objects
   const uint32 MAX_ITERATIONS = 8;
   std::vector<AssetPtr>& sceneGeometry = sceneGetGeometry(integrator->scene);
   for(uint32 i = 0; i < MAX_ITERATIONS; i++)
@@ -219,16 +240,14 @@ void imageIntegratorExecute2(ImageIntegrator* integrator, float32 time)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_BLEND);
   }
-  // traverse geometry of scene inorder
+
   // translate distances of stacks into colors
 
   glViewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
 }
 
-void imageIntegratorExecute(ImageIntegrator* integrator, float32 time)
+void imageIntegratorExecute2(ImageIntegrator* integrator, float32 time)
 {
-  imageIntegratorExecute2(integrator, time);
-  
   imageIntegratorSetupCommonScriptData(integrator, time);
   
   uint2 filmSize = filmGetSize(integrator->film);

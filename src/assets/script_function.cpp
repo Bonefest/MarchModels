@@ -116,17 +116,6 @@ void scriptFunctionSetCode(Asset* asset, const std::string& code)
   ScriptFunction* data = (ScriptFunction*)assetGetInternalData(asset);
 
   data->code = code;
-
-  char fullCodeBuf[4096];
-  sprintf(fullCodeBuf,
-          "function %s()\n"
-          "  %s         \n"
-          "end          \n",
-          assetGetName(asset).c_str(), code.c_str());
-
-  sol::state& lua = luaGetMainState();
-  lua.set(assetGetName(asset), sol::lua_nil);
-  lua.script(fullCodeBuf);
 }
 
 const std::string& scriptFunctionGetRawCode(Asset* asset)

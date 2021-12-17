@@ -64,6 +64,11 @@ ENGINE_API float3 geometryTransformFromParent(Asset* geometry, float3 p);
 ENGINE_API float3 geometryTransformToLocal(Asset* geometry, float3 p);
 ENGINE_API float3 geometryTransformToWorld(Asset* geometry, float3 p);
 
+ENGINE_API float4x4 geometryGetWorldGeoMat(Asset* geometry);
+ENGINE_API float4x4 geometryGetGeoWorldMat(Asset* geometry);
+ENGINE_API float4x4 geometryGetParentGeoMat(Asset* geometry);
+ENGINE_API float4x4 geometryGetGeoParentMat(Asset* geometry);
+
 ENGINE_API float32 geometryCalculateDistanceToPoint(Asset* geometry,
                                                     float3 p,
                                                     Asset** outClosestLeafGeometry = nullptr);

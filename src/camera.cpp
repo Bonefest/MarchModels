@@ -192,30 +192,42 @@ float3 cameraToWorld(Camera* camera, float3 localPosition)
 
 float4x4 cameraGetNDCCameraMat(Camera* camera)
 {
+  cameraRecalculateTransforms(camera);
+  
   return camera->transformNDCToCamera;
 }
 
 float4x4 cameraGetCameraNDCMat(Camera* camera)
 {
+  cameraRecalculateTransforms(camera);
+  
   return camera->transformCameraToNDC;
 }
 
 float4x4 cameraGetCameraWorldMat(Camera* camera)
 {
+  cameraRecalculateTransforms(camera);
+  
   return camera->transformCameraToWorld;
 }
 
 float4x4 cameraGetWorldCameraMat(Camera* camera)
 {
+  cameraRecalculateTransforms(camera);
+  
   return camera->transformWorldToCamera;
 }
 
 float4x4 cameraGetNDCWorldMat(Camera* camera)
 {
+  cameraRecalculateTransforms(camera);
+  
   return camera->transformNDCToWorld;
 }
 float4x4 cameraGetWorldNDCMat(Camera* camera)
 {
+  cameraRecalculateTransforms(camera);
+  
   return camera->transformWorldToNDC;
 }
 

@@ -4,7 +4,9 @@
 #include stack.glsl
 
 uniform sampler2D raysMap;
-uniform float4x4 geometryTransform;
+uniform float3 geoPosition;
+uniform float4x4 geoGeoWorldMat;
+uniform float4x4 geoWorldGeoMat;
 
 float32 unionDistances(float32 d1, float32 d2)
 {

@@ -260,6 +260,9 @@ static void geometryGenerateDistancesCombinationCode(Asset* geometry, ShaderBuil
     shaderBuildAddCode(build, "\t\tfloat32 prevDistance = stackPopDistance(ifragCoord);");
     shaderBuildAddCode(build, "\t\tstackPushDistance(ifragCoord, unionDistances(prevDistance, d));");
     shaderBuildAddCode(build, "\t}");
+    shaderBuildAddCode(build, "\telse {");
+    shaderBuildAddCode(build, "\t\tstackPushDistance(ifragCoord, d);");
+    shaderBuildAddCode(build, "\t}");
   }
 }
 
@@ -286,7 +289,7 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
 
   // register SDF
   shaderBuildAddFunction(build,
-                         "float",
+                         "float32",
                          "SDF",
                          "float3 p",
                          scriptFunctionGetGLSLCode(geometryGetSDF(geometry)).c_str());
@@ -309,9 +312,11 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   {
     shaderBuildAddCodefln(build, "\tp = IDF%d(p);", i);
   }
-  
-  // 2. Transform point p by geometry transform, transform point into distance via SDF
-  shaderBuildAddCode(build, "\tfloat32 d = SDF((geometryTransform * float4(p, 1.0)).xyz);");
+
+  // 2. SDF is defined in local coordinates, but the geometry which uses SDF has a transformation:
+  // apply transformation to the point, converting from world space to local space. Then calculate
+  // SDF itself.
+  shaderBuildAddCode(build, "\tfloat32 d = SDF((geoWorldGeoMat * float4(p, 1.0)).xyz);");
   
   // 3. Transform distance via ODFs
   for(uint32 i = 0; i < odfs.size(); i++)
@@ -747,6 +752,54 @@ float3 geometryTransformToWorld(Asset* geometry, float3 p)
   float4 transformedP = mul(geometryData->transformToWorld, float4(p.x, p.y, p.z, 1.0f));
   return transformedP.xyz();
 }
+
+float4x4 geometryGetWorldGeoMat(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  
+  if(geometryData->dirty == TRUE)
+  {
+    geometryRecalculateTransforms(geometry);
+  }
+
+  return geometryData->transformToLocal;
+}
+float4x4 geometryGetGeoWorldMat(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  
+  if(geometryData->dirty == TRUE)
+  {
+    geometryRecalculateTransforms(geometry);
+  }
+
+  return geometryData->transformToWorld;
+}
+
+  
+float4x4 geometryGetParentGeoMat(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  
+  if(geometryData->dirty == TRUE)
+  {
+    geometryRecalculateTransforms(geometry);
+  }
+
+  return geometryData->transformToLocalFromParent;
+}
+float4x4 geometryGetGeoParentMat(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  
+  if(geometryData->dirty == TRUE)
+  {
+    geometryRecalculateTransforms(geometry);
+  }
+
+  return geometryData->transformToParentFromLocal;
+}
+
 
 float32 geometryCalculateDistanceToPoint(Asset* geometry,
                                          float3 p,
