@@ -78,7 +78,7 @@ static void drawGeometryInorder(AssetPtr geometry)
   std::vector<AssetPtr>& children = geometryGetChildren(geometry);
   for(AssetPtr child: children)
   {
-    drawGeometryInorder(geometry);
+    drawGeometryInorder(child);
   }
   
   ShaderProgram* geometryProgram = geometryGetProgram(geometry);
