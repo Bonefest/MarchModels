@@ -21,6 +21,7 @@ struct ImageIntegrator
 
   GlobalParameters parameters;
   GLuint globalParamsUBO;
+  GLuint geoTransformParamsUBO;
 
   GLuint drawingMaskTexture;
   GLuint rayMapTexture;
@@ -73,34 +74,31 @@ static bool8 imageIntegratorShouldIntegratePixelLocation(ImageIntegrator* integr
   return (loc.x + offset.x) % gap.x == 0 && (loc.y + offset.y) % gap.y == 0;  
 }
 
-static void drawGeometryInorder(AssetPtr geometry)
+static void drawGeometryInorder(ImageIntegrator* integrator, AssetPtr geometry)
 {
   std::vector<AssetPtr>& children = geometryGetChildren(geometry);
   for(AssetPtr child: children)
   {
-    drawGeometryInorder(child);
+    drawGeometryInorder(integrator, child);
   }
   
   ShaderProgram* geometryProgram = geometryGetProgram(geometry);
 
-  GLuint geoPositionUniformPos = glGetUniformLocation(shaderProgramGetGLProgram(geometryProgram),
-                                                      "geoPosition");
-
-  GLuint geoGeoWorldMatUniformPos = glGetUniformLocation(shaderProgramGetGLProgram(geometryProgram),
-                                                         "geoGeoWorldMat");
+  GeometryTransformParameters geoTransforms = {};
+  geoTransforms.position = float4(geometryGetPosition(geometry), 1.0);
+  geoTransforms.geoWorldMat = geometryGetGeoWorldMat(geometry);
+  geoTransforms.worldGeoMat = geometryGetWorldGeoMat(geometry);
+  geoTransforms.geoParentMat = geometryGetGeoParentMat(geometry);
+  geoTransforms.parentGeoMat = geometryGetParentGeoMat(geometry);
   
-  GLuint geoWorldGeoMatUniformPos = glGetUniformLocation(shaderProgramGetGLProgram(geometryProgram),
-                                                         "geoWorldGeoMat");
-
-  float4 geoPosition = float4(geometryGetPosition(geometry), 1.0);
-  float4x4 geoWorldMat = geometryGetGeoWorldMat(geometry);
-  float4x4 worldGeoMat = geometryGetWorldGeoMat(geometry);
+  glBindBuffer(GL_UNIFORM_BUFFER, integrator->geoTransformParamsUBO);
+  glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(GeometryTransformParameters), &geoTransforms);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);                  
 
   shaderProgramUse(geometryProgram);
-  
-  glUniform4fv(geoPositionUniformPos, 1, (float32*)&geoPosition);
-  glUniformMatrix4fv(geoGeoWorldMatUniformPos, 1, GL_FALSE, (float32*)&geoWorldMat[0]);
-  glUniformMatrix4fv(geoWorldGeoMatUniformPos, 1, GL_FALSE, (float32*)&worldGeoMat[0]);                     
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, integrator->rayMapTexture);
   
   glDrawArrays(GL_TRIANGLES, 0, 3);
   shaderProgramUse(nullptr);
@@ -141,6 +139,13 @@ bool8 createImageIntegrator(Scene* scene,
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
   glBindBufferBase(GL_UNIFORM_BUFFER, GLOBAL_PARAMS_UBO_BINDING, integrator->globalParamsUBO);
 
+  // Geometry transform parameters UBO
+  glGenBuffers(1, &integrator->geoTransformParamsUBO);
+  glBindBuffer(GL_UNIFORM_BUFFER, integrator->geoTransformParamsUBO);
+  glBufferData(GL_UNIFORM_BUFFER, sizeof(GeometryTransformParameters), NULL, GL_DYNAMIC_DRAW);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  glBindBufferBase(GL_UNIFORM_BUFFER, GEOMETRY_TRANSFORMS_UBO_BINDING, integrator->geoTransformParamsUBO);
+  
   // Ray map texture
   glGenTextures(1, &integrator->rayMapTexture);
   glBindTexture(GL_TEXTURE_2D, integrator->rayMapTexture);
@@ -221,13 +226,14 @@ void imageIntegratorExecute(ImageIntegrator* integrator, float32 time)
 
 
   // Traverse scene inorder, render objects
-  const uint32 MAX_ITERATIONS = 8;
+  const uint32 MAX_ITERATIONS = 4;
   std::vector<AssetPtr>& sceneGeometry = sceneGetGeometry(integrator->scene);
   for(uint32 i = 0; i < MAX_ITERATIONS; i++)
   {
+    
     for(AssetPtr geometry: sceneGeometry)
     {
-      drawGeometryInorder(geometry);
+      drawGeometryInorder(integrator, geometry);
     }
 
     glEnable(GL_BLEND);

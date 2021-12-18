@@ -236,7 +236,8 @@ static void geometryGenerateDistancesCombinationCode(Asset* geometry, ShaderBuil
   {
     // Detect its number in parent's branch
     bool8 firstInBranch = geometryGetIndexInBranch(geometry) == 0 ? TRUE : FALSE;
-
+    CombinationFunction parentCombFunction = geometryGetCombinationFunction(geometryGetParent(geometry));
+    
     // (TODO: geometry ID should pushed/popped along with distance into stack)
     // This is the first leaf/branch in group - just push distance to the stack
     if(firstInBranch == TRUE)
@@ -250,7 +251,7 @@ static void geometryGenerateDistancesCombinationCode(Asset* geometry, ShaderBuil
 
       // Order of combination is important      
       shaderBuildAddCodefln(build, "\tstackPushDistance(ifragCoord, %s(prevDistance, d));",
-                            getCombinationFunctionShaderName(geometryGetCombinationFunction(geometry)));
+                            getCombinationFunctionShaderName(parentCombFunction));
     }
   }
   else
@@ -316,7 +317,9 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   // 2. SDF is defined in local coordinates, but the geometry which uses SDF has a transformation:
   // apply transformation to the point, converting from world space to local space. Then calculate
   // SDF itself.
-  shaderBuildAddCode(build, "\tfloat32 d = SDF((geoWorldGeoMat * float4(p, 1.0)).xyz);");
+  shaderBuildAddCode(build, "\tfloat32 d = geo.position.z;");
+  shaderBuildAddCode(build, "\tfloat4 tp = geo.worldGeoMat * float4(p, 1.0);");
+  shaderBuildAddCode(build, "\td = SDF(tp.xyz) * geo.position.w;");
   
   // 3. Transform distance via ODFs
   for(uint32 i = 0; i < odfs.size(); i++)

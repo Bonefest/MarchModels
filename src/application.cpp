@@ -94,6 +94,20 @@ static void gwindowResizedCallback(GLFWwindow* window, int width, int height)
   pushEvent(eventData);  
 }
 
+static void openglErrorsCallback(GLenum source,
+                                 GLenum type,
+                                 GLuint id,
+                                 GLenum severity,
+                                 GLsizei length,
+                                 const GLchar* message,
+                                 const void* userParam)
+{
+  if(length > 0)
+  {
+    LOG_VERBOSE("OpenGL callback: %s", message);
+  }
+}
+
 static bool8 initGLFW()
 {
   glfwSetErrorCallback(gerrorCallback);
@@ -130,6 +144,9 @@ static bool8 initGLFW()
   glfwSetKeyCallback(application.window, gkeyCallback);
   glfwSetCursorPosCallback(application.window, gcursorPosCallback);
   glfwSetMouseButtonCallback(application.window, gmouseButtonCallback);
+
+  glEnable(GL_DEBUG_OUTPUT);
+  glDebugMessageCallback(openglErrorsCallback, NULL);
   
   return TRUE;
 }

@@ -36,6 +36,7 @@ float32 stackPopDistance(int2 pixelCoord)
 {
   uint32 stackID = getStackID(pixelCoord);
   uint32 stackSize = stacks[stackID].size;
+  stacks[stackID].size = stackSize - 1;
 
   return stacks[stackID].distances[stackSize - 1];
 }

@@ -7,7 +7,8 @@
 
   #define MAX_STACK_SIZE 8
   #define GLOBAL_PARAMS_UBO_BINDING 0
-  #define STACKS_SSBO_BINDING 1
+  #define GEOMETRY_TRANSFORMS_UBO_BINDING 1
+  #define STACKS_SSBO_BINDING 2
 
   struct DistancesStack
   {
@@ -34,6 +35,15 @@
     float4x4 camWorldNDCMat;
     float4x4 camCameraWorldMat;
     float4x4 camWorldCameraMat;
+  };
+
+  struct GeometryTransformParameters
+  {
+    float4 position;
+    float4x4 geoWorldMat;
+    float4x4 worldGeoMat;
+    float4x4 geoParentMat;
+    float4x4 parentGeoMat;
   };
 
 #endif

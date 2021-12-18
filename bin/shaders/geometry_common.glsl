@@ -3,10 +3,13 @@
 
 #include stack.glsl
 
-uniform sampler2D raysMap;
-uniform float3 geoPosition;
-uniform float4x4 geoGeoWorldMat;
-uniform float4x4 geoWorldGeoMat;
+layout(location = 0) uniform sampler2D raysMap;
+
+layout(std140, binding = GEOMETRY_TRANSFORMS_UBO_BINDING) uniform GeometryTransformParametersUBO
+{
+  GeometryTransformParameters geo;
+};
+
 
 float32 unionDistances(float32 d1, float32 d2)
 {
