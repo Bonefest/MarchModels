@@ -17,6 +17,7 @@ struct ImageIntegrator
   uint2 pixelGap;
   uint2 initialOffset;
 
+  GLuint emptyVAO;
   GLuint stackSSBO;
 
   GlobalParameters parameters;
@@ -26,20 +27,13 @@ struct ImageIntegrator
   GLuint drawingMaskTexture;
   GLuint rayMapTexture;
 
-  GLuint rayMapInitFramebuffer;
+  GLuint rayMapFramebuffer;
 
   ShaderProgram* prepareFrameProgram;
   ShaderProgram* raysMoverProgram;
   
   void* internalData;
 };
-
-static void imageIntegratorSetupCommonScriptData(ImageIntegrator* integrator, float32 time)
-{
-  sol::state& lua = luaGetMainState();
-  lua["args"]["time"] = time;
-  // lua["args"]["camera"] = cameraGetLuaTable(integrator->camera);
-}
 
 static void imageIntegratorSetupGlobalParameters(ImageIntegrator* integrator, float32 time)
 {
@@ -99,7 +93,8 @@ static void drawGeometryInorder(ImageIntegrator* integrator, AssetPtr geometry)
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, integrator->rayMapTexture);
-  
+
+  glBindVertexArray(integrator->emptyVAO);  
   glDrawArrays(GL_TRIANGLES, 0, 3);
   shaderProgramUse(nullptr);
 }
@@ -123,6 +118,9 @@ bool8 createImageIntegrator(Scene* scene,
   integrator->initialOffset = uint2(0, 0);
   integrator->internalData = nullptr;
 
+  // Empty VAO
+  glCreateVertexArrays(1, &integrator->emptyVAO);
+  
   // Stack SSBO
   glGenBuffers(1, &integrator->stackSSBO);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, integrator->stackSSBO);
@@ -156,8 +154,8 @@ bool8 createImageIntegrator(Scene* scene,
   glBindTexture(GL_TEXTURE_2D, 0);
 
   // Ray map init framebuffer
-  glGenFramebuffers(1, &integrator->rayMapInitFramebuffer);
-  glBindFramebuffer(GL_FRAMEBUFFER, integrator->rayMapInitFramebuffer);
+  glGenFramebuffers(1, &integrator->rayMapFramebuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, integrator->rayMapFramebuffer);
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, integrator->rayMapTexture, 0);
   // TODO: attach stencil too
   if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -199,12 +197,19 @@ bool8 createImageIntegrator(Scene* scene,
 
 void destroyImageIntegrator(ImageIntegrator* integrator)
 {
-  engineFreeObject(integrator, MEMORY_TYPE_GENERAL);
+  glDeleteVertexArrays(1, &integrator->emptyVAO);
+  
   glDeleteBuffers(1, &integrator->stackSSBO);
   glDeleteBuffers(1, &integrator->globalParamsUBO);
+  glDeleteBuffers(1, &integrator->geoTransformParamsUBO);
+  
   glDeleteTextures(1, &integrator->rayMapTexture);
-  glDeleteFramebuffers(1, &integrator->rayMapInitFramebuffer);
+  glDeleteFramebuffers(1, &integrator->rayMapFramebuffer);
+  
   destroyShaderProgram(integrator->prepareFrameProgram);
+  destroyShaderProgram(integrator->raysMoverProgram);
+
+  engineFreeObject(integrator, MEMORY_TYPE_GENERAL);  
 }
 
 void imageIntegratorExecute(ImageIntegrator* integrator, float32 time)
@@ -217,7 +222,8 @@ void imageIntegratorExecute(ImageIntegrator* integrator, float32 time)
   
   // Prepare ray map texture and clear stacks
   shaderProgramUse(integrator->prepareFrameProgram);
-  glBindFramebuffer(GL_FRAMEBUFFER, integrator->rayMapInitFramebuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, integrator->rayMapFramebuffer);
+  glBindVertexArray(integrator->emptyVAO);
   glDrawArrays(GL_TRIANGLES, 0, 3);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   shaderProgramUse(nullptr);
@@ -239,8 +245,9 @@ void imageIntegratorExecute(ImageIntegrator* integrator, float32 time)
     glEnable(GL_BLEND);
     glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
     glBlendFuncSeparate(GL_ZERO, GL_ONE, GL_ONE, GL_ONE);
-    glBindFramebuffer(GL_FRAMEBUFFER, integrator->rayMapInitFramebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, integrator->rayMapFramebuffer);
     shaderProgramUse(integrator->raysMoverProgram);
+    glBindVertexArray(integrator->emptyVAO);    
     glDrawArrays(GL_TRIANGLES, 0, 3);
     shaderProgramUse(nullptr);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -250,42 +257,6 @@ void imageIntegratorExecute(ImageIntegrator* integrator, float32 time)
   // translate distances of stacks into colors
 
   glViewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
-}
-
-void imageIntegratorExecute2(ImageIntegrator* integrator, float32 time)
-{
-  imageIntegratorSetupCommonScriptData(integrator, time);
-  
-  uint2 filmSize = filmGetSize(integrator->film);
-  for(int32 y = 0; y < filmSize.y; y++)
-  {
-    for(int32 x = 0; x < filmSize.x; x++)
-    {
-      int2 pixelLocation(x, y);
-
-      float3 radiance(0.0f, 0.0f, 0.0f);
-      // TODO: imageIntegratorShouldIntegratePixelLocation's function should be integrated in shader
-      if(imageIntegratorShouldIntegratePixelLocation(integrator, pixelLocation))
-      {
-        samplerStartSamplingPixel(integrator->sampler, pixelLocation);
-
-        Sample sample;
-        while(samplerGenerateSample(integrator->sampler, sample))
-        {
-          Ray viewRay = cameraGenerateWorldRay(integrator->camera, sample.ndc);
-          
-          float3 sampleRadiance = rayIntegratorCalculateRadiance(integrator->rayIntegrator,
-                                                                 viewRay,
-                                                                 integrator->scene,
-                                                                 time);
-
-          radiance += sampleRadiance * sample.weight;
-        }
-      }
-
-      filmSetPixel(integrator->film, pixelLocation, radiance);
-    }
-  }
 }
 
 void imageIntegratorSetSize(ImageIntegrator* integrator, uint2 size)

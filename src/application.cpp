@@ -102,9 +102,16 @@ static void openglErrorsCallback(GLenum source,
                                  const GLchar* message,
                                  const void* userParam)
 {
-  if(length > 0)
+  if(GL_DEBUG_SEVERITY_HIGH == severity || GL_DEBUG_SEVERITY_MEDIUM == severity)
   {
-    LOG_VERBOSE("OpenGL callback: %s", message);
+    if(GL_DEBUG_TYPE_ERROR == type)
+    {
+      LOG_ERROR("OpenGL: %s", message);
+    }
+    else
+    {
+      LOG_WARNING("OpenGL: %s", message);
+    }
   }
 }
 
@@ -145,8 +152,10 @@ static bool8 initGLFW()
   glfwSetCursorPosCallback(application.window, gcursorPosCallback);
   glfwSetMouseButtonCallback(application.window, gmouseButtonCallback);
 
-  glEnable(GL_DEBUG_OUTPUT);
-  glDebugMessageCallback(openglErrorsCallback, NULL);
+  #ifdef DEBUG
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(openglErrorsCallback, NULL);
+  #endif
   
   return TRUE;
 }

@@ -19,7 +19,7 @@ CFLAGS = -g -Wall -O0 -fPIC -std=c++1z ${DEFINES} $(INCLUDE_DIRS)
 # Linker flags
 LDFLAGS =-lXxf86vm -lxkbcommon-x11 -L/usr/lib/X11
 
-# Link librarires
+# Link libraries
 LDLIBS =-lglfw -ldl -xcb -lX11 -lX11-xcb -llua5.3 -lgtest -lgmock -lpthread 
 
 # Similarly to the old ./build_editor.sh script - find all .c/.cpp files and save them into corresponding variables
