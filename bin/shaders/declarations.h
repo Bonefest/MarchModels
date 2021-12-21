@@ -3,6 +3,8 @@
 
   #if !defined(__cplusplus)
     #include defines.glsl
+  #else
+    #include <maths/common.h>
   #endif
 
   #define MAX_STACK_SIZE 8
@@ -39,7 +41,7 @@
 
   struct GeometryTransformParameters
   {
-    float4 position;
+    float4   position;
     float4x4 geoWorldMat;
     float4x4 worldGeoMat;
     float4x4 geoParentMat;
