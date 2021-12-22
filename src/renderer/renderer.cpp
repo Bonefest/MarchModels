@@ -1,7 +1,9 @@
 #include <../bin/shaders/declarations.h>
 
 #include "logging.h"
+#include "renderer_utils.h"
 #include "passes/render_pass.h"
+#include "passes/rasterization_preparing_pass.h"
 
 #include "renderer.h"
 
@@ -26,6 +28,13 @@ struct Renderer
 
   // std::vector<RenderPass*> tonemapperPasses;
   // std::vector<RenderPass*> postprocessPasses;
+
+  GlobalParameters globalParameters;
+
+  Film*               passedFilm;
+  Camera*             passedCamera;
+  Scene*              passedScene;
+  RenderingParameters passedRenderingParams;
   
   bool8 initialized = FALSE;
 };
@@ -36,12 +45,40 @@ static Renderer data;
 // Helpers
 // ----------------------------------------------------------------------------
 
-#define INIT(funcName)                                                  \
-  if(funcName() == FALSE)                                               \
+#define INIT(funcName, ...)                                             \
+  if(funcName(__VA_ARGS__) == FALSE)                                    \
   {                                                                     \
-    LOG_ERROR("Initialization of '%s' has failed!", #funcName);  \
+    LOG_ERROR("Initialization of '%s' has failed!", #funcName);         \
     return FALSE;                                                       \
   }                                                                     \
+
+static void rendererSetupGlobalParameters(Film* film,
+                                          Scene* scene,
+                                          Camera* camera,
+                                          const RenderingParameters& params)
+{
+  GlobalParameters& parameters = data.globalParameters;
+  
+  parameters.time = params.time;
+  parameters.tone = params.tone;
+  parameters.pixelGapX = 0;
+  parameters.pixelGapY = 0;    
+  parameters.resolution = filmGetSize(film);
+  parameters.invResolution = float2(1.0f / parameters.resolution.x, 1.0f / parameters.resolution.y);
+  
+  parameters.camPosition = float4(cameraGetPosition(camera), 1.0);
+  parameters.camOrientation = cameraGetOrientation(camera);
+  parameters.camNDCCameraMat = cameraGetNDCCameraMat(camera);
+  parameters.camCameraNDCMat = cameraGetCameraNDCMat(camera);
+  parameters.camNDCWorldMat = cameraGetNDCWorldMat(camera);
+  parameters.camWorldNDCMat = cameraGetWorldNDCMat(camera);
+  parameters.camCameraWorldMat = cameraGetCameraWorldMat(camera);
+  parameters.camWorldCameraMat = cameraGetWorldCameraMat(camera);
+
+  glBindBuffer(GL_UNIFORM_BUFFER, rendererGetResourceHandle(RR_GLOBAL_PARAMS_UBO));
+  glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(GlobalParameters), &parameters);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);                    
+}
 
 // ----------------------------------------------------------------------------
 // Resources initialization / destroying
@@ -119,6 +156,8 @@ static void destroyRendererResources()
 
 static bool8 initializeRenderPasses()
 {
+  INIT(createRasterizationPreparingPass, &data.rasterizationPreparingPass);
+  
   return TRUE;
 }
 
@@ -131,7 +170,8 @@ bool8 intializeRenderer()
   }
 
   INIT(initializeRendererResources);
-
+  INIT(initializeRenderPasses);
+  
   data.initialized = TRUE;
   
   return TRUE;
@@ -146,10 +186,53 @@ void shutdownRenderer()
   data = Renderer{};
 }
 
-GLuint getRendererResourceHandle(RendererResourceType type)
+bool8 rendererRenderScene(Film* film,
+                          Scene* scene,
+                          Camera* camera,
+                          const RenderingParameters& params)
+{
+  data.passedFilm = film;
+  data.passedScene = scene;
+  data.passedCamera = camera;
+  data.passedRenderingParams = params;
+  
+  rendererSetupGlobalParameters(film, scene, camera, params);
+
+  pushViewport(0, 0, data.globalParameters.resolution.x, data.globalParameters.resolution.y);
+
+  assert(renderPassExecute(data.rasterizationPreparingPass));
+
+
+  
+  assert(popViewport() == TRUE);
+  
+  return TRUE;
+}
+
+GLuint rendererGetResourceHandle(RendererResourceType type)
 {
   assert(data.initialized == TRUE);
   
   return data.handles[type];
+}
+
+Film* rendererGetPassedFilm()
+{
+  return data.passedFilm;
+}
+
+Scene* rendererGetPassedScene()
+{
+  return data.passedScene;
+}
+
+Camera* rendererGetPassedCamera()
+{
+  return data.passedCamera;
+}
+
+const RenderingParameters& rendererGetPassedRenderingParameters()
+{
+  return data.passedRenderingParams;
 }
 

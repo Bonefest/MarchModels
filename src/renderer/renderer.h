@@ -1,5 +1,6 @@
 #pragma once
 
+#include "film.h"
 #include "scene.h"
 #include "camera.h"
 #include "defines.h"
@@ -44,6 +45,9 @@ enum RendererResourceType
 
 struct RenderingParameters
 {
+  float32 time;
+  float32 tone;
+  
   RendererShadingMode shadingMode;
 
   uint32 rasterItersMaxCount;
@@ -51,7 +55,7 @@ struct RenderingParameters
   
   bool8 enableNormals;
   bool8 enableShadows;
-
+  
   // TODO: Postprocessing choices
   // TODO: Tonemapper
   // TODO: RaySampler sampler;
@@ -61,5 +65,38 @@ struct RenderingParameters
 ENGINE_API bool8 intializeRenderer();
 ENGINE_API void shutdownRenderer();
 
-ENGINE_API bool8 rendererRenderScene(Scene* scene, Camera* camera, const RenderingParameters& params);
+ENGINE_API bool8 rendererRenderScene(Film* film,
+                                     Scene* scene,
+                                     Camera* camera,
+                                     const RenderingParameters& params);
+
 ENGINE_API GLuint rendererGetResourceHandle(RendererResourceType type);
+
+/**
+ * @note Useful for passes, which need additional data (e.g for rasterization pass, which needs to have an access
+ * to the scene).
+ *
+ * @warning returned data is valid only during execution of rendererRenderScene() function.
+ *
+ * @return pointer to object if getter executed during execution of rendererRenderScene(), otherwise nullptr
+ */
+
+/**
+ * @return passed film during execution of rendererRenderScene() or nullptr
+ */
+ENGINE_API Film* rendererGetPassedFilm();
+
+/**
+ * @return passed scene during execution of rendererRenderScene() or nullptr
+ */
+ENGINE_API Scene* rendererGetPassedScene();
+
+/**
+ * @return passed camera during execution of rendererRenderScene() or nullptr
+ */
+ENGINE_API Camera* rendererGetPassedCamera();
+
+/**
+ * @return passed rendering parameters during last execution of rendererRenderScene()
+ */
+ENGINE_API const RenderingParameters& rendererGetPassedRenderingParameters();

@@ -2,7 +2,7 @@
 
 #include "defines.h"
 
-ENGINE_API void pushViewport();
+ENGINE_API void pushViewport(GLint x, GLint y, GLint width, GLint height);
 ENGINE_API bool8 popViewport();
 
 ENGINE_API void pushBlendingEquation();
