@@ -1,4 +1,4 @@
- #include <../bin/shaders/declarations.h>
+#include <../bin/shaders/declarations.h>
 
 #include "logging.h"
 #include "renderer_utils.h"
@@ -14,7 +14,7 @@ struct Renderer
   RenderPass* shadowRasterizationPreparingPass;
   
   RenderPass* rasterizationPass;
-  RenderPass* rasterizationDataExtractionPass;  
+  RenderPass* rasterizationResultExtractionPass;  
   RenderPass* normalsCalculationPass;
 
   RenderPass* distancesVisualizationPass;
@@ -127,6 +127,30 @@ static bool8 initRaysMapTexture()
   return TRUE;
 }
 
+static bool8 initGeometryIDMapTexture()
+{
+  glGenTextures(1, &data.handles[RR_GEOIDS_MAP_TEXTURE]);
+  glBindTexture(GL_TEXTURE_2D, data.handles[RR_GEOIDS_MAP_TEXTURE]);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R16, 1280, 720, 0, GL_RED, GL_UNSIGNED_SHORT, NULL);
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  return TRUE;  
+}
+
+static bool8 initDistancesMapTexture()
+{
+  glGenTextures(1, &data.handles[RR_DISTANCES_MAP_TEXTURE]);
+  glBindTexture(GL_TEXTURE_2D, data.handles[RR_DISTANCES_MAP_TEXTURE]);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 1280, 720, 0, GL_RED, GL_FLOAT, NULL);
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  return TRUE;  
+}
+
 static bool8 initializeRendererResources()
 {
   glCreateVertexArrays(1, &data.handles[RR_EMPTY_VAO]);
@@ -135,7 +159,9 @@ static bool8 initializeRendererResources()
   INIT(initGlobalParamsUBO);
   INIT(initGeometryTransformParamsUBO);
   INIT(initRaysMapTexture);
-
+  INIT(initGeometryIDMapTexture);
+  INIT(initDistancesMapTexture);
+  
   return TRUE;
 }
 
