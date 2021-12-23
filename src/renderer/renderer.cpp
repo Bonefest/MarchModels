@@ -1,9 +1,9 @@
-#include <../bin/shaders/declarations.h>
+ #include <../bin/shaders/declarations.h>
 
 #include "logging.h"
 #include "renderer_utils.h"
 #include "passes/render_pass.h"
-#include "passes/rasterization_preparing_pass.h"
+#include "passes/rasterization_pass.h"
 
 #include "renderer.h"
 
@@ -11,13 +11,11 @@ struct Renderer
 {
   GLuint handles[RR_MAX];
   
-  RenderPass* rasterizationPreparingPass;
   RenderPass* shadowRasterizationPreparingPass;
-  RenderPass* rasterizationRaysUpdatePass;
   
   RenderPass* rasterizationPass;
+  RenderPass* rasterizationDataExtractionPass;  
   RenderPass* normalsCalculationPass;
-  RenderPass* rasterizationDataExtractionPass;
 
   RenderPass* distancesVisualizationPass;
   RenderPass* normalsVisualizationPass;
@@ -156,7 +154,7 @@ static void destroyRendererResources()
 
 static bool8 initializeRenderPasses()
 {
-  INIT(createRasterizationPreparingPass, &data.rasterizationPreparingPass);
+  INIT(createRasterizationPass, &data.rasterizationPass);
   
   return TRUE;
 }
@@ -200,8 +198,7 @@ bool8 rendererRenderScene(Film* film,
 
   pushViewport(0, 0, data.globalParameters.resolution.x, data.globalParameters.resolution.y);
 
-  assert(renderPassExecute(data.rasterizationPreparingPass));
-
+  assert(renderPassExecute(data.rasterizationPass));
 
   
   assert(popViewport() == TRUE);
