@@ -9,18 +9,23 @@
 
 struct RasterizationPassData
 {
-  GLuint raysMapFramebuffer;
+  GLuint raysMapFB;
+  GLuint geometryAndDistancesFB;
   
   ShaderProgram* preparingProgram;
   ShaderProgram* raysMoverProgram;
+  ShaderProgram* resultsExtractionProgram;
 };
 
 static void destroyRasterizationPass(RenderPass* pass)
 {
   RasterizationPassData* data = (RasterizationPassData*)renderPassGetInternalData(pass);
-  glDeleteFramebuffers(1, &data->raysMapFramebuffer);  
+  glDeleteFramebuffers(1, &data->raysMapFB);
+  glDeleteFramebuffers(1, &data->geometryAndDistancesFB);
+  
   destroyShaderProgram(data->preparingProgram);
   destroyShaderProgram(data->raysMoverProgram);
+  destroyShaderProgram(data->resultsExtractionProgram);
   
   engineFreeObject(data, MEMORY_TYPE_GENERAL);
 }
@@ -28,7 +33,7 @@ static void destroyRasterizationPass(RenderPass* pass)
 static bool8 rasterizationPassPrepareToRasterize(RasterizationPassData* data)
 {
   shaderProgramUse(data->preparingProgram);
-  glBindFramebuffer(GL_FRAMEBUFFER, data->raysMapFramebuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, data->raysMapFB);
 
   drawTriangleNoVAO();
 
@@ -87,9 +92,11 @@ static bool8 rasterizationPassRasterize(RasterizationPassData* data)
     // Move per-pixel rays based on calculated distances
     glEnable(GL_BLEND);
     pushBlend(GL_FUNC_ADD, GL_FUNC_ADD, GL_ZERO, GL_ONE, GL_ONE, GL_ONE);
-    glBindFramebuffer(GL_FRAMEBUFFER, rendererGetResourceHandle(RR_RAYS_MAP_TEXTURE));
+    glBindFramebuffer(GL_FRAMEBUFFER, data->raysMapFB);
     
     shaderProgramUse(data->raysMoverProgram);
+
+    glUniform1ui(glGetUniformLocation(shaderProgramGetGLProgram(data->raysMoverProgram), "curItemIdx"), i);
     drawTriangleNoVAO();
     shaderProgramUse(nullptr);
     
@@ -102,12 +109,28 @@ static bool8 rasterizationPassRasterize(RasterizationPassData* data)
   return TRUE;
 }
 
+static bool8 rasterizationPassExtractResults(RasterizationPassData* data)
+{
+  glBindFramebuffer(GL_FRAMEBUFFER, data->geometryAndDistancesFB);
+  shaderProgramUse(data->resultsExtractionProgram);
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_RAYS_MAP_TEXTURE));  
+  drawTriangleNoVAO();
+  
+  shaderProgramUse(nullptr);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  return TRUE;
+}
+
 static bool8 rasterizationPassExecute(RenderPass* pass)
 {
   RasterizationPassData* data = (RasterizationPassData*)renderPassGetInternalData(pass);
 
   assert(rasterizationPassPrepareToRasterize(data));
   assert(rasterizationPassRasterize(data));
+  assert(rasterizationPassExtractResults(data));
   
   return TRUE;
 }
@@ -117,13 +140,13 @@ static const char* rasterizationPassGetName(RenderPass* pass)
   return "RasterizationPass";
 }
 
-static ShaderProgram* createPreparingProgram()
+static ShaderProgram* createAndLinkProgram(const char* fragmentShaderPath)
 {
   ShaderProgram* program = nullptr;
   
   createShaderProgram(&program);
   shaderProgramAttachShader(program, shaderManagerGetShader("triangle.vert"));
-  shaderProgramAttachShader(program, shaderManagerLoadShader(GL_FRAGMENT_SHADER, "shaders/frame_preparer.frag"));
+  shaderProgramAttachShader(program, shaderManagerLoadShader(GL_FRAGMENT_SHADER, fragmentShaderPath));
 
   if(linkShaderProgram(program) == FALSE)
   {
@@ -131,23 +154,6 @@ static ShaderProgram* createPreparingProgram()
     return nullptr;
   }
   
-  return program;
-}
-
-static ShaderProgram* createRaysMoverProgram()
-{
-  ShaderProgram* program = nullptr;
-
-  createShaderProgram(&program);
-  shaderProgramAttachShader(program, shaderManagerGetShader("triangle.vert"));
-  shaderProgramAttachShader(program, shaderManagerLoadShader(GL_FRAGMENT_SHADER, "shaders/rays_mover.frag"));
-
-  if(linkShaderProgram(program) == FALSE)
-  {
-    destroyShaderProgram(program);
-    return nullptr;
-  }
-
   return program;
 }
 
@@ -168,6 +174,26 @@ static GLuint createRayMapFramebuffer()
   return framebuffer;
 }
 
+static GLuint createGeometryAndDistancesFramebuffer()
+{
+  GLuint framebuffer = 0;
+  
+  glGenFramebuffers(1, &framebuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+  
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE), 0);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, rendererGetResourceHandle(RR_GEOIDS_MAP_TEXTURE), 0);  
+
+  if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+  {
+    return 0;
+  }
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  return framebuffer;
+}
+
 bool8 createRasterizationPass(RenderPass** outPass)
 {
   RenderPassInterface interface = {};
@@ -183,14 +209,20 @@ bool8 createRasterizationPass(RenderPass** outPass)
 
   RasterizationPassData* data = engineAllocObject<RasterizationPassData>(MEMORY_TYPE_GENERAL);
 
-  data->raysMapFramebuffer = createRayMapFramebuffer();
-  assert(data->raysMapFramebuffer != 0);
-  
-  data->preparingProgram = createPreparingProgram();
+  data->raysMapFB = createRayMapFramebuffer();
+  assert(data->raysMapFB != 0);
+
+  data->geometryAndDistancesFB = createGeometryAndDistancesFramebuffer();
+  assert(data->geometryAndDistancesFB != 0);
+
+  data->preparingProgram = createAndLinkProgram("shaders/prepare_to_raster.frag");
   assert(data->preparingProgram != nullptr);
 
-  data->raysMoverProgram = createRaysMoverProgram();
+  data->raysMoverProgram = createAndLinkProgram("shaders/rays_mover.frag");
   assert(data->raysMoverProgram != nullptr);
+
+  data->resultsExtractionProgram = createAndLinkProgram("shaders/extract_raster_results.frag");
+  assert(data->resultsExtractionProgram != nullptr);
   
   renderPassSetInternalData(*outPass, data);
   

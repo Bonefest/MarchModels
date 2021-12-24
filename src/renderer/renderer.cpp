@@ -11,10 +11,7 @@ struct Renderer
 {
   GLuint handles[RR_MAX];
   
-  RenderPass* shadowRasterizationPreparingPass;
-  
   RenderPass* rasterizationPass;
-  RenderPass* rasterizationResultExtractionPass;  
   RenderPass* normalsCalculationPass;
 
   RenderPass* distancesVisualizationPass;
@@ -63,6 +60,8 @@ static void rendererSetupGlobalParameters(Film* film,
   parameters.pixelGapY = 0;    
   parameters.resolution = filmGetSize(film);
   parameters.invResolution = float2(1.0f / parameters.resolution.x, 1.0f / parameters.resolution.y);
+
+  parameters.rasterItersMaxCount = params.rasterItersMaxCount;
   
   parameters.camPosition = float4(cameraGetPosition(camera), 1.0);
   parameters.camOrientation = cameraGetOrientation(camera);

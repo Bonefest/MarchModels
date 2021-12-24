@@ -26,6 +26,11 @@
     uint32   pixelGapX;
     uint32   pixelGapY;
 
+    uint32   rasterItersMaxCount;
+    uint32   _gap1;
+    uint32   _gap2;
+    uint32   _gap3;    
+    
     uint2    resolution;
     float2   invResolution;
 

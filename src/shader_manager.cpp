@@ -50,6 +50,7 @@ ShaderPtr shaderManagerLoadShader(GLuint shaderType,
   ShaderPtr shaderPtr = shaderManagerGetShader(filename);
   if(shaderPtr != nullptr)
   {
+    assert(shaderGetType(shaderPtr) == shaderType);
     return shaderPtr;
   }
   
