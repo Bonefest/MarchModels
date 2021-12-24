@@ -12,7 +12,7 @@ void main()
 
     float32 distance = stackPopDistance(ifragCoord);
 
-    bool notLastIteration = (curItemIdx + 1 < params.rasterItersMaxCount);
+    bool notLastIteration = (curIterIdx + 1 < params.rasterItersMaxCount);
     if(notLastIteration)
     {
       stackClear(ifragCoord);

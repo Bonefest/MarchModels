@@ -184,7 +184,7 @@ static bool8 initializeRenderPasses()
   return TRUE;
 }
 
-bool8 intializeRenderer()
+bool8 initializeRenderer()
 {
   if(data.initialized == TRUE)
   {
@@ -224,7 +224,6 @@ bool8 rendererRenderScene(Film* film,
   pushViewport(0, 0, data.globalParameters.resolution.x, data.globalParameters.resolution.y);
 
   assert(renderPassExecute(data.rasterizationPass));
-
   
   assert(popViewport() == TRUE);
   
@@ -233,8 +232,6 @@ bool8 rendererRenderScene(Film* film,
 
 GLuint rendererGetResourceHandle(RendererResourceType type)
 {
-  assert(data.initialized == TRUE);
-  
   return data.handles[type];
 }
 

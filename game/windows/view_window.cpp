@@ -2,6 +2,7 @@
 #include <stopwatch.h>
 #include <imgui/imgui.h>
 #include <memory_manager.h>
+#include <renderer/renderer.h>
 #include <samplers/center_sampler.h>
 #include <ray_integrators/debug_ray_integrator.h>
 
@@ -14,7 +15,7 @@ struct ViewSettingsWindowData;
 struct ViewWindowData
 {
   ImageIntegrator* integrator;
-  WindowPtr settingsWindow;
+  RenderingParameters renderingParameters;
   
   float32 maxFPS;
   Stopwatch lifetimeStopwatch;
@@ -22,6 +23,8 @@ struct ViewWindowData
   Time refreshPeriod;
 
   bool8 requestedRedrawImage;
+
+  WindowPtr settingsWindow;  
 };
 
 static bool8 initializeViewWindow(Window* window)
@@ -65,7 +68,8 @@ static void drawViewWindow(Window* window, float64 delta)
   
   if((data->requestedRedrawImage == TRUE || newFrameTicked == TRUE) && currentScene != nullptr)
   {
-    imageIntegratorExecute(data->integrator, data->lifetimeStopwatch.getElapsedTime().asSecs());
+    data->renderingParameters.time = data->lifetimeStopwatch.getElapsedTime().asSecs();
+    imageIntegratorExecute(data->integrator, data->renderingParameters);
     data->refreshStopwatch.restart();
 
     data->requestedRedrawImage = FALSE;
@@ -166,7 +170,7 @@ static void drawViewWindow(Window* window, float64 delta)
     float32 textWidth = ImGui::CalcTextSize(shortInfoBuf).x;
 
     ImGui::SameLine(windowSize.x - textWidth - cogButtonWidth - 2.0 * style.FramePadding.x);
-    ImGui::Text(shortInfoBuf);
+    ImGui::Text("%s", shortInfoBuf);
   }
   else
   {
@@ -283,7 +287,13 @@ static void drawViewSettingsWindow(Window* window, float64 delta)
 
     ImGui::TreePop();
   }
-
+  // --- Rendering settings ---------------------------------------------------
+  if(ImGui::TreeNode("Rendering settings"))
+  {
+    ImGui::Text("TODO");
+    ImGui::TreePop();
+  }
+  
   // --- Image integrator settings --------------------------------------------
   if(ImGui::TreeNode("Image integrator settings"))
   {

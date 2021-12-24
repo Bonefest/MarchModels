@@ -4,6 +4,7 @@
 #include "scene.h"
 #include "camera.h"
 #include "samplers/sampler.h"
+#include "renderer/renderer.h"
 #include "ray_integrators/ray_integrator.h"
 
 struct ImageIntegrator;
@@ -17,7 +18,7 @@ ENGINE_API bool8 createImageIntegrator(Scene* scene,
 
 ENGINE_API void destroyImageIntegrator(ImageIntegrator* integrator);
 
-ENGINE_API void imageIntegratorExecute(ImageIntegrator* integrator, float32 time = 0.0f);
+ENGINE_API void imageIntegratorExecute(ImageIntegrator* integrator, const RenderingParameters& parameters);
 ENGINE_API void imageIntegratorSetSize(ImageIntegrator* integrator, uint2 size);
 
 ENGINE_API void imageIntegratorSetScene(ImageIntegrator* integrator, Scene* scene);

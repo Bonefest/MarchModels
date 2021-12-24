@@ -55,14 +55,15 @@ struct RenderingParameters
   
   bool8 enableNormals;
   bool8 enableShadows;
-  
+
+  // TODO: Coverage mask generator (pixel gap is an example of mask generator)
   // TODO: Postprocessing choices
   // TODO: Tonemapper
   // TODO: RaySampler sampler;
   // TODO (sort of): void(*customShadingPathFn)(RenderingParameters params);
 };
 
-ENGINE_API bool8 intializeRenderer();
+ENGINE_API bool8 initializeRenderer();
 ENGINE_API void shutdownRenderer();
 
 ENGINE_API bool8 rendererRenderScene(Film* film,

@@ -7,6 +7,7 @@
 #include "shader_manager.h"
 #include "memory_manager.h"
 #include "lua/lua_system.h"
+#include "renderer/renderer.h"
 
 #include "application.h"
 #include "game_framework.h"
@@ -307,6 +308,16 @@ static bool8 initApplication()
   else
   {
     LOG_INFO("Lua system has been initialized successfully!");
+  }
+
+  if(initializeRenderer() == FALSE)
+  {
+    LOG_ERROR("Cannot initialize rendering system!");
+    return FALSE;
+  }
+  else
+  {
+    LOG_INFO("Rendering system has been initialize successfully!");
   }
   
   /** --- Game initialization ---------------------------------------------- */
