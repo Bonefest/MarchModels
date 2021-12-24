@@ -4,6 +4,7 @@
 #include "renderer_utils.h"
 #include "passes/render_pass.h"
 #include "passes/rasterization_pass.h"
+#include "passes/distances_visualization_pass.h"
 
 #include "renderer.h"
 
@@ -150,6 +151,18 @@ static bool8 initDistancesMapTexture()
   return TRUE;  
 }
 
+static bool8 initLDRMapTexture()
+{
+  glGenTextures(1, &data.handles[RR_LDR_MAP_TEXTURE]);
+  glBindTexture(GL_TEXTURE_2D, data.handles[RR_LDR_MAP_TEXTURE]);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 1280, 720, 0, GL_RGB, GL_FLOAT, NULL);
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  return TRUE;
+}
+
 static bool8 initializeRendererResources()
 {
   glCreateVertexArrays(1, &data.handles[RR_EMPTY_VAO]);
@@ -160,6 +173,7 @@ static bool8 initializeRendererResources()
   INIT(initRaysMapTexture);
   INIT(initGeometryIDMapTexture);
   INIT(initDistancesMapTexture);
+  INIT(initLDRMapTexture);
   
   return TRUE;
 }
@@ -180,7 +194,10 @@ static void destroyRendererResources()
 static bool8 initializeRenderPasses()
 {
   INIT(createRasterizationPass, &data.rasterizationPass);
-  
+  INIT(createDistancesVisualizationPass,
+       float2(0.0f, 100.0f), float3(1.0f, 1.0f, 1.0f), float3(0.0f, 0.0f, 0.0f),
+       &data.distancesVisualizationPass);
+
   return TRUE;
 }
 
@@ -224,6 +241,7 @@ bool8 rendererRenderScene(Film* film,
   pushViewport(0, 0, data.globalParameters.resolution.x, data.globalParameters.resolution.y);
 
   assert(renderPassExecute(data.rasterizationPass));
+  assert(renderPassExecute(data.distancesVisualizationPass));
   
   assert(popViewport() == TRUE);
   

@@ -56,13 +56,13 @@ bool8 shaderProgramAttachShader(ShaderProgram* program, ShaderPtr shader)
   {
     if(shaderGetType(shader) == shaderGetType(*shaderIt))
     {
-      glDetachShader(program->program, shaderGetGLShader(*shaderIt));
+      glDetachShader(program->program, shaderGetGLHandle(*shaderIt));
       program->attachedShaders.erase(shaderIt);
       break;
     }
   }
 
-  glAttachShader(program->program, shaderGetGLShader(shader));
+  glAttachShader(program->program, shaderGetGLHandle(shader));
   program->attachedShaders.push_back(shader);
 
   return TRUE;
@@ -127,7 +127,7 @@ void shaderProgramUse(ShaderProgram* program)
   glUseProgram(programHandle);
 }
 
-GLuint shaderProgramGetGLProgram(ShaderProgram* program)
+GLuint shaderProgramGetGLHandle(ShaderProgram* program)
 {
   return program->program;
 }

@@ -131,7 +131,7 @@ GLuint shaderGetType(Shader* shader)
   return shader->type;
 }
 
-GLuint shaderGetGLShader(Shader* shader)
+GLuint shaderGetGLHandle(Shader* shader)
 {
   return shader->shader;
 }

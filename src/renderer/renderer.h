@@ -50,11 +50,11 @@ struct RenderingParameters
   
   RendererShadingMode shadingMode;
 
-  uint32 rasterItersMaxCount;
-  uint32 shadowRasterItersMaxCount;
+  uint32 rasterItersMaxCount = 8;
+  uint32 shadowRasterItersMaxCount = 8;
   
-  bool8 enableNormals;
-  bool8 enableShadows;
+  bool8 enableNormals = TRUE;
+  bool8 enableShadows = TRUE;
 
   // TODO: Coverage mask generator (pixel gap is an example of mask generator)
   // TODO: Postprocessing choices

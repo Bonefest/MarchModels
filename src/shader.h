@@ -16,6 +16,6 @@ ENGINE_API bool8 shaderIsCompiled(Shader* shader);
 ENGINE_API void shaderAttachSource(Shader* shader, const char* source);
 
 ENGINE_API GLuint shaderGetType(Shader* shader);
-ENGINE_API GLuint shaderGetGLShader(Shader* shader);
+ENGINE_API GLuint shaderGetGLHandle(Shader* shader);
 
 using ShaderPtr = SharedPtr<Shader, &destroyShader>;

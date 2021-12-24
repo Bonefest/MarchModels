@@ -96,7 +96,7 @@ static bool8 rasterizationPassRasterize(RasterizationPassData* data)
     
     shaderProgramUse(data->raysMoverProgram);
 
-    glUniform1ui(glGetUniformLocation(shaderProgramGetGLProgram(data->raysMoverProgram), "curItemIdx"), i);
+    glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(data->raysMoverProgram), "curItemIdx"), i);
     drawTriangleNoVAO();
     shaderProgramUse(nullptr);
     

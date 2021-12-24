@@ -238,7 +238,7 @@ bool8 createViewWindow(const std::string& identifier,
   
   ViewWindowData* data = engineAllocObject<ViewWindowData>(MEMORY_TYPE_GENERAL);
   data->integrator = imageIntegrator;
-  data->settingsWindow = WindowPtr(nullptr);  
+  data->settingsWindow = WindowPtr(nullptr);
   
   windowSetInternalData(*outWindow, data);
   viewWindowSetMaxFPS(*outWindow, 10.0f);
