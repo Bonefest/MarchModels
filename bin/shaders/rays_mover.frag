@@ -18,6 +18,8 @@ void main()
       stackClear(ifragCoord);
     }
 
+    // TODO: Check if distance < threshold - mark pixel as intersected (in coverage mask)
+    
     outCameraRay = float4(0, 0, 0, distance);
 }
 

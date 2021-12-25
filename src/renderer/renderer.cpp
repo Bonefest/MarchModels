@@ -65,6 +65,8 @@ static void rendererSetupGlobalParameters(Film* film,
   parameters.tone = params.tone;
   parameters.gamma = params.gamma;
   parameters.invGamma = 1.0 / params.gamma;
+
+  parameters.intersectionThreshold = params.intersectionThreshold;
   
   parameters.resolution = filmGetSize(film);
   parameters.invResolution = float2(1.0f / parameters.resolution.x, 1.0f / parameters.resolution.y);
@@ -204,7 +206,7 @@ static bool8 initializeRenderPasses()
 {
   INIT(createRasterizationPass, &data.rasterizationPass);
   INIT(createDistancesVisualizationPass,
-       float2(0.0f, 100.0f), float3(1.0f, 1.0f, 1.0f), float3(0.0f, 0.0f, 0.0f),
+       float2(0.0f, 20.0f), float3(0.43f, 0.85f, 0.28f), float3(0.0f, 0.0f, 0.0f),
        &data.distancesVisualizationPass);
   INIT(createLDRToFilmCopyPass, &data.ldrToFilmPass);
   

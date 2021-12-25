@@ -47,7 +47,8 @@ struct RenderingParameters
 {
   float32 time;
   float32 tone;
-  float32 gamma = 2.2;
+  float32 gamma = 2.2f;
+  float32 intersectionThreshold = 0.1f;
   
   RendererShadingMode shadingMode;
 

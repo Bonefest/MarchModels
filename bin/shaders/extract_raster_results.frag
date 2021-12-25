@@ -11,7 +11,7 @@ void main()
 
     DistancesStack stack = getStack(ifragCoord);
 
-    if(stack.distances[0] < INTERSECTION_THRESHOLD)
+    if(stack.distances[0] < params.intersectionThreshold)
     {
         outDistance = texelFetch(raysMap, ifragCoord, 0).w;
         outGeometryID = stack.geometry[0];

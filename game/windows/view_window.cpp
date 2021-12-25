@@ -192,6 +192,12 @@ static void viewWindowOnSettingsWindowShutdown(Window* window, Window* settingsW
   data->settingsWindow = WindowPtr(nullptr);
 }
 
+static RenderingParameters& viewWindowGetRenderingParameters(Window* window)
+{
+  ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);    
+  return data->renderingParameters;  
+}
+
 static ImageIntegrator* viewWindowGetImageIntegrator(Window* window)
 {
   ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);    
@@ -290,7 +296,14 @@ static void drawViewSettingsWindow(Window* window, float64 delta)
   // --- Rendering settings ---------------------------------------------------
   if(ImGui::TreeNode("Rendering settings"))
   {
-    ImGui::Text("TODO");
+    RenderingParameters& params = viewWindowGetRenderingParameters(data->viewWindow);
+
+    ImGui::Checkbox("Enable shadows", (bool*)&params.enableShadows);
+    ImGui::SameLine();
+    ImGui::Checkbox("Enable normals", (bool*)&params.enableNormals);
+    ImGui::SliderInt("Rasterizations iterations count", (int*)&params.rasterItersMaxCount, 1, 512);
+    ImGui::SliderFloat("Intersection threshold", &params.intersectionThreshold, 0.0001f, 100.0f);
+    
     ImGui::TreePop();
   }
   

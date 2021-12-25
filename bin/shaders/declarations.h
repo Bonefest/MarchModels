@@ -32,11 +32,16 @@
     float32  tone;
     float32  gamma;
     float32  invGamma;
+
+    float32  intersectionThreshold;
+    float32  _gap1;
+    float32  _gap2;
+    float32  _gap3;    
     
     uint32   pixelGapX;
     uint32   pixelGapY;
     uint32   rasterItersMaxCount;
-    uint32   _gap2;
+    uint32   _gap4;
     
     uint2    resolution;
     float2   invResolution;
