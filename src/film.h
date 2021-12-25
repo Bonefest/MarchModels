@@ -17,6 +17,7 @@ ENGINE_API float3 filmLoadPixel(Film* film, int2 location, int2 offset = int2())
 
 ENGINE_API uint2 filmGetSize(Film* film);
 
-ENGINE_API GLenum filmGetGLTexture(Film* film);
+ENGINE_API GLuint filmGetGLHandle(Film* film);
+ENGINE_API GLuint filmGetGLFBOHandle(Film* film);
 
 

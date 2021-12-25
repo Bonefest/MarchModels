@@ -88,7 +88,7 @@ static void drawViewWindow(Window* window, float64 delta)
   {
     float2 initialCursorPos = ImGui::GetCursorPos();
 
-    ImGui::Image((void*)filmGetGLTexture(film),
+    ImGui::Image((void*)filmGetGLHandle(film),
                  float2(filmSize.x, filmSize.y), float2(1.0f, 1.0f), float2(0.0f, 0.0f));
 
     ImGui::SetCursorPos(initialCursorPos);
@@ -230,7 +230,7 @@ bool8 createViewWindow(const std::string& identifier,
   }
 
   Film* film = nullptr;
-  assert(createFilm(uint2(8, 8), &film));
+  assert(createFilm(uint2(1280, 720), &film));
 
   ImageIntegrator* imageIntegrator = nullptr;
   assert(createImageIntegrator(nullptr, sampler, rayIntegrator, film, camera, &imageIntegrator));

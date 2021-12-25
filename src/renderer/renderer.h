@@ -47,6 +47,7 @@ struct RenderingParameters
 {
   float32 time;
   float32 tone;
+  float32 gamma = 2.2;
   
   RendererShadingMode shadingMode;
 

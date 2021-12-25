@@ -9,8 +9,8 @@
 
 struct RasterizationPassData
 {
-  GLuint raysMapFB;
-  GLuint geometryAndDistancesFB;
+  GLuint raysMapFBO;
+  GLuint geometryAndDistancesFBO;
   
   ShaderProgram* preparingProgram;
   ShaderProgram* raysMoverProgram;
@@ -20,8 +20,8 @@ struct RasterizationPassData
 static void destroyRasterizationPass(RenderPass* pass)
 {
   RasterizationPassData* data = (RasterizationPassData*)renderPassGetInternalData(pass);
-  glDeleteFramebuffers(1, &data->raysMapFB);
-  glDeleteFramebuffers(1, &data->geometryAndDistancesFB);
+  glDeleteFramebuffers(1, &data->raysMapFBO);
+  glDeleteFramebuffers(1, &data->geometryAndDistancesFBO);
   
   destroyShaderProgram(data->preparingProgram);
   destroyShaderProgram(data->raysMoverProgram);
@@ -33,7 +33,7 @@ static void destroyRasterizationPass(RenderPass* pass)
 static bool8 rasterizationPassPrepareToRasterize(RasterizationPassData* data)
 {
   shaderProgramUse(data->preparingProgram);
-  glBindFramebuffer(GL_FRAMEBUFFER, data->raysMapFB);
+  glBindFramebuffer(GL_FRAMEBUFFER, data->raysMapFBO);
 
   drawTriangleNoVAO();
 
@@ -92,7 +92,7 @@ static bool8 rasterizationPassRasterize(RasterizationPassData* data)
     // Move per-pixel rays based on calculated distances
     glEnable(GL_BLEND);
     pushBlend(GL_FUNC_ADD, GL_FUNC_ADD, GL_ZERO, GL_ONE, GL_ONE, GL_ONE);
-    glBindFramebuffer(GL_FRAMEBUFFER, data->raysMapFB);
+    glBindFramebuffer(GL_FRAMEBUFFER, data->raysMapFBO);
     
     shaderProgramUse(data->raysMoverProgram);
 
@@ -111,7 +111,7 @@ static bool8 rasterizationPassRasterize(RasterizationPassData* data)
 
 static bool8 rasterizationPassExtractResults(RasterizationPassData* data)
 {
-  glBindFramebuffer(GL_FRAMEBUFFER, data->geometryAndDistancesFB);
+  glBindFramebuffer(GL_FRAMEBUFFER, data->geometryAndDistancesFBO);
   shaderProgramUse(data->resultsExtractionProgram);
 
   glActiveTexture(GL_TEXTURE0);
@@ -209,11 +209,11 @@ bool8 createRasterizationPass(RenderPass** outPass)
 
   RasterizationPassData* data = engineAllocObject<RasterizationPassData>(MEMORY_TYPE_GENERAL);
 
-  data->raysMapFB = createRayMapFramebuffer();
-  assert(data->raysMapFB != 0);
+  data->raysMapFBO = createRayMapFramebuffer();
+  assert(data->raysMapFBO != 0);
 
-  data->geometryAndDistancesFB = createGeometryAndDistancesFramebuffer();
-  assert(data->geometryAndDistancesFB != 0);
+  data->geometryAndDistancesFBO = createGeometryAndDistancesFramebuffer();
+  assert(data->geometryAndDistancesFBO != 0);
 
   data->preparingProgram = createAndLinkProgram("shaders/prepare_to_raster.frag");
   assert(data->preparingProgram != nullptr);

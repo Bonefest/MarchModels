@@ -7,10 +7,17 @@
     #include <maths/common.h>
   #endif
 
-  #define MAX_STACK_SIZE 8
-  #define GLOBAL_PARAMS_UBO_BINDING 0
+
+
+  #define GLOBAL_PARAMS_UBO_BINDING       0
   #define GEOMETRY_TRANSFORMS_UBO_BINDING 1
-  #define STACKS_SSBO_BINDING 2
+  #define STACKS_SSBO_BINDING             2
+
+  #define MAX_STACK_SIZE                  8
+  #define INF_DISTANCE                    77777.0
+  #define UKNOWN_GEOMETRY_ID              65535
+  #define INTERSECTION_THRESHOLD          0.1
+  
 
   struct DistancesStack
   {
@@ -23,13 +30,13 @@
   {
     float32  time;
     float32  tone;
+    float32  gamma;
+    float32  invGamma;
+    
     uint32   pixelGapX;
     uint32   pixelGapY;
-
     uint32   rasterItersMaxCount;
-    uint32   _gap1;
     uint32   _gap2;
-    uint32   _gap3;    
     
     uint2    resolution;
     float2   invResolution;

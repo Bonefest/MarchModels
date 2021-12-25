@@ -10,7 +10,15 @@ void main()
     int2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);
 
     DistancesStack stack = getStack(ifragCoord);
-    
-    outDistance = stack.distances[0];
-    outGeometryID = stack.geometry[0];
+
+    if(stack.distances[0] < INTERSECTION_THRESHOLD)
+    {
+        outDistance = texelFetch(raysMap, ifragCoord, 0).w;
+        outGeometryID = stack.geometry[0];
+    }
+    else
+    {
+        outDistance = INF_DISTANCE;
+        outGeometryID = UKNOWN_GEOMETRY_ID;
+    }
 }

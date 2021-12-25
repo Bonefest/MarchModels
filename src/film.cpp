@@ -6,7 +6,8 @@ struct Film
   float3* pixels;
 
   bool8 textureGLAllocated;
-  GLenum textureGL;
+  GLuint textureGL;
+  GLuint textureFBO = 0;
 };
 
 static inline uint32 calculateMemSize(uint2 size)
@@ -29,6 +30,26 @@ static inline float3* calculatePixel(Film* film, int2 location)
   return film->pixels + calculatePixelIndex(film, location);
 }
 
+static bool8 filmRegenerateFBO(Film* film)
+{
+  if(film->textureFBO != 0)
+  {
+    glDeleteFramebuffers(1, &film->textureFBO);
+  }
+  
+  glGenFramebuffers(1, &film->textureFBO);
+  glBindFramebuffer(GL_FRAMEBUFFER, film->textureFBO);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, film->textureGL, 0);
+  if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+  {
+    glDeleteFramebuffers(1, &film->textureFBO);
+    return FALSE;
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  return TRUE;
+}
+
 static void filmReallocateGLTexture(Film* film)
 {
   if(film->textureGLAllocated == FALSE)
@@ -44,9 +65,11 @@ static void filmReallocateGLTexture(Film* film)
   glBindTexture(GL_TEXTURE_2D, film->textureGL);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, film->size.x, film->size.y, 0, GL_RGB, GL_FLOAT, film->pixels);
   glBindTexture(GL_TEXTURE_2D, 0);
-
-  assert(glGetError() == GL_NO_ERROR);    
+  
+  assert(glGetError() == GL_NO_ERROR);
+  assert(filmRegenerateFBO(film) == TRUE);
 }
+
 
 bool8 createFilm(uint2 size, Film** film)
 {
@@ -69,6 +92,7 @@ void destroyFilm(Film* film)
   if(film->textureGLAllocated == TRUE)
   {
     glDeleteTextures(1, &film->textureGL);
+    glDeleteFramebuffers(1, &film->textureFBO);
   }
   
   engineFreeObject(film, MEMORY_TYPE_FILM);
@@ -84,10 +108,7 @@ bool8 filmResize(Film* film, uint2 newSize)
   film->pixels = (float3*)engineAllocMem(calculateMemSize(newSize), MEMORY_TYPE_FILM);
   film->size = newSize;
   
-  if(film->textureGLAllocated)
-  {
-    filmReallocateGLTexture(film);
-  }
+  filmReallocateGLTexture(film);
   
   return TRUE;
 }
@@ -119,7 +140,7 @@ uint2 filmGetSize(Film* film)
   return film->size;
 }
 
-GLenum filmGetGLTexture(Film* film)
+GLuint filmGetGLHandle(Film* film)
 {
   if(film->textureGLAllocated == FALSE)
   {
@@ -130,9 +151,14 @@ GLenum filmGetGLTexture(Film* film)
   else
   {
     glBindTexture(GL_TEXTURE_2D, film->textureGL);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, film->size.x, film->size.y, GL_RGB, GL_FLOAT, film->pixels);
+    //glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, film->size.x, film->size.y, GL_RGB, GL_FLOAT, film->pixels);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
 
   return film->textureGL;
+}
+
+GLuint filmGetGLFBOHandle(Film* film)
+{
+  return film->textureFBO;
 }

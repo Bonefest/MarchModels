@@ -12,7 +12,7 @@ struct DistancesVisualizationPassData
   float3 closestColor;
   float3 farthestColor;
   
-  GLuint ldrFB;
+  GLuint ldrFBO;
   
   ShaderProgram* visualizationProgram;
 };
@@ -20,7 +20,7 @@ struct DistancesVisualizationPassData
 static void destroyDistancesVisualizationPass(RenderPass* pass)
 {
   DistancesVisualizationPassData* data = (DistancesVisualizationPassData*)renderPassGetInternalData(pass);
-  glDeleteFramebuffers(1, &data->ldrFB);
+  glDeleteFramebuffers(1, &data->ldrFBO);
   
   destroyShaderProgram(data->visualizationProgram);
   
@@ -31,9 +31,12 @@ static bool8 distancesVisualizationPassExecute(RenderPass* pass)
 {
   DistancesVisualizationPassData* data = (DistancesVisualizationPassData*)renderPassGetInternalData(pass);
 
-  glBindFramebuffer(GL_FRAMEBUFFER, data->ldrFB);
+  glBindFramebuffer(GL_FRAMEBUFFER, data->ldrFBO);
   shaderProgramUse(data->visualizationProgram);
 
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE));
+  
   GLuint programHandle = shaderProgramGetGLHandle(data->visualizationProgram);
   glUniform2fv(glGetUniformLocation(programHandle, "distancesRange"), 1, &data->distancesRange[0]);
   glUniform3fv(glGetUniformLocation(programHandle, "closestColor"), 1, &data->closestColor[0]);
@@ -42,7 +45,7 @@ static bool8 distancesVisualizationPassExecute(RenderPass* pass)
   drawTriangleNoVAO();
   shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  
+
   return TRUE;
 }
 
@@ -100,9 +103,12 @@ bool8 createDistancesVisualizationPass(float2 distancesRange,
   }
 
   DistancesVisualizationPassData* data = engineAllocObject<DistancesVisualizationPassData>(MEMORY_TYPE_GENERAL);
-
-  data->ldrFB = createLDRFramebuffer();
-  assert(data->ldrFB != 0);
+  data->distancesRange = distancesRange;
+  data->closestColor = closestColor;
+  data->farthestColor = farthestColor;
+  
+  data->ldrFBO = createLDRFramebuffer();
+  assert(data->ldrFBO != 0);
 
   data->visualizationProgram = createVisualizationProgram();
   assert(data->visualizationProgram != nullptr);

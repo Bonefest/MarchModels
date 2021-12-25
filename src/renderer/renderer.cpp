@@ -4,9 +4,13 @@
 #include "renderer_utils.h"
 #include "passes/render_pass.h"
 #include "passes/rasterization_pass.h"
+#include "passes/ldr_to_film_copy_pass.h"
 #include "passes/distances_visualization_pass.h"
 
 #include "renderer.h"
+
+#define MAX_WIDTH 1280
+#define MAX_HEIGHT 720
 
 struct Renderer
 {
@@ -25,6 +29,8 @@ struct Renderer
   // std::vector<RenderPass*> tonemapperPasses;
   // std::vector<RenderPass*> postprocessPasses;
 
+  RenderPass* ldrToFilmPass;
+  
   GlobalParameters globalParameters;
 
   Film*               passedFilm;
@@ -57,11 +63,14 @@ static void rendererSetupGlobalParameters(Film* film,
   
   parameters.time = params.time;
   parameters.tone = params.tone;
-  parameters.pixelGapX = 0;
-  parameters.pixelGapY = 0;    
+  parameters.gamma = params.gamma;
+  parameters.invGamma = 1.0 / params.gamma;
+  
   parameters.resolution = filmGetSize(film);
   parameters.invResolution = float2(1.0f / parameters.resolution.x, 1.0f / parameters.resolution.y);
 
+  parameters.pixelGapX = 0;
+  parameters.pixelGapY = 0;      
   parameters.rasterItersMaxCount = params.rasterItersMaxCount;
   
   parameters.camPosition = float4(cameraGetPosition(camera), 1.0);
@@ -86,7 +95,7 @@ static bool8 initStacksSSBO()
 {
   glGenBuffers(1, &data.handles[RR_DISTANCES_STACK_SSBO]);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, data.handles[RR_DISTANCES_STACK_SSBO]);
-  glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(DistancesStack) * 1280 * 720, NULL, GL_DYNAMIC_COPY);
+  glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(DistancesStack) * MAX_WIDTH * MAX_HEIGHT, NULL, GL_DYNAMIC_COPY);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, STACKS_SSBO_BINDING, data.handles[RR_DISTANCES_STACK_SSBO]);
 
@@ -121,7 +130,7 @@ static bool8 initRaysMapTexture()
   glBindTexture(GL_TEXTURE_2D, data.handles[RR_RAYS_MAP_TEXTURE]);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 1280, 720, 0, GL_RGBA, GL_FLOAT, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, MAX_WIDTH, MAX_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
   glBindTexture(GL_TEXTURE_2D, 0);
 
   return TRUE;
@@ -133,7 +142,7 @@ static bool8 initGeometryIDMapTexture()
   glBindTexture(GL_TEXTURE_2D, data.handles[RR_GEOIDS_MAP_TEXTURE]);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_R16, 1280, 720, 0, GL_RED, GL_UNSIGNED_SHORT, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R16, MAX_WIDTH, MAX_HEIGHT, 0, GL_RED, GL_UNSIGNED_SHORT, NULL);
   glBindTexture(GL_TEXTURE_2D, 0);
 
   return TRUE;  
@@ -145,7 +154,7 @@ static bool8 initDistancesMapTexture()
   glBindTexture(GL_TEXTURE_2D, data.handles[RR_DISTANCES_MAP_TEXTURE]);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 1280, 720, 0, GL_RED, GL_FLOAT, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, MAX_WIDTH, MAX_HEIGHT, 0, GL_RED, GL_FLOAT, NULL);
   glBindTexture(GL_TEXTURE_2D, 0);
 
   return TRUE;  
@@ -157,7 +166,7 @@ static bool8 initLDRMapTexture()
   glBindTexture(GL_TEXTURE_2D, data.handles[RR_LDR_MAP_TEXTURE]);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 1280, 720, 0, GL_RGB, GL_FLOAT, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, MAX_WIDTH, MAX_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
   glBindTexture(GL_TEXTURE_2D, 0);
 
   return TRUE;
@@ -197,8 +206,16 @@ static bool8 initializeRenderPasses()
   INIT(createDistancesVisualizationPass,
        float2(0.0f, 100.0f), float3(1.0f, 1.0f, 1.0f), float3(0.0f, 0.0f, 0.0f),
        &data.distancesVisualizationPass);
-
+  INIT(createLDRToFilmCopyPass, &data.ldrToFilmPass);
+  
   return TRUE;
+}
+
+static void destroyRenderPasses()
+{
+  destroyRenderPass(data.rasterizationPass);
+  destroyRenderPass(data.distancesVisualizationPass);
+  destroyRenderPass(data.ldrToFilmPass);  
 }
 
 bool8 initializeRenderer()
@@ -222,6 +239,7 @@ void shutdownRenderer()
   assert(data.initialized == TRUE);
   
   destroyRendererResources();
+  destroyRenderPasses();
   
   data = Renderer{};
 }
@@ -242,6 +260,8 @@ bool8 rendererRenderScene(Film* film,
 
   assert(renderPassExecute(data.rasterizationPass));
   assert(renderPassExecute(data.distancesVisualizationPass));
+
+  assert(renderPassExecute(data.ldrToFilmPass));
   
   assert(popViewport() == TRUE);
   
