@@ -11,19 +11,19 @@ layout(std140, binding = GEOMETRY_TRANSFORMS_UBO_BINDING) uniform GeometryTransf
 };
 
 
-float32 unionDistances(float32 d1, float32 d2)
+GeometryData unionGeometries(GeometryData geometry1, GeometryData geometry2)
 {
-  return min(d1, d2);
+  return geometry1.distance < geometry2.distance ? geometry1 : geometry2;
 }
 
-float32 intersectDistances(float32 d1, float32 d2)
+GeometryData intersectGeometries(GeometryData geometry1, GeometryData geometry2)
 {
-  return max(d1, d2);
+  return createGeometryData(max(geometry1.distance, geometry2.distance), geometry1.id);
 }
 
-float32 subtractDistances(float32 d1, float32 d2)
+GeometryData subtractGeometries(GeometryData geometry1, GeometryData geometry2)
 {
-  return max(d1, -d2);
+  return createGeometryData(max(geometry1.distance, -geometry2.distance), geometry1.id);  
 }
 
 #endif

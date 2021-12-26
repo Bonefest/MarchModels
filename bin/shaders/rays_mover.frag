@@ -10,7 +10,7 @@ void main()
 {
     int2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);
 
-    float32 distance = getStack(ifragCoord).distances[0];
+    float32 distance = getStack(ifragCoord).geometries[0].distance;
 
     bool notLastIteration = (curIterIdx + 1 < params.rasterItersMaxCount);
     if(notLastIteration)

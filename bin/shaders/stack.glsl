@@ -5,7 +5,7 @@
 
 layout(std140, binding = STACKS_SSBO_BINDING) buffer StacksSSBO
 {
-    DistancesStack stacks[];
+    GeometriesStack stacks[];
 };
 
 uint32 getStackID(uint2 pixelCoord)
@@ -13,7 +13,7 @@ uint32 getStackID(uint2 pixelCoord)
   return pixelCoord.y * params.resolution.x + pixelCoord.x;
 }
 
-DistancesStack getStack(uint2 pixelCoord)
+GeometriesStack getStack(uint2 pixelCoord)
 {
   return stacks[getStackID(pixelCoord)];
 }
@@ -23,22 +23,22 @@ uint32 getStackSize(uint2 pixelCoord)
   return stacks[getStackID(pixelCoord)].size;
 }
 
-void stackPushDistance(int2 pixelCoord, float32 distance)
+void stackPushGeometry(int2 pixelCoord, GeometryData geometry)
 {
   uint32 stackID = getStackID(pixelCoord);
   uint32 stackSize = stacks[stackID].size;
-  stacks[stackID].distances[stackSize] = distance;
-  // TODO: stacks[stackID].geometry[stackSize] = GEOMETRY_ID;
+
+  stacks[stackID].geometries[stackSize] = geometry;
   stacks[stackID].size = stackSize + 1;
 }
 
-float32 stackPopDistance(int2 pixelCoord)
+GeometryData stackPopGeometry(int2 pixelCoord)
 {
   uint32 stackID = getStackID(pixelCoord);
   uint32 stackSize = stacks[stackID].size;
   stacks[stackID].size = stackSize - 1;
 
-  return stacks[stackID].distances[stackSize - 1];
+  return stacks[stackID].geometries[stackSize - 1];
 }
 
 void stackClear(int2 pixelCoord)

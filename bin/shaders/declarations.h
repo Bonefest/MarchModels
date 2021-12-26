@@ -7,8 +7,6 @@
     #include <maths/common.h>
   #endif
 
-
-
   #define GLOBAL_PARAMS_UBO_BINDING       0
   #define GEOMETRY_TRANSFORMS_UBO_BINDING 1
   #define STACKS_SSBO_BINDING             2
@@ -16,14 +14,26 @@
   #define MAX_STACK_SIZE                  8
   #define INF_DISTANCE                    77777.0
   #define UKNOWN_GEOMETRY_ID              65535
-  #define INTERSECTION_THRESHOLD          0.1
-  
 
-  struct DistancesStack
+  struct GeometryData
+  {
+    float32 distance;
+    uint32 id;
+  };
+
+  GeometryData createGeometryData(float32 distance, uint32 id)
+  {
+    GeometryData data;
+    data.distance = distance;
+    data.id = id;
+
+    return data;
+  }
+
+  struct GeometriesStack
   {
     uint32  size;
-    float32 distances[MAX_STACK_SIZE];
-    uint32  geometry[MAX_STACK_SIZE]; // stores index of geometry corresponding to the distances
+    GeometryData geometries[MAX_STACK_SIZE];
   };
 
   struct GlobalParameters

@@ -97,7 +97,7 @@ static bool8 initStacksSSBO()
 {
   glGenBuffers(1, &data.handles[RR_DISTANCES_STACK_SSBO]);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, data.handles[RR_DISTANCES_STACK_SSBO]);
-  glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(DistancesStack) * MAX_WIDTH * MAX_HEIGHT, NULL, GL_DYNAMIC_COPY);
+  glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GeometriesStack) * MAX_WIDTH * MAX_HEIGHT, NULL, GL_DYNAMIC_COPY);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, STACKS_SSBO_BINDING, data.handles[RR_DISTANCES_STACK_SSBO]);
 

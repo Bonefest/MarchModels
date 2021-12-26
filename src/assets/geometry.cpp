@@ -220,9 +220,9 @@ static const char* getCombinationFunctionShaderName(CombinationFunction function
 {
   switch(function)
   {
-    case COMBINATION_INTERSECTION: return "intersectDistances";
-    case COMBINATION_UNION: return "unionDistances";
-    case COMBINATION_SUBTRACTION: return "subtractDistances";
+    case COMBINATION_INTERSECTION: return "intersectGeometries";
+    case COMBINATION_UNION: return "unionGeometries";
+    case COMBINATION_SUBTRACTION: return "subtractGeometries";
     default: assert(FALSE); return "";
   }
 
@@ -231,24 +231,22 @@ static const char* getCombinationFunctionShaderName(CombinationFunction function
 
 static void geometryGenerateDistancesCombinationCode(Asset* geometry, ShaderBuild* build)
 {
-
   // Detect its number in parent's branch
   bool8 firstInBranch = geometryGetIndexInBranch(geometry) == 0 ? TRUE : FALSE;
   CombinationFunction parentCombFunction = geometryGetCombinationFunction(geometryGetParent(geometry));
-
-  // (TODO: geometry ID should pushed/popped along with distance into stack)
-  // This is the first leaf/branch in group - just push distance to the stack
+  
+  // This is the first leaf/branch in group - just push geometry to the stack
   if(firstInBranch == TRUE)
   {
-    shaderBuildAddCode(build, "\tstackPushDistance(ifragCoord, d);");
+    shaderBuildAddCode(build, "\tstackPushGeometry(ifragCoord, geometry);");
   }
-  // This is not the first leaf/branch in group - pop previous distance from stack, combine, push new distance back
+  // This is not the first leaf/branch in group - pop previous geometry from stack, combine, push new geometry back
   else
   {
-    shaderBuildAddCode(build, "\tfloat32 prevDistance = stackPopDistance(ifragCoord);");
+    shaderBuildAddCode(build, "\tGeometryData prevGeometry = stackPopGeometry(ifragCoord);");
 
     // Order of combination is important      
-    shaderBuildAddCodefln(build, "\tstackPushDistance(ifragCoord, %s(prevDistance, d));",
+    shaderBuildAddCodefln(build, "\tstackPushGeometry(ifragCoord, %s(prevGeometry, geometry));",
                           getCombinationFunctionShaderName(parentCombFunction));
   }
 
@@ -328,8 +326,8 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   shaderBuildAddCode(build, "\tfloat4 ray = texelFetch(raysMap, ifragCoord, 0);");
   shaderBuildAddCode(build, "\tfloat3 p = ray.xyz * ray.w + params.camPosition.xyz;");
 
-  // 2. Transform point into distance
-  shaderBuildAddCode(build, "\tfloat32 d = transform(p);");
+  // 2. Transform point into geometry data (distance, id)
+  shaderBuildAddCode(build, "\tGeometryData geometry = createGeometryData(transform(p), 777);");
 
   // 3. Combine distance with last distance on stack (if needed)
   geometryGenerateDistancesCombinationCode(geometry, build);
@@ -354,12 +352,12 @@ static void geometryGenerateBranchCode(Asset* geometry, ShaderBuild* build)
   shaderBuildAddCode(build, "\tint2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);");  
 
   // 1. Extract distance from the stack
-  shaderBuildAddCode(build, "\tfloat32 d = stackPopDistance(ifragCoord);");
+  shaderBuildAddCode(build, "\tGeometryData geometry = stackPopGeometry(ifragCoord);");
 
   // 2. Apply ODFs to the distance  
   for(uint32 i = 0; i < odfs.size(); i++)
   {
-    shaderBuildAddCode(build, "d = ODF%u(d);");
+    shaderBuildAddCode(build, "geometry.distance = ODF%u(geometry.distance);");
   }
 
   // 3. Combine distance with last distance on stack (if needed)
