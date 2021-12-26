@@ -41,6 +41,8 @@ ENGINE_API quat geometryGetOrientation(Asset* geometry);
 ENGINE_API void geometryAddFunction(Asset* geometry, AssetPtr function);
 ENGINE_API bool8 geometryRemoveFunction(Asset* geometry, Asset* function);
 
+ENGINE_API uint32 geometryGetID(Asset* geometry);
+
 ENGINE_API std::vector<AssetPtr>& geometryGetIDFs(Asset* geometry);
 ENGINE_API std::vector<AssetPtr>& geometryGetODFs(Asset* geometry);
 

@@ -13,6 +13,8 @@ using std::vector;
 struct Geometry
 {
   // Common data
+  uint32 ID;
+  
   std::vector<AssetPtr> idfs;
   std::vector<AssetPtr> odfs;
 
@@ -30,7 +32,7 @@ struct Geometry
   float4x4 transformToParentFromLocal;
 
   ShaderProgram* program;
-  
+
   bool8 needRebuild;
   bool8 dirty;
   
@@ -449,6 +451,25 @@ static void geometryMarkNeedRebuild(Asset* geometry, bool8 forwardToChildren)
   }
 }
 
+static void geometryRecalculateIDs(Asset* geometry, uint32& idCounter)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  for(AssetPtr child: geometryData->children)
+  {
+    geometryRecalculateIDs(child, idCounter);
+  }
+
+  geometryData->ID = idCounter++;
+}
+
+static void geometryRecalculateIDs(Asset* geometry)
+{
+  uint32 idCounter = 0;
+  geometryRecalculateIDs(geometry, idCounter);
+
+  assert(idCounter < 65535);
+}
+
 // ----------------------------------------------------------------------------
 // Geometry common interface
 // ----------------------------------------------------------------------------
@@ -605,6 +626,13 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
   }
 
   return FALSE;
+}
+
+uint32 geometryGetID(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+
+  return geometryData->ID;
 }
 
 std::vector<AssetPtr>& geometryGetIDFs(Asset* geometry)
@@ -914,7 +942,9 @@ void geometryAddChild(AssetPtr geometry, AssetPtr child)
   geometryData->children.push_back(child);
   geometrySetParent(child, geometry);
 
-  geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);  
+  geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);
+
+  geometryRecalculateIDs(geometry);
 }
 
 bool8 geometryRemoveChild(Asset* geometry, Asset* child)
@@ -930,6 +960,8 @@ bool8 geometryRemoveChild(Asset* geometry, Asset* child)
   geometryData->children.erase(childIt);
 
   geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);    
+
+  geometryRecalculateIDs(geometry);
   
   return TRUE;
 }

@@ -79,7 +79,7 @@ static bool8 rasterizationPassRasterize(RasterizationPassData* data)
   const RenderingParameters& renderingParams = rendererGetPassedRenderingParameters();
   
   Scene* sceneToRasterize = rendererGetPassedScene();
-  std::vector<AssetPtr>& sceneGeometry = sceneGetGeometry(sceneToRasterize);
+  std::vector<AssetPtr>& sceneGeometry = sceneGetChildren(sceneToRasterize);
 
   for(uint32 i = 0; i < renderingParams.rasterItersMaxCount; i++)
   {

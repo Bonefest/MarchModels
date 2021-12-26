@@ -204,7 +204,7 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
   
   if(data->listGeometry)
   {
-    std::vector<AssetPtr>& geometryArray = sceneGetGeometry(currentScene);
+    std::vector<AssetPtr>& geometryArray = sceneGetChildren(currentScene);
     sceneHierarchyProcessGeometryArray(window, geometryArray, data, currentScene);
   }
 }
