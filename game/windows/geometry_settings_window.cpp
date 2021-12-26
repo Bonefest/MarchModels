@@ -81,7 +81,9 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
     if(ImGui::IsItemHovered())
     {
       ImGui::BeginTooltip();
-      ImGui::TextColored("_<C>%#010x</C>_[%s] _<C>%#010x</C>_'%s'_<C>0x1</C>_ was created on_<C>%#010x</C>_ 12.12.2021",
+      ImGui::TextColored("_<C>%010x</C>_[ID %u] _<C>%#010x</C>_[%s] _<C>%#010x</C>_'%s'_<C>0x1</C>_ was created on_<C>%#010x</C>_ 12.12.2021",
+                         revbytes((uint32)InfoClr),
+                         geometryGetID(data->geometry),
                          revbytes((uint32)PrimaryClr),
                          geometryTypeLabel,
                          revbytes((uint32)SecondaryClr),

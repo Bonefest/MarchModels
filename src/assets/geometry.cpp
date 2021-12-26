@@ -231,42 +231,28 @@ static const char* getCombinationFunctionShaderName(CombinationFunction function
 
 static void geometryGenerateDistancesCombinationCode(Asset* geometry, ShaderBuild* build)
 {
-  // Root and non-root leafs/branches have a bit different code because root geometry doesn't have a direct parent
-  // (they are part of a scene's hierarchy), so we cannot deduce their position in branch from c++ code, additionally
-  // for root objects we implicitly use a union distance.
-  if(geometryIsRoot(geometry) == FALSE)
-  {
-    // Detect its number in parent's branch
-    bool8 firstInBranch = geometryGetIndexInBranch(geometry) == 0 ? TRUE : FALSE;
-    CombinationFunction parentCombFunction = geometryGetCombinationFunction(geometryGetParent(geometry));
-    
-    // (TODO: geometry ID should pushed/popped along with distance into stack)
-    // This is the first leaf/branch in group - just push distance to the stack
-    if(firstInBranch == TRUE)
-    {
-      shaderBuildAddCode(build, "\tstackPushDistance(ifragCoord, d);");
-    }
-    // This is not the first leaf/branch in group - pop previous distance from stack, combine, push new distance back
-    else
-    {
-      shaderBuildAddCode(build, "\tfloat32 prevDistance = stackPopDistance(ifragCoord);");
 
-      // Order of combination is important      
-      shaderBuildAddCodefln(build, "\tstackPushDistance(ifragCoord, %s(prevDistance, d));",
-                            getCombinationFunctionShaderName(parentCombFunction));
-    }
+  // Detect its number in parent's branch
+  bool8 firstInBranch = geometryGetIndexInBranch(geometry) == 0 ? TRUE : FALSE;
+  CombinationFunction parentCombFunction = geometryGetCombinationFunction(geometryGetParent(geometry));
+
+  // (TODO: geometry ID should pushed/popped along with distance into stack)
+  // This is the first leaf/branch in group - just push distance to the stack
+  if(firstInBranch == TRUE)
+  {
+    shaderBuildAddCode(build, "\tstackPushDistance(ifragCoord, d);");
   }
+  // This is not the first leaf/branch in group - pop previous distance from stack, combine, push new distance back
   else
   {
-    shaderBuildAddCode(build, "\tuint32 stackSize = getStackSize(ifragCoord);");
-    shaderBuildAddCode(build, "\tif(stackSize > 0) {");
-    shaderBuildAddCode(build, "\t\tfloat32 prevDistance = stackPopDistance(ifragCoord);");
-    shaderBuildAddCode(build, "\t\tstackPushDistance(ifragCoord, unionDistances(prevDistance, d));");
-    shaderBuildAddCode(build, "\t}");
-    shaderBuildAddCode(build, "\telse {");
-    shaderBuildAddCode(build, "\t\tstackPushDistance(ifragCoord, d);");
-    shaderBuildAddCode(build, "\t}");
+    shaderBuildAddCode(build, "\tfloat32 prevDistance = stackPopDistance(ifragCoord);");
+
+    // Order of combination is important      
+    shaderBuildAddCodefln(build, "\tstackPushDistance(ifragCoord, %s(prevDistance, d));",
+                          getCombinationFunctionShaderName(parentCombFunction));
   }
+
+
 }
 
 // NOTE: Leaf geometry uses IDFs, SDF and ODFs (only related to the geometry)
@@ -454,18 +440,18 @@ static void geometryMarkNeedRebuild(Asset* geometry, bool8 forwardToChildren)
 static void geometryRecalculateIDs(Asset* geometry, uint32& idCounter)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  geometryData->ID = idCounter++;
+  
   for(AssetPtr child: geometryData->children)
   {
     geometryRecalculateIDs(child, idCounter);
   }
-
-  geometryData->ID = idCounter++;
 }
 
 static void geometryRecalculateIDs(Asset* geometry)
 {
   uint32 idCounter = 0;
-  geometryRecalculateIDs(geometry, idCounter);
+  geometryRecalculateIDs(geometryGetRoot(geometry), idCounter);
 
   assert(idCounter < 65535);
 }
