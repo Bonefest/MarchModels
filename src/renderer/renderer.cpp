@@ -5,6 +5,7 @@
 #include "passes/render_pass.h"
 #include "passes/rasterization_pass.h"
 #include "passes/ldr_to_film_copy_pass.h"
+#include "passes/ids_visualization_pass.h"
 #include "passes/distances_visualization_pass.h"
 
 #include "renderer.h"
@@ -20,6 +21,7 @@ struct Renderer
   RenderPass* normalsCalculationPass;
 
   RenderPass* distancesVisualizationPass;
+  RenderPass* idsVisualizationPass;
   RenderPass* normalsVisualizationPass;
   RenderPass* shadowsVisualizationPass;
 
@@ -208,6 +210,7 @@ static bool8 initializeRenderPasses()
   INIT(createDistancesVisualizationPass,
        float2(0.0f, 20.0f), float3(0.156f, 0.7, 0.06), float3(0.0f, 0.0f, 0.0f),
        &data.distancesVisualizationPass);
+  INIT(createIDsVisualizationPass, &data.idsVisualizationPass);
   INIT(createLDRToFilmCopyPass, &data.ldrToFilmPass);
   
   return TRUE;
@@ -217,6 +220,7 @@ static void destroyRenderPasses()
 {
   destroyRenderPass(data.rasterizationPass);
   destroyRenderPass(data.distancesVisualizationPass);
+  destroyRenderPass(data.idsVisualizationPass);
   destroyRenderPass(data.ldrToFilmPass);  
 }
 
@@ -261,7 +265,8 @@ bool8 rendererRenderScene(Film* film,
   pushViewport(0, 0, data.globalParameters.resolution.x, data.globalParameters.resolution.y);
 
   assert(renderPassExecute(data.rasterizationPass));
-  assert(renderPassExecute(data.distancesVisualizationPass));
+  //assert(renderPassExecute(data.distancesVisualizationPass));
+  assert(renderPassExecute(data.idsVisualizationPass));
 
   assert(renderPassExecute(data.ldrToFilmPass));
   
