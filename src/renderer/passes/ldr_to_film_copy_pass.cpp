@@ -25,6 +25,9 @@ static bool8 LDRToFilmCopyPassExecute(RenderPass* pass)
   Film* film = rendererGetPassedFilm();
   
   glBindFramebuffer(GL_FRAMEBUFFER, filmGetGLFBOHandle(film));
+  float4 blackColor = float4(0.0, 0.0, 0.0, 1.0);
+  glClearBufferfv(GL_COLOR, 0, &blackColor[0]);
+  
   shaderProgramUse(data->copyProgram);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_LDR_MAP_TEXTURE));

@@ -51,7 +51,7 @@ struct RenderingParameters
   float32 gamma = 2.2f;
   float32 intersectionThreshold = 0.1f;
   
-  RendererShadingMode shadingMode;
+  RendererShadingMode shadingMode = RS_VISUALIZE_DISTANCES;
 
   uint32 rasterItersMaxCount = 8;
   uint32 shadowRasterItersMaxCount = 8;

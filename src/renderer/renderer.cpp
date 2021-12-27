@@ -265,8 +265,20 @@ bool8 rendererRenderScene(Film* film,
   pushViewport(0, 0, data.globalParameters.resolution.x, data.globalParameters.resolution.y);
 
   assert(renderPassExecute(data.rasterizationPass));
-  //assert(renderPassExecute(data.distancesVisualizationPass));
-  assert(renderPassExecute(data.idsVisualizationPass));
+
+  if(params.enableNormals == TRUE)
+  {
+    // assert(renderPassExecute(data.normalsGenerationPass));
+  }
+
+  if(params.shadingMode == RS_VISUALIZE_DISTANCES)
+  {
+    assert(renderPassExecute(data.distancesVisualizationPass));
+  }
+  else if(params.shadingMode == RS_VISUALIZE_IDS)
+  {
+    assert(renderPassExecute(data.idsVisualizationPass));
+  }
 
   assert(renderPassExecute(data.ldrToFilmPass));
   
