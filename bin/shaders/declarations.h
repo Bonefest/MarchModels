@@ -21,14 +21,16 @@
     uint32 id;
   };
 
-  GeometryData createGeometryData(float32 distance, uint32 id)
-  {
-    GeometryData data;
-    data.distance = distance;
-    data.id = id;
+  #if !defined(__cplusplus)
+    GeometryData createGeometryData(float32 distance, uint32 id)
+    {
+      GeometryData data;
+      data.distance = distance;
+      data.id = id;
 
-    return data;
-  }
+      return data;
+    }
+  #endif
 
   struct GeometriesStack
   {

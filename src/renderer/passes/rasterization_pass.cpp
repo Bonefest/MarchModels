@@ -66,6 +66,9 @@ static void drawGeometryInorder(AssetPtr geometry)
 
   shaderProgramUse(geometryProgram);
 
+  glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(geometryProgram), "geometryID"),
+               geometryGetID(geometry));
+  
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_RAYS_MAP_TEXTURE));
   
@@ -184,6 +187,9 @@ static GLuint createGeometryAndDistancesFramebuffer()
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE), 0);
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, rendererGetResourceHandle(RR_GEOIDS_MAP_TEXTURE), 0);  
 
+  GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+  glNamedFramebufferDrawBuffers(framebuffer, 2, drawBuffers);
+  
   if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
   {
     return 0;

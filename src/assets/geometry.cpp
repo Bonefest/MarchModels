@@ -327,7 +327,7 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   shaderBuildAddCode(build, "\tfloat3 p = ray.xyz * ray.w + params.camPosition.xyz;");
 
   // 2. Transform point into geometry data (distance, id)
-  shaderBuildAddCode(build, "\tGeometryData geometry = createGeometryData(transform(p), 777);");
+  shaderBuildAddCode(build, "\tGeometryData geometry = createGeometryData(transform(p), geometryID);");
 
   // 3. Combine distance with last distance on stack (if needed)
   geometryGenerateDistancesCombinationCode(geometry, build);
@@ -374,11 +374,12 @@ static void geometryRebuild(Asset* geometry)
   assert(createShaderBuild(&build));
 
   shaderBuildAddVersion(build, 430, "core");
-  shaderBuildAddMacro(build, "GEOMETRY_ID", std::to_string(777).c_str());
 
   assert(shaderBuildIncludeFile(build, "shaders/common.glsl") == TRUE);  
   assert(shaderBuildIncludeFile(build, "shaders/geometry_common.glsl") == TRUE);
 
+  shaderBuildAddCode(build, "uniform uint32 geometryID;");
+  
   if(geometryIsLeaf(geometry))
   {
     geometryGenerateLeafCode(geometry, build);

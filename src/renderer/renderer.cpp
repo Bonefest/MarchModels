@@ -144,7 +144,7 @@ static bool8 initGeometryIDMapTexture()
   glBindTexture(GL_TEXTURE_2D, data.handles[RR_GEOIDS_MAP_TEXTURE]);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_R16, MAX_WIDTH, MAX_HEIGHT, 0, GL_RED, GL_UNSIGNED_SHORT, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R16UI, MAX_WIDTH, MAX_HEIGHT, 0, GL_RED_INTEGER, GL_UNSIGNED_SHORT, NULL);
   glBindTexture(GL_TEXTURE_2D, 0);
 
   return TRUE;  
@@ -206,7 +206,7 @@ static bool8 initializeRenderPasses()
 {
   INIT(createRasterizationPass, &data.rasterizationPass);
   INIT(createDistancesVisualizationPass,
-       float2(0.0f, 20.0f), float3(0.43f, 0.85f, 0.28f), float3(0.0f, 0.0f, 0.0f),
+       float2(0.0f, 20.0f), float3(0.156f, 0.7, 0.06), float3(0.0f, 0.0f, 0.0f),
        &data.distancesVisualizationPass);
   INIT(createLDRToFilmCopyPass, &data.ldrToFilmPass);
   
