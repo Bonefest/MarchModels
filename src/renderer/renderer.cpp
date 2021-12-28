@@ -6,6 +6,7 @@
 #include "passes/rasterization_pass.h"
 #include "passes/ldr_to_film_copy_pass.h"
 #include "passes/ids_visualization_pass.h"
+#include "passes/normals_calculation_pass.h"
 #include "passes/distances_visualization_pass.h"
 
 #include "renderer.h"
@@ -176,6 +177,18 @@ static bool8 initLDRMapTexture()
   return TRUE;
 }
 
+static bool8 initNormalsMapTexture()
+{
+  glGenTextures(1, &data.handles[RR_NORMALS_MAP_TEXTURE]);
+  glBindTexture(GL_TEXTURE_2D, data.handles[RR_NORMALS_MAP_TEXTURE]);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16, MAX_WIDTH, MAX_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  return TRUE;
+}
+
 static bool8 initializeRendererResources()
 {
   glCreateVertexArrays(1, &data.handles[RR_EMPTY_VAO]);
@@ -187,6 +200,7 @@ static bool8 initializeRendererResources()
   INIT(initGeometryIDMapTexture);
   INIT(initDistancesMapTexture);
   INIT(initLDRMapTexture);
+  INIT(initNormalsMapTexture);
   
   return TRUE;
 }
@@ -198,6 +212,9 @@ static void destroyRendererResources()
   glDeleteBuffers(1, &data.handles[RR_GLOBAL_PARAMS_UBO]);
   glDeleteBuffers(1, &data.handles[RR_GEOTRANSFORM_PARAMS_UBO]);
   glDeleteTextures(1, &data.handles[RR_RAYS_MAP_TEXTURE]);
+  glDeleteTextures(1, &data.handles[RR_GEOIDS_MAP_TEXTURE]);  
+  glDeleteTextures(1, &data.handles[RR_DISTANCES_MAP_TEXTURE]);  
+  glDeleteTextures(1, &data.handles[RR_LDR_MAP_TEXTURE]);
 }
 
 // ----------------------------------------------------------------------------
@@ -207,6 +224,7 @@ static void destroyRendererResources()
 static bool8 initializeRenderPasses()
 {
   INIT(createRasterizationPass, &data.rasterizationPass);
+  INIT(createNormalsCalculationPass, &data.normalsCalculationPass);
   INIT(createDistancesVisualizationPass,
        float2(0.0f, 20.0f), float3(0.156f, 0.7, 0.06), float3(0.0f, 0.0f, 0.0f),
        &data.distancesVisualizationPass);
@@ -219,6 +237,7 @@ static bool8 initializeRenderPasses()
 static void destroyRenderPasses()
 {
   destroyRenderPass(data.rasterizationPass);
+  destroyRenderPass(data.normalsCalculationPass);
   destroyRenderPass(data.distancesVisualizationPass);
   destroyRenderPass(data.idsVisualizationPass);
   destroyRenderPass(data.ldrToFilmPass);  
@@ -268,7 +287,7 @@ bool8 rendererRenderScene(Film* film,
 
   if(params.enableNormals == TRUE)
   {
-    // assert(renderPassExecute(data.normalsGenerationPass));
+    assert(renderPassExecute(data.normalsCalculationPass));
   }
 
   if(params.shadingMode == RS_VISUALIZE_DISTANCES)
