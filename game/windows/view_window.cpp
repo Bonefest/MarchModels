@@ -89,7 +89,7 @@ static void drawViewWindow(Window* window, float64 delta)
     float2 initialCursorPos = ImGui::GetCursorPos();
 
     ImGui::Image((void*)filmGetGLHandle(film),
-                 float2(filmSize.x, filmSize.y), float2(1.0f, 1.0f), float2(0.0f, 0.0f));
+                 float2(filmSize.x, filmSize.y));
 
     ImGui::SetCursorPos(initialCursorPos);
 
