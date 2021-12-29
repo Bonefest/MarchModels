@@ -311,7 +311,8 @@ static void drawViewSettingsWindow(Window* window, float64 delta)
     ImGui::Checkbox("Enable shadows", (bool*)&params.enableShadows);
     ImGui::SameLine();
     ImGui::Checkbox("Enable normals", (bool*)&params.enableNormals);
-    ImGui::Combo("Shading mode", (int32*)&params.shadingMode, shadingModeLabels, ARRAY_SIZE(shadingModeLabels));    
+    ImGui::Combo("Shading mode", (int32*)&params.shadingMode, shadingModeLabels, ARRAY_SIZE(shadingModeLabels));
+    ImGui::SliderFloat("Gamma", &params.gamma, 1.0f, 3.0f);
     ImGui::SliderInt("Rasterizations iterations count", (int*)&params.rasterItersMaxCount, 1, 512);
     ImGui::SliderFloat("Intersection threshold", &params.intersectionThreshold, 0.0001f, 100.0f);
     

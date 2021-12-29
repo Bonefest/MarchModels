@@ -9,5 +9,5 @@ void main()
 {
     int2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);
    
-    outColor = pow(texelFetch(LDRMap, ifragCoord, 0).rgb, params.invGamma.rrr);
+    outColor = gammaEncode(texelFetch(LDRMap, ifragCoord, 0).rgb);
 }

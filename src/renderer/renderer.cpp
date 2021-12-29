@@ -7,6 +7,7 @@
 #include "passes/ldr_to_film_copy_pass.h"
 #include "passes/ids_visualization_pass.h"
 #include "passes/normals_calculation_pass.h"
+#include "passes/normals_visualization_pass.h"
 #include "passes/distances_visualization_pass.h"
 
 #include "renderer.h"
@@ -229,6 +230,7 @@ static bool8 initializeRenderPasses()
        float2(0.0f, 20.0f), float3(0.156f, 0.7, 0.06), float3(0.0f, 0.0f, 0.0f),
        &data.distancesVisualizationPass);
   INIT(createIDsVisualizationPass, &data.idsVisualizationPass);
+  INIT(createNormalsVisualizationPass, &data.normalsVisualizationPass);
   INIT(createLDRToFilmCopyPass, &data.ldrToFilmPass);
   
   return TRUE;
@@ -240,6 +242,7 @@ static void destroyRenderPasses()
   destroyRenderPass(data.normalsCalculationPass);
   destroyRenderPass(data.distancesVisualizationPass);
   destroyRenderPass(data.idsVisualizationPass);
+  destroyRenderPass(data.normalsVisualizationPass);
   destroyRenderPass(data.ldrToFilmPass);  
 }
 
@@ -298,7 +301,11 @@ bool8 rendererRenderScene(Film* film,
   {
     assert(renderPassExecute(data.idsVisualizationPass));
   }
-
+  else if(params.shadingMode == RS_VISUALIZE_NORMALS)
+  {
+    assert(renderPassExecute(data.normalsVisualizationPass));
+  }
+  
   assert(renderPassExecute(data.ldrToFilmPass));
   
   assert(popViewport() == TRUE);

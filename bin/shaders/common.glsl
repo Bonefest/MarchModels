@@ -34,5 +34,18 @@
     return normalize(frustumFPoint.xyz - frustumNPoint.xyz);
   }
 
+  // NOTE: Convert given value to nonlinear space
+  float3 gammaEncode(float3 color)
+  {
+    return pow(color, params.invGamma.rrr);
+  }
+
+  // NOTE: Convert given value to linear space
+  float3 gammaDecode(float3 color)
+  {
+    return pow(color, params.gamma.rrr);
+  }
+
+
 
 #endif
