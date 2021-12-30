@@ -303,9 +303,8 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   // 2. SDF is defined in local coordinates, but the geometry which uses SDF has a transformation:
   // apply transformation to the point, converting from world space to local space. Then calculate
   // SDF itself.
-  shaderBuildAddCode(build, "\tfloat32 d = geo.position.z;");
   shaderBuildAddCode(build, "\tfloat4 tp = geo.worldGeoMat * float4(p, 1.0);");
-  shaderBuildAddCode(build, "\td = SDF(tp.xyz) * geo.position.w;");
+  shaderBuildAddCode(build, "\tfloat32 d = SDF(tp.xyz);");
   
   // 3. Transform distance via ODFs
   for(uint32 i = 0; i < odfs.size(); i++)
@@ -473,7 +472,7 @@ bool8 createGeometry(const string& name, Asset** outGeometry)
   geometryData->combinationFunction = COMBINATION_UNION;
   geometryData->scale = 1.0f;
   geometryData->position = float3(0.0f, 0.0f, 0.0f);
-  geometryData->orientation = quat(0.0f, 0.0f, 1.0f, 0.0f);
+  geometryData->orientation = quat(0.0f, 0.0f, 0.0f, 1.0f);
   geometryData->needRebuild = TRUE;  
   geometryData->dirty = TRUE;
   geometryData->program = nullptr;

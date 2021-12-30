@@ -11,7 +11,7 @@ layout(location = 1) uniform usampler2D idsMap;
 // distance, traversed along that ray - the result is a point on a surface in world space
 float3 convertFragCoordToWorldSpace(float2 fragCoord)
 {
-  float3 worldRay = (params.camCameraWorldMat * float4(generateRayDir(fragCoordToUV(fragCoord)), 0.0)).xyz;
+  float3 worldRay = generateRayDir(fragCoordToUV(fragCoord));
   float distance = texelFetch(distancesMap, int2(fragCoord.xy), 0).r;
 
   return normalize(worldRay) * distance + params.camPosition.xyz;

@@ -26,7 +26,7 @@ struct Camera
 static void cameraRecalculateTransforms(Camera* camera)
 {
   if(camera->dirty == FALSE) return;
-  
+   
   float4x4 projTransform = perspective_matrix(camera->fovY,
                                               camera->aspectRatio,
                                               camera->near,
