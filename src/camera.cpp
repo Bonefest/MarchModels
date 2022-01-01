@@ -111,22 +111,10 @@ quat cameraGetOrientation(Camera* camera)
 
 void cameraSetOrientation(Camera* camera, float32 yaw, float32 pitch)
 {
-  // NOTE: Calculate where z axis will be after euler rotation is applied
-  float32 cosPitch = std::cos(pitch);  
-  float3 rotatedZAxis = float3(std::sin(yaw) * cosPitch, std::sin(pitch), std::cos(yaw) * cosPitch);
-
-  // NOTE: Calculate axis of rotation from z axis to the rotated z axis
-  float3 rotationAxis = float3(0.0f, 0.0f, 1.0f);
-  if(rotatedZAxis != float3(0.0f, 0.0f, 1.0f))
-  {
-    rotationAxis = normalize(cross(float3(0.0f, 0.0f, 1.0f), rotatedZAxis));
-  }
-
-  // NOTE: Calculate angle of rotation from z axis to the rotated z axis
-  float32 angle = std::acos(dot(rotatedZAxis, float3(0.0f, 0.0f, 1.0f)));
-  
   camera->dirty = TRUE;
-  camera->orientation = rotation_quat(rotationAxis, angle);
+  camera->orientation = qmul(rotation_quat(float3(0.0f, 1.0f, 0.0f), yaw),
+                             rotation_quat(float3(1.0f, 0.0f, 0.0f), pitch)); 
+                             
 }
 
 float3 cameraGetEulerAngles(Camera* camera)
@@ -138,7 +126,8 @@ float3 cameraGetEulerAngles(Camera* camera)
   float32 pitch = asin(axis.y);
   float32 yaw = atan2(axis.x, axis.z);
 
-  return float3(yaw, pitch, 0.0f);
+  // NOTE: We need to negate pitch, because positive rotation around x axis is going in opposite order
+  return float3(yaw, -pitch, 0.0f);
 }
 
 void cameraPose(Camera* camera, quat orientation, float3 position)
