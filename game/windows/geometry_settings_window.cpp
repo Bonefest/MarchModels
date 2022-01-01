@@ -179,23 +179,20 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
   ImGui::SameLine();
   
 
-  float3 axis = qaxis(geometryOrientation);
-  float32 angle = qangle(geometryOrientation);
-
-  float4 axisAngle(axis, toDeg(angle));
-  const static float32 axisAngleMinRange[] = {-1.0, -1.0, -1.0, 1.0};
-  const static float32 axisAngleMaxRange[] = { 1.0,  1.0,  1.0, 359.0};
+  float4 orientation = geometryGetOrientation(data->geometry);
+  const static float32 orientationMinRange[] = {-1.0, -1.0, -1.0, -1.0};
+  const static float32 orientationMaxRange[] = { 1.0,  1.0,  1.0, 1.0};
   
   ImGui::SliderScalarN("Orientation",
                        ImGuiDataType_Float,
-                       &axisAngle,
+                       &orientation,
                        4,
-                       axisAngleMinRange,
-                       axisAngleMaxRange,
+                       orientationMinRange,
+                       orientationMaxRange,
                        "%.2f",
                        ImGuiSliderFlags_MultiRange);
 
-  geometrySetOrientation(data->geometry, rotation_quat(normalize(axisAngle.xyz()), toRad(axisAngle.w)));
+  geometrySetOrientation(data->geometry, normalize(orientation));
 
   // Script functions list
   if(ImGui::TreeNode("Attached script functions"))
