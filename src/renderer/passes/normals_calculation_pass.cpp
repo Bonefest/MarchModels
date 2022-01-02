@@ -62,6 +62,11 @@ static ShaderProgram* createNormalsCalculationProgram()
     destroyShaderProgram(program);
     return nullptr;
   }
+
+  shaderProgramUse(program);
+  glUniform1i(glGetUniformLocation(shaderProgramGetGLHandle(program), "distancesMap"), 0);  
+  glUniform1i(glGetUniformLocation(shaderProgramGetGLHandle(program), "idsMap"), 1);
+  shaderProgramUse(nullptr);
   
   return program;
 }
