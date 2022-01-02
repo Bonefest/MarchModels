@@ -58,6 +58,9 @@
     uint2    resolution;
     float2   invResolution;
 
+    uint2    gapResolution;
+    float2   invGapResolution;
+
     float4   camPosition;
     quat     camOrientation;
     float4x4 camNDCCameraMat;

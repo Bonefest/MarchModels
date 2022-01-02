@@ -75,8 +75,13 @@ static void rendererSetupGlobalParameters(Film* film,
   parameters.resolution = filmGetSize(film);
   parameters.invResolution = float2(1.0f / parameters.resolution.x, 1.0f / parameters.resolution.y);
 
-  parameters.pixelGapX = 0;
-  parameters.pixelGapY = 0;      
+  parameters.gapResolution = uint2(parameters.resolution.x / (params.pixelGap.x + 1),
+                                   parameters.resolution.y / (params.pixelGap.y + 1));
+  parameters.invGapResolution = float2(1.0f / parameters.gapResolution.x, 1.0f / parameters.gapResolution.y);
+  
+  parameters.pixelGapX = params.pixelGap.x;
+  parameters.pixelGapY = params.pixelGap.y;
+  
   parameters.rasterItersMaxCount = params.rasterItersMaxCount;
   
   parameters.camPosition = float4(cameraGetPosition(camera), 1.0);
@@ -284,7 +289,7 @@ bool8 rendererRenderScene(Film* film,
   
   rendererSetupGlobalParameters(film, scene, camera, params);
 
-  pushViewport(0, 0, data.globalParameters.resolution.x, data.globalParameters.resolution.y);
+  pushViewport(0, 0, data.globalParameters.gapResolution.x, data.globalParameters.gapResolution.y);
 
   assert(renderPassExecute(data.rasterizationPass));
 
@@ -306,9 +311,13 @@ bool8 rendererRenderScene(Film* film,
     assert(renderPassExecute(data.normalsVisualizationPass));
   }
   
+  assert(popViewport() == TRUE);
+
+  pushViewport(0, 0, data.globalParameters.resolution.x, data.globalParameters.resolution.y);
+  
   assert(renderPassExecute(data.ldrToFilmPass));
   
-  assert(popViewport() == TRUE);
+  assert(popViewport() == TRUE);  
   
   return TRUE;
 }

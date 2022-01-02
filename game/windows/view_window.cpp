@@ -315,6 +315,9 @@ static void drawViewSettingsWindow(Window* window, float64 delta)
     ImGui::SliderFloat("Gamma", &params.gamma, 1.0f, 3.0f);
     ImGui::SliderInt("Rasterizations iterations count", (int*)&params.rasterItersMaxCount, 1, 512);
     ImGui::SliderFloat("Intersection threshold", &params.intersectionThreshold, 0.0001f, 100.0f);
+
+    uint2 minValue = uint2(0, 0), maxValue = uint2(128, 128);
+    ImGui::SliderScalarN("Pixel gap", ImGuiDataType_U32, &params.pixelGap, 2, &minValue, &maxValue);    
     
     ImGui::TreePop();
   }

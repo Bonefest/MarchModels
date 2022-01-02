@@ -10,7 +10,7 @@ layout(std140, binding = STACKS_SSBO_BINDING) buffer StacksSSBO
 
 uint32 getStackID(uint2 pixelCoord)
 {
-  return pixelCoord.y * params.resolution.x + pixelCoord.x;
+  return pixelCoord.y * params.gapResolution.x + pixelCoord.x;
 }
 
 GeometriesStack getStack(uint2 pixelCoord)
