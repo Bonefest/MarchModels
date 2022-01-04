@@ -2,7 +2,6 @@
 
 #include defines.glsl
 
-
 layout(location = 0) out float3 outDistanceColor;
 
 layout(location = 0) uniform sampler2D distancesMap;

@@ -56,7 +56,7 @@ struct RenderingParameters
   uint32 rasterItersMaxCount = 8;
   uint32 shadowRasterItersMaxCount = 8;
 
-  uint2 pixelGap;
+  uint2 pixelGap = uint2(6, 6);
   
   bool8 enableNormals = TRUE;
   bool8 enableShadows = TRUE;

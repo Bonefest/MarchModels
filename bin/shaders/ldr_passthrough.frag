@@ -14,7 +14,14 @@ void main()
       int2 noGapCoord = int2(ifragCoord.x / (params.pixelGapX + 1),
                              ifragCoord.y / (params.pixelGapY + 1));
 
-      outColor = gammaEncode(texelFetch(LDRMap, noGapCoord, 0).rgb);      
+      if(all(lessThan(noGapCoord, params.gapResolution)))
+      {
+        outColor = gammaEncode(texelFetch(LDRMap, noGapCoord, 0).rgb);
+      }
+      else
+      {
+        outColor = float3(0.0, 0.0, 0.0);
+      }
     }
     else
     {

@@ -148,6 +148,8 @@ static bool8 initGLFW()
     glfwTerminate();
     return FALSE;
   }
+
+  glfwSwapInterval(1);
   
   glfwSetKeyCallback(application.window, gkeyCallback);
   glfwSetCursorPosCallback(application.window, gcursorPosCallback);
