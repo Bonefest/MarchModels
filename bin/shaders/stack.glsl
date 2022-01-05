@@ -3,9 +3,9 @@
 
 #include common.glsl
 
-layout(std140, binding = STACKS_SSBO_BINDING) buffer StacksSSBO
+layout(std430, binding = STACKS_SSBO_BINDING) buffer StacksSSBO
 {
-    GeometriesStack stacks[];
+  float32 _stacks[];
 };
 
 uint32 getStackID(uint2 pixelCoord)
@@ -13,38 +13,66 @@ uint32 getStackID(uint2 pixelCoord)
   return pixelCoord.y * params.gapResolution.x + pixelCoord.x;
 }
 
-GeometriesStack getStack(uint2 pixelCoord)
+uint32 getStackByteOffset(uint2 pixelCoord)
 {
-  return stacks[getStackID(pixelCoord)];
+  return getStackID(pixelCoord) * GEOMETRY_STACK_MEMBERS_COUNT;
+}
+
+GeometryData stackFront(uint2 pixelCoord)
+{
+  uint32 byteOffset = getStackByteOffset(pixelCoord);
+
+  GeometryData data;
+  
+  data.distance = _stacks[byteOffset + 1];
+  data.id = uint32(_stacks[byteOffset + 2]);
+
+  return data;
+}
+
+GeometryData stackBack(uint2 pixelCoord)
+{
+  uint32 byteOffset = getStackByteOffset(pixelCoord);
+  uint32 stackSize = uint32(_stacks[byteOffset]);
+  
+  GeometryData data;
+  
+  data.distance = _stacks[byteOffset + (stackSize - 1) * GEOMETRY_MEMBERS_COUNT + 1];
+  data.id = uint32(_stacks[byteOffset + (stackSize - 1) * GEOMETRY_MEMBERS_COUNT + 2]);
+
+  return data;
 }
 
 uint32 getStackSize(uint2 pixelCoord)
 {
-  return stacks[getStackID(pixelCoord)].size;
+  uint32 byteOffset = getStackByteOffset(pixelCoord);
+  return uint32(_stacks[byteOffset]);
 }
 
-void stackPushGeometry(int2 pixelCoord, GeometryData geometry)
+void stackPushGeometry(uint2 pixelCoord, GeometryData geometry)
 {
-  uint32 stackID = getStackID(pixelCoord);
-  uint32 stackSize = stacks[stackID].size;
+  uint32 byteOffset = getStackByteOffset(pixelCoord);
+  uint32 stackSize = uint32(_stacks[byteOffset]);
 
-  stacks[stackID].geometries[stackSize] = geometry;
-  stacks[stackID].size = stackSize + 1;
+  _stacks[byteOffset + stackSize * GEOMETRY_MEMBERS_COUNT + 1]  = geometry.distance;
+  _stacks[byteOffset + stackSize * GEOMETRY_MEMBERS_COUNT + 2]  = geometry.id;
+
+  _stacks[byteOffset] = stackSize + 1;
 }
 
-GeometryData stackPopGeometry(int2 pixelCoord)
+GeometryData stackPopGeometry(uint2 pixelCoord)
 {
-  uint32 stackID = getStackID(pixelCoord);
-  uint32 stackSize = stacks[stackID].size;
-  stacks[stackID].size = stackSize - 1;
-
-  return stacks[stackID].geometries[stackSize - 1];
+  GeometryData data = stackBack(pixelCoord);
+  uint32 byteOffset = getStackByteOffset(pixelCoord);
+  _stacks[byteOffset] = _stacks[byteOffset] - 1; 
+  
+  return data;
 }
 
-void stackClear(int2 pixelCoord)
+void stackClear(uint2 pixelCoord)
 {
-  uint32 stackID = getStackID(pixelCoord);
-  stacks[stackID].size = 0;
+  uint32 byteOffset = getStackByteOffset(pixelCoord);
+  _stacks[byteOffset] = 0;
 }
 
 #endif

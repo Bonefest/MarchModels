@@ -15,11 +15,26 @@
   #define INF_DISTANCE                    77777.0
   #define UKNOWN_GEOMETRY_ID              65535
 
+  // One geometry has two members (see GeometryData declaration)
+  #define GEOMETRY_MEMBERS_COUNT 2
+  // 4 bytes per member, 1 member for size, 2 members per array element,
+  // 2 * MAX_STACK_SIZE members of array
+
   struct GeometryData
   {
     float32 distance;
     uint32 id;
   };
+
+  // One geometry stack consists of one member for size + array of geometry (see GeometriesStack declaration)
+  #define GEOMETRY_STACK_MEMBERS_COUNT (1 + GEOMETRY_MEMBERS_COUNT * MAX_STACK_SIZE)
+
+  struct GeometriesStack
+  {
+    uint32  size;
+    GeometryData geometries[MAX_STACK_SIZE];
+  };
+
 
   #if !defined(__cplusplus)
     GeometryData createGeometryData(float32 distance, uint32 id)
@@ -31,12 +46,6 @@
       return data;
     }
   #endif
-
-  struct GeometriesStack
-  {
-    uint32  size;
-    GeometryData geometries[MAX_STACK_SIZE];
-  };
 
   struct GlobalParameters
   {

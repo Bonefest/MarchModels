@@ -9,12 +9,12 @@ void main()
 {
     int2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);
 
-    GeometriesStack stack = getStack(ifragCoord);
+    GeometryData front = stackFront(ifragCoord);
 
-    if(stack.geometries[0].distance < params.intersectionThreshold)
+    if(front.distance < params.intersectionThreshold)
     {
         outDistance = texelFetch(raysMap, ifragCoord, 0).w;
-        outGeometryID = stack.geometries[0].id;
+        outGeometryID = front.id;
     }
     else
     {

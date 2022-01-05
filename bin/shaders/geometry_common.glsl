@@ -10,7 +10,6 @@ layout(std140, binding = GEOMETRY_TRANSFORMS_UBO_BINDING) uniform GeometryTransf
   GeometryTransformParameters geo;
 };
 
-
 GeometryData unionGeometries(GeometryData geometry1, GeometryData geometry2)
 {
   return geometry1.distance < geometry2.distance ? geometry1 : geometry2;

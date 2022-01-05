@@ -320,7 +320,8 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   // -------------------------
   shaderBuildAddCode(build, "void main() {");
   shaderBuildAddCode(build, "\tint2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);");
-
+  shaderBuildAddCode(build, "\tif(!all(lessThan(ifragCoord, params.gapResolution))) discard;");
+  
   // 1. Extract point p from ray map
   shaderBuildAddCode(build, "\tfloat4 ray = texelFetch(raysMap, ifragCoord, 0);");
   shaderBuildAddCode(build, "\tfloat3 p = ray.xyz * ray.w + params.camPosition.xyz;");
@@ -330,6 +331,8 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
 
   // 3. Combine distance with last distance on stack (if needed)
   geometryGenerateDistancesCombinationCode(geometry, build);
+
+  shaderBuildAddCode(build, "\toutColor = 0.0f.xxxx;");
   
   shaderBuildAddCode(build, "}");
 }
@@ -348,9 +351,12 @@ static void geometryGenerateBranchCode(Asset* geometry, ShaderBuild* build)
 
   // generate a main function:
   shaderBuildAddCode(build, "void main() {");
-  shaderBuildAddCode(build, "\tint2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);");  
 
+  shaderBuildAddCode(build, "\tint2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);");
+  shaderBuildAddCode(build, "\tif(!all(lessThan(ifragCoord, params.gapResolution))) discard;");
+  
   // 1. Extract distance from the stack
+  shaderBuildAddCode(build, "\tmemoryBarrierBuffer();");
   shaderBuildAddCode(build, "\tGeometryData geometry = stackPopGeometry(ifragCoord);");
 
   // 2. Apply ODFs to the distance  
@@ -361,6 +367,8 @@ static void geometryGenerateBranchCode(Asset* geometry, ShaderBuild* build)
 
   // 3. Combine distance with last distance on stack (if needed)
   geometryGenerateDistancesCombinationCode(geometry, build);
+
+  shaderBuildAddCode(build, "\toutColor = 0.0f.xxxx;");
 
   shaderBuildAddCode(build, "}");
 }
@@ -378,6 +386,8 @@ static void geometryRebuild(Asset* geometry)
   assert(shaderBuildIncludeFile(build, "shaders/geometry_common.glsl") == TRUE);
 
   shaderBuildAddCode(build, "uniform uint32 geometryID;");
+
+  shaderBuildAddCode(build, "layout(location = 0) out float4 outColor;");
   
   if(geometryIsLeaf(geometry))
   {

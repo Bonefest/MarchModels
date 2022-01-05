@@ -33,7 +33,7 @@ AssetPtr createNewGeometry()
 {
   Asset* newGeometry;
   assert(createGeometry("sphere", &newGeometry));
-  geometrySetSDF(newGeometry, createDefaultSDF());
+  geometryAddFunction(newGeometry, createDefaultSDF());
 
   return AssetPtr(newGeometry);
 }

@@ -106,7 +106,7 @@ static bool8 initStacksSSBO()
 {
   glGenBuffers(1, &data.handles[RR_DISTANCES_STACK_SSBO]);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, data.handles[RR_DISTANCES_STACK_SSBO]);
-  glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(GeometriesStack) * MAX_WIDTH * MAX_HEIGHT, NULL, GL_DYNAMIC_COPY);
+  glBufferData(GL_SHADER_STORAGE_BUFFER, GEOMETRY_STACK_SIZE * MAX_WIDTH * MAX_HEIGHT * sizeof(float32), NULL, GL_DYNAMIC_COPY);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, STACKS_SSBO_BINDING, data.handles[RR_DISTANCES_STACK_SSBO]);
 
@@ -289,7 +289,7 @@ bool8 rendererRenderScene(Film* film,
   
   rendererSetupGlobalParameters(film, scene, camera, params);
 
-  pushViewport(0, 0, data.globalParameters.gapResolution.x, data.globalParameters.gapResolution.y);
+  pushViewport(0, 0, max(data.globalParameters.gapResolution.x, 300), max(data.globalParameters.gapResolution.y, 300));
 
   assert(renderPassExecute(data.rasterizationPass));
 

@@ -7,6 +7,8 @@ out float4 outCameraRay;
 void main()
 {
     int2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);
+    if(!all(lessThan(ifragCoord, params.gapResolution))) discard;
+
     stackClear(ifragCoord);
 
     // TODO: Now we generate a ray going through a center of a pixel. In future
