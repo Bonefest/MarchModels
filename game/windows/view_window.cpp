@@ -247,7 +247,7 @@ bool8 createViewWindow(const std::string& identifier,
   data->settingsWindow = WindowPtr(nullptr);
   
   windowSetInternalData(*outWindow, data);
-  viewWindowSetMaxFPS(*outWindow, 10.0f);
+  viewWindowSetMaxFPS(*outWindow, 60.0f);
 
   return TRUE;
 }

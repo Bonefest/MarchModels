@@ -49,6 +49,11 @@ static void drawGeometryInorder(AssetPtr geometry)
   for(AssetPtr child: children)
   {
     drawGeometryInorder(child);
+
+    // NOTE: Read https://gamedev.stackexchange.com/questions/151563/synchronization-between-several-gldispatchcompute-with-same-ssbos;
+    // The idea is that we need to tell OpenGL explicitly that we want to synchronize several draw calls, which are
+    // reading/writing from the SSBO. Otherwise some strange artifacts may occur.
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
   }
   
   ShaderProgram* geometryProgram = geometryGetProgram(geometry);

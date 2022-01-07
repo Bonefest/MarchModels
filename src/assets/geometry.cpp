@@ -356,7 +356,6 @@ static void geometryGenerateBranchCode(Asset* geometry, ShaderBuild* build)
   shaderBuildAddCode(build, "\tif(!all(lessThan(ifragCoord, params.gapResolution))) discard;");
   
   // 1. Extract distance from the stack
-  shaderBuildAddCode(build, "\tmemoryBarrierBuffer();");
   shaderBuildAddCode(build, "\tGeometryData geometry = stackPopGeometry(ifragCoord);");
 
   // 2. Apply ODFs to the distance  
