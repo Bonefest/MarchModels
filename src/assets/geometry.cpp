@@ -14,6 +14,7 @@ struct Geometry
 {
   // Common data
   uint32 ID;
+  uint32 codeVersionHash;
   
   std::vector<AssetPtr> idfs;
   std::vector<AssetPtr> odfs;
@@ -192,6 +193,19 @@ static void geometryCollectParents(Asset* geometry, vector<Asset*>& collection)
   }
 
   collection.push_back(geometry);
+}
+
+// NOTE: Geometry code hash is simply a sum of code versions of each script function
+static uint32 geometryCalculateCodeVersionHash(Asset* geometry)
+{
+  uint32 hash = 0;
+  std::vector<AssetPtr> scriptFunctions = geometryGetScriptFunctions(geometry);
+  for(AssetPtr function: scriptFunctions)
+  {
+    hash += scriptFunctionGetCodeVersion(function);
+  }
+
+  return hash;
 }
 
 static uint32 geometryGetIndexInBranch(Asset* geometry)
@@ -568,13 +582,15 @@ void geometryAddFunction(Asset* geometry, AssetPtr function)
   {
     geometryData->idfs.push_back(function);
     // NOTE: Children also should be marked, because IDFs are integrated into leafs
-    geometryMarkNeedRebuild(geometry, TRUE);    
+    geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);    
   }
   else if(type == SCRIPT_FUNCTION_TYPE_ODF)
   {
     geometryData->odfs.push_back(function);
-    geometryMarkNeedRebuild(geometry, FALSE);        
+    geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);        
   }
+
+  geometryData->codeVersionHash = geometryCalculateCodeVersionHash(geometry);
 }
 
 bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
@@ -587,7 +603,8 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
     if(geometryData->sdf != nullptr)
     {
       geometryData->sdf = AssetPtr(nullptr);
-      geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);      
+      geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);
+      geometryData->codeVersionHash = geometryCalculateCodeVersionHash(function);      
       return TRUE;
     }
 
@@ -599,7 +616,8 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
     if(idfIt != geometryData->idfs.end())
     {
       geometryData->idfs.erase(idfIt);
-      geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);            
+      geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);
+      geometryData->codeVersionHash = geometryCalculateCodeVersionHash(function);      
       return TRUE;
     }
 
@@ -611,7 +629,8 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
     if(odfIt != geometryData->odfs.end())
     {
       geometryData->odfs.erase(odfIt);
-      geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);                  
+      geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);
+      geometryData->codeVersionHash = geometryCalculateCodeVersionHash(function);      
       return TRUE;
     }
 
@@ -916,6 +935,16 @@ bool8 geometryNeedRebuild(Asset* geometry)
 ShaderProgram* geometryGetProgram(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  uint32 newCodeVersionHash = geometryCalculateCodeVersionHash(geometry);
+  if(newCodeVersionHash != geometryData->codeVersionHash)
+  {
+    // TODO: If we could determine somehow that only sdf/odf has changed (e.g store
+    // previous code version for each function distinctly), we can omit marking
+    // children ==> decrease compilation time.
+    geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);
+    geometryData->codeVersionHash = newCodeVersionHash;
+  }
+  
   if(geometryData->needRebuild == TRUE)
   {
     geometryRebuild(geometry);

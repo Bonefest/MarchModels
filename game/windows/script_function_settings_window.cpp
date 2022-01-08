@@ -49,6 +49,7 @@ bool8 createScriptFunctionSettingsWindow(AssetPtr owner, AssetPtr function, Wind
   data->owner = owner;
   data->function = function;
   strcpy(data->saveName, assetGetName(function).c_str());
+  strcpy(data->codeBuf, scriptFunctionGetRawCode(function).c_str());
   windowSetInternalData(*outWindow, data);
 
   return TRUE;
@@ -173,7 +174,10 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
         ImGui::EndMenu();
       }
       
-      ImGui::MenuItem(ICON_KI_WRENCH" Compile");      
+      if(ImGui::MenuItem(ICON_KI_WRENCH" Compile"))
+      {
+        scriptFunctionSetCode(data->function, data->codeBuf);
+      }
 
       ImGui::EndMenuBar();
     }

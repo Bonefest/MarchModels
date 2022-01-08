@@ -59,13 +59,15 @@ ENGINE_API const std::string& scriptFunctionGetRawCode(Asset* asset);
 
 /**
  * @return code string prepapred for integration in GLSL code (parameters are replaced
- * by float constats
+ * by float constants)
  *
  * @warning It's a costly function. It's better to save the result somewhere if you
  * need to reuse it often.
  */
 ENGINE_API std::string scriptFunctionGetGLSLCode(Asset* asset);
+ENGINE_API uint32 scriptFunctionGetCodeVersion(Asset* asset);
 
 ENGINE_API float3 executeIDF(Asset* idf, float3 p);
 ENGINE_API float32 executeSDF(Asset* sdf, float3 p);
 ENGINE_API float32 executeODF(Asset* odf, float32 distance);
+

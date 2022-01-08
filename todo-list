@@ -2,3 +2,8 @@
 2. Global configurations system
 3. Dynamic resolution for image integrator
 4. Label at the bottom "FPS, frame took x ms"
+5. Output compile log into a dedicated window
+6. Add list of built-in arguments in script function settings window
+7. Fix forking problem
+8. Recalculate geometry when its relative position in parent's branch has changed
+9. Add turn on/turn off button, probably only for 2+ geometries in the branch or union-only
