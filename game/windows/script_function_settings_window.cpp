@@ -81,8 +81,315 @@ void scriptFunctionSettingsWindowUpdate(Window* window, float64 delta)
 
 }
 
+void scriptFunctionSettingsWindowDraw2(Window* window, float64 delta)
+{
+  ImGuiStyle& imstyle = ImGui::GetStyle();  
+
+  ScriptFunctionSettingsWindowData* data = (ScriptFunctionSettingsWindowData*)windowGetInternalData(window);
+  ScriptFunctionType sfType = scriptFunctionGetType(data->function);  
+  AssetPtr assetFromManager = assetsManagerFindAsset(assetGetName(data->function));
+  bool8 isPrototype = assetFromManager != nullptr &&
+    (assetGetInternalData(assetFromManager) == assetGetInternalData(data->function));
+  
+  pushIconSmallButtonStyle();
+  
+  // --------------------------------------------------------------------------
+  // Open button
+  // --------------------------------------------------------------------------
+  ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);  
+  ImGui::SmallButton("[Open]");
+  ImGui::SameLine();
+  ImGui::PopStyleColor();
+
+  // --------------------------------------------------------------------------
+  // Save button
+  // --------------------------------------------------------------------------
+  ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);    
+  if(ImGui::SmallButton("[Save]"))
+  {
+    saveFunction(data);
+  }
+  ImGui::SameLine();
+  ImGui::PopStyleColor();  
+
+  // --------------------------------------------------------------------------
+  // Save as button
+  // --------------------------------------------------------------------------
+  ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);    
+  if(ImGui::SmallButton("[Save as]"))
+  {
+    strcpy(textInputPopupGetBuffer(), data->saveName);
+    ImGui::OpenPopup(NewSaveNamePopupName);    
+  }
+  ImGui::SameLine();
+  ImGui::PopStyleColor();  
+
+  // --------------------------------------------------------------------------
+  // Forking buttons
+  // --------------------------------------------------------------------------
+  ImGui::PushStyleColor(ImGuiCol_Text, (float4)WarningClr);
+  if(isPrototype == TRUE)
+  {
+    if(ImGui::SmallButton("[" ICON_KI_USERS " Prototype]"))
+    {
+        geometryRemoveFunction(data->owner, data->function);
+        data->function = AssetPtr(scriptFunctionClone(assetFromManager));
+        geometryAddFunction(data->owner, data->function);
+    }
+  }
+  else
+  {
+    bool8 prototypeExists = assetFromManager != nullptr;
+
+    ImGui::BeginDisabled(prototypeExists == FALSE);    
+
+    // NOTE: We can unfork back only if prototype exists
+    if(ImGui::SmallButton("[" ICON_KI_USER " Instance]") && prototypeExists == TRUE)
+    {
+      // NOTE: Replace script function by a function from the assets manager
+      geometryRemoveFunction(data->owner, data->function);
+      data->function = assetFromManager;
+      geometryAddFunction(data->owner, data->function);
+    }
+
+    // if(ImGui::SmallButton("[Sync]") ...
+    ImGui::EndDisabled();    
+  }
+
+  ImGui::PopStyleColor();
+  ImGui::SameLine();
+  
+  // --------------------------------------------------------------------------
+  // Function type changing button
+  // --------------------------------------------------------------------------
+  ImGui::PushStyleColor(ImGuiCol_Text, (float4)WarningClr);  
+  
+  char typeButton[32];
+  sprintf(typeButton, "[%s]", scriptFunctionTypeLabel(sfType));
+  if(ImGui::SmallButton(typeButton) && isPrototype == TRUE)
+  {
+    sfType = (ScriptFunctionType)(((int)sfType + 1) % (int)SCRIPT_FUNCTION_TYPE_COUNT);
+    scriptFunctionSetType(data->function, sfType);
+  }
+  
+  ImGui::PopStyleColor();  
+  popIconSmallButtonStyle();
+
+
+
+
+  
+  float2 avalReg = ImGui::GetContentRegionAvail();
+  ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, float2(0.0, 0.0));
+  // --------------------------------------------------------------------------
+  // Code child
+  // --------------------------------------------------------------------------
+  ImGui::BeginChild("CodeChild", float2(avalReg.x * 0.5, avalReg.y));
+  
+  float2 cursorPos = ImGui::GetCursorScreenPos();
+  ImGui::GetWindowDrawList()->AddRectFilled(cursorPos,
+                                            float2(cursorPos.x + avalReg.x * 0.5, cursorPos.y + ImGui::GetFontSize()),
+                                            ImColor(imstyle.Colors[ImGuiCol_MenuBarBg]),
+                                            2.0);  
+  
+  ImGui::Text("Code");
+  ImGui::SameLine(avalReg.x * 0.5 - 80);
+
+  pushIconSmallButtonStyle();
+  if(ImGui::SmallButton(ICON_KI_WRENCH " Compile"))
+  {
+    scriptFunctionSetCode(data->function, data->codeBuf);    
+  }
+  popIconSmallButtonStyle();
+  
+  float2 codeReg = ImGui::GetContentRegionAvail();
+
+  ImGui::PushStyleColor(ImGuiCol_FrameBg, (float4)ImColor(32, 32, 32, 128));
+  ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+  ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 5.0);  
+    ImGui::InputTextMultiline("##CodeInputText",
+                              data->codeBuf,
+                             ARRAY_SIZE(data->codeBuf),
+                              codeReg,
+                              ImGuiInputTextFlags_AllowTabInput);
+  ImGui::PopStyleVar(2);
+  ImGui::PopStyleColor();
+  
+  ImGui::EndChild();
+
+  // --------------------------------------------------------------------------
+  ImGui::SameLine();
+  ImGui::BeginChild("RightChildren", float2(avalReg.x * 0.5, avalReg.y));    
+  {
+    // ------------------------------------------------------------------------
+    // Arguments child
+    // ------------------------------------------------------------------------
+
+    ImGui::BeginChild("ArgumentsChild", float2(avalReg.x * 0.5, avalReg.y * 0.5));
+    if(ImGui::BeginTabBar("##tabs"))
+    {
+      if(ImGui::BeginTabItem("Custom arguments"))
+      {
+
+        // --- Arguments table
+        ScriptFunctionArgs& args = scriptFunctionGetArgs(data->function);
+
+        if(ImGui::BeginTable("ScriptFunctionArgsTable", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp))
+        {
+          ImGui::TableSetupColumn("##Commands", 0, 0.07f);
+          ImGui::TableSetupColumn("ID", 0, 0.05f);
+          ImGui::TableSetupColumn("Name", 0, 0.45f);
+          ImGui::TableSetupColumn("Value", 0, 0.45f);
+          ImGui::TableHeadersRow();
+
+          ImGui::PushStyleColor(ImGuiCol_FrameBg, 0x0);
+
+          int32 argIdx = 0;
+          for(auto argIt = args.begin(); argIt != args.end();)
+          {
+            bool8 removeRequested = FALSE;
+
+            ImGui::PushID(argIt->first.c_str());
+
+              ImGui::TableNextRow();
+
+              ImGui::TableSetColumnIndex(0);
+
+              float32 cellWidth = ImGui::GetContentRegionAvail().x;
+
+              ImGui::PushStyleColor(ImGuiCol_Button, (float4)ImColor(128, 0, 0, 255));
+              ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (float4)ImColor(160, 0, 0, 255));
+              ImGui::PushStyleColor(ImGuiCol_ButtonActive, (float4)ImColor(144, 0, 0, 255));                
+                if(ImGui::Button("X", float2(cellWidth, 0.0f)))
+                {
+                  removeRequested = TRUE;
+                }
+              ImGui::PopStyleColor(3);
+
+
+              // ID column
+              ImGui::TableSetColumnIndex(1);
+              ImGui::Text("%d", argIdx);
+
+              // Name column
+              ImGui::TableSetColumnIndex(2);
+              ImGui::Text("%s", argIt->first.c_str());
+
+              // Value column
+              ImGui::TableSetColumnIndex(3);
+              ImGui::InputFloat("##ArgValueInput", &argIt->second, 0.0f, 0.0f, "%.1f");
+
+            ImGui::PopID();
+
+            if(removeRequested == FALSE)
+            {
+              argIt++;
+              argIdx++;
+            }
+            else
+            {
+              argIt = args.erase(argIt);
+            }
+          }
+        }
+
+        ImGui::PopStyleColor();
+        ImGui::EndTable();        
+        
+        // --- New argument creation
+        ImGui::Dummy(float2(0.0, 10.0));
+        ImGui::InputTextWithHint("##NewArgNameInput", "New argument name", data->newArgName, ARRAY_SIZE(data->newArgName));
+        ImGui::SameLine();
+        ImGui::Dummy(float2(10.0, 0.0));
+        ImGui::SameLine();        
+        
+        bool8 argNameAlreadyExists = args.find(data->newArgName) != args.end();
+
+
+        ImGui::BeginDisabled(argNameAlreadyExists ? TRUE : FALSE);
+        if(ImGui::Button("Create") && argNameAlreadyExists == FALSE)
+        {
+          args[data->newArgName] = 0.0f;
+          data->newArgName[0] = '\0';
+        }
+        ImGui::EndDisabled();
+        
+
+        ImGui::EndTabItem();
+      }
+      if(ImGui::BeginTabItem("Built-in arguments"))
+      {
+        ImGui::Text("T");
+
+        ImGui::EndTabItem();        
+      }
+
+      ImGui::EndTabBar();
+
+    }
+    
+    ImGui::EndChild();
+
+    // ------------------------------------------------------------------------
+    // Compile log child
+    // ------------------------------------------------------------------------
+    ImGui::BeginChild("CompileLogChild", float2(avalReg.x * 0.5, avalReg.y * 0.5));
+
+    cursorPos = ImGui::GetCursorScreenPos();
+    ImGui::GetWindowDrawList()->AddRectFilled(cursorPos,
+                                              float2(cursorPos.x + avalReg.x * 0.5, cursorPos.y + ImGui::GetFontSize()),
+                                              ImColor(imstyle.Colors[ImGuiCol_MenuBarBg])); 
+    
+    ImGui::Text("Compile output");
+
+    cursorPos = ImGui::GetCursorScreenPos();
+    float2 logReg = ImGui::GetContentRegionAvail();
+
+    ImGui::GetWindowDrawList()->AddRectFilled(cursorPos,
+                                              float2(cursorPos.x + avalReg.x * 0.5, cursorPos.y + logReg.y),
+                                              ImColor(20, 20, 35, 128));
+
+    ImGui::PushTextWrapPos(0.0f);
+    ImGui::TextColored("");
+    ImGui::PopTextWrapPos();
+    
+    ImGui::EndChild();
+  }
+  ImGui::EndChild();
+
+  ImGui::PopStyleVar();
+
+  // --------------------------------------------------------------------------
+  // New save name popup
+  // --------------------------------------------------------------------------  
+  if(ImGui::IsPopupOpen(NewSaveNamePopupName))
+  {
+    ImGuiUtilsButtonsFlags pressedButton = textInputPopup(NewSaveNamePopupName, "Enter save name");
+                                                          
+    if(ImGuiUtilsButtonsFlags_Accept == pressedButton)
+    {
+      const char* enteredName = textInputPopupGetBuffer();
+      
+      if(strlen(enteredName) == 0)
+      {
+        // TODO: Show error popup
+      }
+      else
+      {
+        strcpy(data->saveName, enteredName);
+        saveFunction(data);
+      }
+    }
+  }
+  
+}
+
 void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
 {
+
+  scriptFunctionSettingsWindowDraw2(window, delta);
+  return;
+  
   ScriptFunctionSettingsWindowData* data = (ScriptFunctionSettingsWindowData*)windowGetInternalData(window);
 
   ScriptFunctionType sfType = scriptFunctionGetType(data->function);
@@ -96,50 +403,48 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
   bool8 isPrototype = assetFromManager != nullptr &&
     (assetGetInternalData(assetFromManager) == assetGetInternalData(data->function));
 
-  // Meta information
-  ImGui::Text("%s", isPrototype == TRUE ? "Prototype" : "Instance");
-  ImGui::SameLine();
-
+  // Meta information  
   ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
   pushIconSmallButtonStyle();
-
-    char typeButton[32];
-    sprintf(typeButton, "[%s]", scriptFunctionTypeLabel(sfType));
-    if(ImGui::SmallButton(typeButton) && isPrototype == TRUE)
-    {
-      sfType = (ScriptFunctionType)(((int)sfType + 1) % (int)SCRIPT_FUNCTION_TYPE_COUNT);
-      scriptFunctionSetType(data->function, sfType);
-    }
   
-    ImGui::SameLine();
-    if(isPrototype == FALSE)
+  if(isPrototype == TRUE)
+  {
+    if(ImGui::SmallButton("[Prototype]"))
     {
-      bool8 prototypeExists = assetFromManager != nullptr;
-
-      ImGui::BeginDisabled(prototypeExists == FALSE);
-        // NOTE: We can unfork back only in prototype exists
-        if(ImGui::SmallButton("[Unfork]") && prototypeExists == TRUE)
-        {
-          // NOTE: Replace script function by a function from the assets manager
-          geometryRemoveFunction(data->owner, data->function);
-          data->function = assetFromManager;
-          geometryAddFunction(data->owner, data->function);
-        }
-
-        // if(ImGui::SmallButton("[Sync]") ...
-      ImGui::EndDisabled();
-    }
-    else
-    {
-      if(ImGui::SmallButton("[Fork]"))
-      {
         geometryRemoveFunction(data->owner, data->function);
         data->function = AssetPtr(scriptFunctionClone(assetFromManager));
         geometryAddFunction(data->owner, data->function);
-      }
+    }
+  }
+  else
+  {
+    bool8 prototypeExists = assetFromManager != nullptr;
+
+    ImGui::BeginDisabled(prototypeExists == FALSE);
+    
+    // NOTE: We can unfork back only in prototype exists
+    if(ImGui::SmallButton("[Instance]") && prototypeExists == TRUE)
+    {
+      // NOTE: Replace script function by a function from the assets manager
+      geometryRemoveFunction(data->owner, data->function);
+      data->function = assetFromManager;
+      geometryAddFunction(data->owner, data->function);
     }
 
-    
+    // if(ImGui::SmallButton("[Sync]") ...
+    ImGui::EndDisabled();    
+  }
+
+  ImGui::SameLine();
+  
+  char typeButton[32];
+  sprintf(typeButton, "[%s]", scriptFunctionTypeLabel(sfType));
+  if(ImGui::SmallButton(typeButton) && isPrototype == TRUE)
+  {
+    sfType = (ScriptFunctionType)(((int)sfType + 1) % (int)SCRIPT_FUNCTION_TYPE_COUNT);
+    scriptFunctionSetType(data->function, sfType);
+  }
+
   popIconSmallButtonStyle();
   ImGui::PopStyleColor();
 
