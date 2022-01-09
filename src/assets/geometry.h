@@ -40,14 +40,15 @@ ENGINE_API quat geometryGetOrientation(Asset* geometry);
 
 ENGINE_API void geometryAddFunction(Asset* geometry, AssetPtr function);
 ENGINE_API bool8 geometryRemoveFunction(Asset* geometry, Asset* function);
+ENGINE_API void geometryNotifyFunctionHasChanged(Asset* geometry, Asset* function);
 
 ENGINE_API uint32 geometryGetID(Asset* geometry);
 
 ENGINE_API std::vector<AssetPtr>& geometryGetIDFs(Asset* geometry);
 ENGINE_API std::vector<AssetPtr>& geometryGetODFs(Asset* geometry);
-
 // Get SDF, IDFs and ODFs as a single array
 ENGINE_API std::vector<AssetPtr> geometryGetScriptFunctions(Asset* geometry);
+ENGINE_API bool8 geometryHasFunction(Asset* geometry, Asset* function);
 
 ENGINE_API void geometrySetParent(Asset* geometry, AssetPtr parent);
 ENGINE_API bool8 geometryHasParent(Asset* geometry);
@@ -81,6 +82,11 @@ ENGINE_API float3 geometryCalculateNormal(Asset* geometry, float3 p);
 
 ENGINE_API bool8 geometryNeedRebuild(Asset* geometry);
 ENGINE_API ShaderProgram* geometryGetProgram(Asset* geometry);
+
+typedef bool8(*fpTraverseFunction)(Asset* geometry, void* userData);
+ENGINE_API bool8 geometryTraversePostorder(Asset* geometry,
+                                           fpTraverseFunction traverseFunction,
+                                           void* userData = nullptr);
 
 // ----------------------------------------------------------------------------
 // Branch geometry-related interface

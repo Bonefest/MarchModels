@@ -79,6 +79,7 @@ enum EventType
   EVENT_TYPE_COUNT,
 
   EVENT_TYPE_USER_DEFINED,
+
   EVENT_TYPE_MAX = 127
 };
 

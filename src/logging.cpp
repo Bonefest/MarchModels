@@ -53,7 +53,7 @@ void shutdownLoggingSystem()
 
 void _log(LogMessageType type, const char* format, ...)
 {
-  char buf[4096] = {};
+  char buf[16384] = {};
 
   // Appending prefix
   uint32 prefixSize = sprintf(buf, "%s", logMessageTypeToPrefix[type]);

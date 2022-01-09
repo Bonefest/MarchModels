@@ -42,20 +42,21 @@ ENGINE_API bool8 createScriptFunction(ScriptFunctionType type,
 ENGINE_API void scriptFunctionCopy(Asset* dst, Asset* src);
 ENGINE_API Asset* scriptFunctionClone(Asset* assetCloneFrom);
 
-ENGINE_API void scriptFunctionSetArgValue(Asset* asset, const std::string& argName, float32 value);
-ENGINE_API float32 scriptFunctionGetArgValue(Asset* asset, const std::string& argName);
-ENGINE_API ScriptFunctionArgs& scriptFunctionGetArgs(Asset* asset);
+ENGINE_API void scriptFunctionSetArgValue(Asset* function, const std::string& argName, float32 value);
+ENGINE_API float32 scriptFunctionGetArgValue(Asset* function, const std::string& argName);
+ENGINE_API ScriptFunctionArgs& scriptFunctionGetArgs(Asset* function);
 
-ENGINE_API void scriptFunctionSetType(Asset* asset, ScriptFunctionType type);
-ENGINE_API ScriptFunctionType scriptFunctionGetType(Asset* asset);
+ENGINE_API void scriptFunctionSetType(Asset* function, ScriptFunctionType type);
+ENGINE_API ScriptFunctionType scriptFunctionGetType(Asset* function);
 
-ENGINE_API void scriptFunctionSetCode(Asset* asset, const std::string& code);
+ENGINE_API void scriptFunctionSetCode(Asset* function, const std::string& code);
+ENGINE_API bool8 scriptFunctionHasValidCode(Asset* function);
 
 /**
  * @return code string with working symbols (parameter names, built-in parameters)
  * represents a string how it looks from user point of view.
  */
-ENGINE_API const std::string& scriptFunctionGetRawCode(Asset* asset);
+ENGINE_API const std::string& scriptFunctionGetRawCode(Asset* function);
 
 /**
  * @return code string prepapred for integration in GLSL code (parameters are replaced
@@ -64,8 +65,7 @@ ENGINE_API const std::string& scriptFunctionGetRawCode(Asset* asset);
  * @warning It's a costly function. It's better to save the result somewhere if you
  * need to reuse it often.
  */
-ENGINE_API std::string scriptFunctionGetGLSLCode(Asset* asset);
-ENGINE_API uint32 scriptFunctionGetCodeVersion(Asset* asset);
+ENGINE_API std::string scriptFunctionGetGLSLCode(Asset* function);
 
 ENGINE_API float3 executeIDF(Asset* idf, float3 p);
 ENGINE_API float32 executeSDF(Asset* sdf, float3 p);

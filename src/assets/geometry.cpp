@@ -14,7 +14,6 @@ struct Geometry
 {
   // Common data
   uint32 ID;
-  uint32 codeVersionHash;
   
   std::vector<AssetPtr> idfs;
   std::vector<AssetPtr> odfs;
@@ -195,19 +194,6 @@ static void geometryCollectParents(Asset* geometry, vector<Asset*>& collection)
   collection.push_back(geometry);
 }
 
-// NOTE: Geometry code hash is simply a sum of code versions of each script function
-static uint32 geometryCalculateCodeVersionHash(Asset* geometry)
-{
-  uint32 hash = 0;
-  std::vector<AssetPtr> scriptFunctions = geometryGetScriptFunctions(geometry);
-  for(AssetPtr function: scriptFunctions)
-  {
-    hash += scriptFunctionGetCodeVersion(function);
-  }
-
-  return hash;
-}
-
 static uint32 geometryGetIndexInBranch(Asset* geometry)
 {
   AssetPtr parent = geometryGetParent(geometry);
@@ -386,7 +372,7 @@ static void geometryGenerateBranchCode(Asset* geometry, ShaderBuild* build)
   shaderBuildAddCode(build, "}");
 }
 
-static void geometryRebuild(Asset* geometry)
+static bool8 geometryRebuild(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
 
@@ -415,14 +401,14 @@ static void geometryRebuild(Asset* geometry)
   if(fragmentShader == nullptr)
   {
     LOG_ERROR("Cannot generate a shader for geometry!");
-    return;
+    return FALSE;
   }
 
   ShaderPtr vertexShader = shaderManagerGetShader("triangle.vert");
   if(vertexShader == nullptr)
   {
     LOG_ERROR("Cannot load a triangle vertex shader!");
-    return;
+    return FALSE;
   }
   
   destroyShaderBuild(build);
@@ -438,10 +424,15 @@ static void geometryRebuild(Asset* geometry)
   shaderProgramAttachShader(shaderProgram, vertexShader);  
   shaderProgramAttachShader(shaderProgram, fragmentShader);
 
-  assert(linkShaderProgram(shaderProgram));
+  if(linkShaderProgram(shaderProgram) == FALSE)
+  {
+    return FALSE;
+  }
   
   geometryData->program = shaderProgram;
   geometryData->needRebuild = FALSE;
+
+  return TRUE;
 }
 
 static void geometryMarkNeedRebuild(Asset* geometry, bool8 forwardToChildren)
@@ -590,7 +581,6 @@ void geometryAddFunction(Asset* geometry, AssetPtr function)
     geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);        
   }
 
-  geometryData->codeVersionHash = geometryCalculateCodeVersionHash(geometry);
 }
 
 bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
@@ -604,7 +594,6 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
     {
       geometryData->sdf = AssetPtr(nullptr);
       geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);
-      geometryData->codeVersionHash = geometryCalculateCodeVersionHash(function);      
       return TRUE;
     }
 
@@ -617,7 +606,6 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
     {
       geometryData->idfs.erase(idfIt);
       geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);
-      geometryData->codeVersionHash = geometryCalculateCodeVersionHash(function);      
       return TRUE;
     }
 
@@ -630,7 +618,6 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
     {
       geometryData->odfs.erase(odfIt);
       geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);
-      geometryData->codeVersionHash = geometryCalculateCodeVersionHash(function);      
       return TRUE;
     }
 
@@ -638,6 +625,12 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
   }
 
   return FALSE;
+}
+
+void geometryNotifyFunctionHasChanged(Asset* geometry, Asset* function)
+{
+  ScriptFunctionType type = scriptFunctionGetType(function);
+  geometryMarkNeedRebuild(geometry, /** Mark children */ type == SCRIPT_FUNCTION_TYPE_IDF ? TRUE : FALSE);
 }
 
 uint32 geometryGetID(Asset* geometry)
@@ -687,6 +680,34 @@ std::vector<AssetPtr> geometryGetScriptFunctions(Asset* geometry)
   functions.insert(functions.end(), geometryData->odfs.begin(), geometryData->odfs.end());  
 
   return functions;
+}
+
+bool8 geometryHasFunction(Asset* geometry, Asset* function)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  
+  if(function == geometryData->sdf)
+  {
+    return TRUE;
+  }
+
+  for(AssetPtr sf: geometryData->idfs)
+  {
+    if(sf == function)
+    {
+      return TRUE;
+    }
+  }
+  
+  for(AssetPtr sf: geometryData->odfs)
+  {
+    if(sf == function)
+    {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
 }
 
 void geometrySetParent(Asset* geometry, AssetPtr parent)
@@ -935,22 +956,32 @@ bool8 geometryNeedRebuild(Asset* geometry)
 ShaderProgram* geometryGetProgram(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
-  uint32 newCodeVersionHash = geometryCalculateCodeVersionHash(geometry);
-  if(newCodeVersionHash != geometryData->codeVersionHash)
-  {
-    // TODO: If we could determine somehow that only sdf/odf has changed (e.g store
-    // previous code version for each function distinctly), we can omit marking
-    // children ==> decrease compilation time.
-    geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);
-    geometryData->codeVersionHash = newCodeVersionHash;
-  }
   
   if(geometryData->needRebuild == TRUE)
   {
-    geometryRebuild(geometry);
+    if(geometryRebuild(geometry) == FALSE)
+    {
+      return nullptr;
+    }
   }
 
   return geometryData->program;
+}
+
+bool8 geometryTraversePostorder(Asset* geometry, fpTraverseFunction traverseFunction, void* userData)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+
+  for(Asset* child: geometryData->children)
+  {
+    // If stop traversing is requested - terminate function
+    if(geometryTraversePostorder(child, traverseFunction, userData) == TRUE)
+    {
+      return TRUE;
+    }
+  }
+
+  return traverseFunction(geometry, userData);
 }
 
 // ----------------------------------------------------------------------------
@@ -1006,6 +1037,11 @@ void geometrySetCombinationFunction(Asset* geometry, CombinationFunction functio
 
 CombinationFunction geometryGetCombinationFunction(Asset* geometry)
 {
+  if(geometry == nullptr)
+  {
+    return COMBINATION_UNION;
+  }
+  
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);  
   
   return geometryData->combinationFunction;

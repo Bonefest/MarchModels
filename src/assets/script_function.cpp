@@ -8,7 +8,6 @@ using std::vector;
 
 struct ScriptFunction
 {
-  uint32 codeVersion;
   string code;
   ScriptFunctionArgs args;
   ScriptFunctionType type;
@@ -45,7 +44,6 @@ bool8 createScriptFunction(ScriptFunctionType type, const string& name, Asset** 
   assert(allocateAsset(interface, name, outAsset));
   
   ScriptFunction* function = engineAllocObject<ScriptFunction>(MEMORY_TYPE_GENERAL);
-  function->codeVersion = 0;
   function->code = "";
   function->type = type;
 
@@ -118,7 +116,6 @@ void scriptFunctionSetCode(Asset* asset, const std::string& code)
   ScriptFunction* data = (ScriptFunction*)assetGetInternalData(asset);
 
   data->code = code;
-  data->codeVersion++;
 }
 
 const std::string& scriptFunctionGetRawCode(Asset* asset)
@@ -147,13 +144,6 @@ std::string scriptFunctionGetGLSLCode(Asset* asset)
   }
 
   return result;
-}
-
-uint32 scriptFunctionGetCodeVersion(Asset* asset)
-{
-  ScriptFunction* data = (ScriptFunction*)assetGetInternalData(asset);
-  
-  return data->codeVersion;
 }
 
 float3 executeIDF(Asset* idf, float3 p)
