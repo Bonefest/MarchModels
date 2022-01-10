@@ -28,16 +28,16 @@
 
 int initNormal(int argc, char** argv)
 {
-  if(initLoggingSystem(2048) != TRUE)
-  {
-    fprintf(stderr, "Cannot initialize a logging system!");
-    return -1;
-  }
-
   if(engineInitMemoryManager() != TRUE)
   {
     LOG_ERROR("Cannot initialize a memory manager!");
     return -2;
+  }
+
+  if(initGlobalLogger(2048) != TRUE)
+  {
+    fprintf(stderr, "Cannot initialize a logging system!");
+    return -1;
   }
 
   if(!startApplication())
@@ -47,7 +47,7 @@ int initNormal(int argc, char** argv)
   }
 
   engineShutdownMemoryManager();
-  shutdownLoggingSystem();
+  shutdownGlobalLogger();
 
   return 0;
 }

@@ -11,15 +11,8 @@
 
 const static uint32 MAX_BUF_SIZE = 255;
 
-const static ImColor mapLogMessageTypeToColor[] =
-{
-  LogErrorClr,
-  LogWarningClr,
-  LogVerboseClr,
-  LogInfoClr
-};
 
-struct LogMessage
+struct LogMessageData
 {
   LogMessageType type;  
   std::string message;
@@ -28,7 +21,7 @@ struct LogMessage
 
 struct ConsoleWindowData
 {
-  std::deque<LogMessage> messages;
+  std::deque<LogMessageData> messages;
   std::vector<std::string> history;
   int32 historyIdx = 0;
   
@@ -41,10 +34,10 @@ bool8 logMessageCallback(EventData data, void* sender, void* listener)
 {
   assert(data.type == EVENT_TYPE_LOG_MESSAGE);
 
-  LogMessage logMessage = {};
+  LogMessageData logMessage = {};
   logMessage.type = (LogMessageType)data.u32[0];
   logMessage.message = (char*)data.ptr[0];
-  logMessage.color = mapLogMessageTypeToColor[data.u32[0]];
+  logMessage.color = logTypeToClr((LogMessageType)data.u32[0]);
   
   Window* window = (Window*)listener;
   ConsoleWindowData* windowData = (ConsoleWindowData*)windowGetInternalData(window);
@@ -169,7 +162,7 @@ static void consoleWindowDraw(Window* window, float64 delta)
   ImGui::PushStyleVar(ImGuiStyleVar_DisabledAlpha, 1.0f);
   ImGui::PushStyleColor(ImGuiCol_Header, (float4)ImColor(32, 32, 32, 255));    
     uint32 messageIdx = 1;
-    for(const LogMessage& message: data->messages)
+    for(const LogMessageData& message: data->messages)
     {
       if((uint32)message.type != data->filterType && data->filterType != (uint32)LOG_MESSAGE_TYPE_COUNT)
       {

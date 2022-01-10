@@ -1,9 +1,14 @@
 #pragma once
 
+#include <imgui/imgui.h>
+
+#include <logging.h>
+
 #define LogErrorClr ImColor(192, 0, 0, 255)
 #define LogWarningClr ImColor(192, 192, 0, 255)
 #define LogVerboseClr ImColor(192, 0, 192, 255)
 #define LogInfoClr ImColor(66, 135, 246, 255)
+#define LogSuccessClr ImColor(23, 217, 11, 255)
 
 #define DeleteClr ImColor(160, 0, 0, 255)
 #define BrightDeleteClr ImColor(200, 0, 0, 255)
@@ -44,3 +49,5 @@
 #define FadedClr ImColor(247, 247, 247, 255)
 #define BrightFadedClr ImColor(255, 255, 255, 255)
 #define DarkFadedClr ImColor(200, 200, 200, 255)
+
+ImColor logTypeToClr(LogMessageType type);

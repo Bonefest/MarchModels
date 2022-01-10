@@ -7,3 +7,5 @@
 7. Fix forking problem
 8. Recalculate geometry when its relative position in parent's branch has changed
 9. Add turn on/turn off button, probably only for 2+ geometries in the branch or union-only
+10. We should not be able to change script function type if it's used by some geometry or geometry should additionally recheck and update its scripts (e.g move sdf to odfs list or vice versa)
+11. add time to logger's messages

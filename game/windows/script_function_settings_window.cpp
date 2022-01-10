@@ -1,7 +1,9 @@
 #include <deque>
+#include <vector>
 #include <string>
 
 using std::deque;
+using std::vector;
 using std::string;
 
 #include <imgui/imgui.h>
@@ -19,12 +21,46 @@ using std::string;
 
 static const char* NewSaveNamePopupName = "NewSaveName##ScriptFunctionSettingsWindow";
 
+struct ArgumentDesc
+{
+  const char* name;
+  const char* description;
+};
+
+static const vector<ArgumentDesc> builtinArgsDescs =
+{
+  {"params.time", "current time"},
+  {"params.gamma", "power used for gamma-correction decoding"},
+  {"params.invGamma", "power used for gamma-correction encoding"},
+  {"params.pixelGapX", "horizontal gap size between pixels"},
+  {"params.pixelGapY", "vertical gap size between pixels"},
+  {"params.resolution", "film resolution"}, 
+  {"params.invResolution", "inversed film resolution"}, 
+  {"params.gapResolution", "resolution with applied gap between pixels"},
+  {"params.invGapResolution", "inversed resolution with applied gap between pixels"},
+  
+  {"params.camPosition", "camera position in world space"},
+  {"params.camOrientation", "camera orientation in world space expressed as a quaternion"},
+  {"params.camNDCCameraMat", "NDC->Camera space transformation matrix"},
+  {"params.camCameraNDCMat", "Camera->NDC space transformation matrix"},
+  {"params.camNDCWorldMat", "NDC->World space transformation matrix"},
+  {"params.camWorldNDCMat", "World->NDC space transformation matrix"},
+  {"params.camCameraWorldMat", "Camera->World space transformation matrix"},
+  {"params.camWorldCameraMat", "World->Camera space transformation matrix"},
+  
+  {"geo.position", "Geometry position"},
+  {"geo.geoWorldMat", "Geometry->World space transformation matrix"},
+  {"geo.worldGeoMat", "World->Geometry space transformation matrix"},
+  {"geo.geoParentMat", "Geometry->Parent space transformation matrix"},
+  {"geo.parentGetoMat", "Parent->Geometry space transformation matrix"}
+};
+
 struct ScriptFunctionSettingsWindowData
 {
   char saveName[255];
   char newArgName[255];
   char codeBuf[4096];
-  std::deque<string> logMessages;
+  Logger* logger;
   
   AssetPtr owner;
   AssetPtr function;
@@ -48,6 +84,11 @@ static bool8 notifyGeometryScriptFunctionHasChanged(Asset* geometry, void* chang
   }
 
   return FALSE;
+}
+
+static void addLogMessage(ScriptFunctionSettingsWindowData* windowData, const char* message, float4 color)
+{
+
 }
 
 bool8 createScriptFunctionSettingsWindow(AssetPtr owner, AssetPtr function, Window** outWindow)
@@ -74,6 +115,11 @@ bool8 createScriptFunctionSettingsWindow(AssetPtr owner, AssetPtr function, Wind
   Asset* dummyGeometry;
   createGeometry("dummy", &dummyGeometry);
   data->dummyGeometry = AssetPtr(dummyGeometry);
+
+  if(createLogger(32, FALSE, FALSE, TRUE, nullptr, &data->logger) == FALSE)
+  {
+    return FALSE;
+  }
   
   return TRUE;
 }
@@ -95,6 +141,7 @@ void scriptFunctionSettingsWindowShutdown(Window* window)
   ScriptFunctionSettingsWindowData* data = (ScriptFunctionSettingsWindowData*)windowGetInternalData(window);
   if(data != nullptr)
   {
+    destroyLogger(data->logger);
     engineFreeObject(data, MEMORY_TYPE_GENERAL);
   }
 }
@@ -120,7 +167,7 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
   // Open button
   // --------------------------------------------------------------------------
   ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);  
-  ImGui::SmallButton("[Open]");
+  ImGui::SmallButton("[" ICON_KI_DOWNLOAD " Open]");
   ImGui::SameLine();
   ImGui::PopStyleColor();
 
@@ -128,7 +175,7 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
   // Save button
   // --------------------------------------------------------------------------
   ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);    
-  if(ImGui::SmallButton("[Save]"))
+  if(ImGui::SmallButton("[" ICON_KI_UPLOAD " Save]"))
   {
     saveFunction(data);
   }
@@ -139,7 +186,7 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
   // Save as button
   // --------------------------------------------------------------------------
   ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);    
-  if(ImGui::SmallButton("[Save as]"))
+  if(ImGui::SmallButton("[" ICON_KI_UPLOAD " Save as]"))
   {
     strcpy(textInputPopupGetBuffer(), data->saveName);
     ImGui::OpenPopup(NewSaveNamePopupName);    
@@ -193,6 +240,10 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
   {
     sfType = (ScriptFunctionType)(((int)sfType + 1) % (int)SCRIPT_FUNCTION_TYPE_COUNT);
     scriptFunctionSetType(data->function, sfType);
+
+    logMsg(data->logger,
+           LOG_MESSAGE_TYPE_SUCCESS,
+           "changed script function type to '%s'", scriptFunctionTypeLabel(sfType));
   }
   
   ImGui::PopStyleColor();  
@@ -240,14 +291,14 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
       scriptFunctionSetCode(data->function, previousCode);
     }
 
-    char logMessage[255];
-    sprintf(logMessage,
-            "_<C>%#010x</C>_ Compilation has %s.",
-            revbytes((uint32)(compilationSucceeded == TRUE ? LogInfoClr : LogErrorClr)),
-            (compilationSucceeded == TRUE ? "succeeded" : "failed"));
-
-    data->logMessages.push_front(logMessage);
-    
+    if(compilationSucceeded == TRUE)
+    {
+      logMsg(data->logger, LOG_MESSAGE_TYPE_SUCCESS, "Compilation has succeeded.");
+    }
+    else
+    {
+      logMsg(data->logger, LOG_MESSAGE_TYPE_ERROR, "Compilation has failed.");
+    }
   }
   popIconSmallButtonStyle();
   
@@ -283,7 +334,9 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
         // --- Arguments table
         ScriptFunctionArgs& args = scriptFunctionGetArgs(data->function);
 
-        if(ImGui::BeginTable("ScriptFunctionArgsTable", 4, ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp))
+        if(ImGui::BeginTable("ScriptFunctionArgsTable",
+                             4,
+                             ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp))
         {
           ImGui::TableSetupColumn("##Commands", 0, 0.07f);
           ImGui::TableSetupColumn("ID", 0, 0.05f);
@@ -337,6 +390,11 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
             }
             else
             {
+              logMsg(data->logger,
+                     LOG_MESSAGE_TYPE_SUCCESS,
+                     "Removed argument '%s'",
+                     argIt->first.c_str());
+              
               argIt = args.erase(argIt);
             }
           }
@@ -356,10 +414,26 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
 
 
         ImGui::BeginDisabled(argNameAlreadyExists ? TRUE : FALSE);
-        if(ImGui::Button("Create") && argNameAlreadyExists == FALSE)
+        if(ImGui::Button("Register") && strlen(data->newArgName) > 0)
         {
-          args[data->newArgName] = 0.0f;
-          data->newArgName[0] = '\0';
+          if(argNameAlreadyExists == FALSE)
+          {
+            args[data->newArgName] = 0.0f;
+
+            logMsg(data->logger,
+                   LOG_MESSAGE_TYPE_SUCCESS,
+                   "Registered new argument '%s'",
+                   data->newArgName);
+          
+            data->newArgName[0] = '\0';
+          }
+          else
+          {
+            logMsg(data->logger,
+                   LOG_MESSAGE_TYPE_ERROR,
+                   "Arguments '%s' already exists!",
+                   data->newArgName);
+          }
         }
         ImGui::EndDisabled();
         
@@ -368,8 +442,30 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
       }
       if(ImGui::BeginTabItem("Built-in arguments"))
       {
-        ImGui::Text("T");
+        if(ImGui::BeginTable("ScriptFunctionBuiltinArgsTable",
+                             2,
+                             ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp))
+        {
+          ImGui::TableSetupColumn("Name", 0, 0.5f);
+          ImGui::TableSetupColumn("Description", 0, 0.5f);
+          ImGui::TableHeadersRow();
 
+          for(auto argIt = builtinArgsDescs.begin(); argIt != builtinArgsDescs.end(); argIt++)
+          {
+            ImGui::TableNextRow();
+
+            // Name column
+            ImGui::TableSetColumnIndex(0);
+            ImGui::TextWrapped("%s", argIt->name);
+
+            // Description column
+            ImGui::TableSetColumnIndex(1);
+            ImGui::TextWrapped("%s", argIt->description);
+          }
+
+          ImGui::EndTable();           
+        }
+        
         ImGui::EndTabItem();        
       }
 
@@ -398,13 +494,14 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
                                               float2(cursorPos.x + avalReg.x * 0.5, cursorPos.y + logReg.y),
                                               ImColor(20, 20, 35, 128));
 
+    const std::deque<LogMessage> logMessages = logGetMessages(data->logger);
     uint32 msgIdx = 0;
-    for(auto msgIt = data->logMessages.begin(); msgIt != data->logMessages.end(); msgIt++, msgIdx++)
+    for(auto msgIt = logMessages.rbegin(); msgIt != logMessages.rend(); msgIt++, msgIdx++)
     {
       float2 cursorPosBeforeWc = ImGui::GetCursorPos();
       float2 cursorPosBefore = ImGui::GetCursorScreenPos();
       ImGui::PushStyleColor(ImGuiCol_Text, float4(0.0f, 0.0f, 0.0f, 0.0f));
-      ImGui::Text("%s", msgIt->c_str());
+      ImGui::TextWrapped("%s", msgIt->message.c_str());
       ImGui::PopStyleColor();
       float2 cursorPosAfter = ImGui::GetCursorScreenPos();
 
@@ -414,8 +511,10 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
       
 
       ImGui::SetCursorPos(cursorPosBeforeWc);
-      
-      ImGui::TextColored("%s", msgIt->c_str());
+
+      ImGui::PushStyleColor(ImGuiCol_Text, (float4)logTypeToClr(msgIt->type));
+      ImGui::TextWrapped("%s", msgIt->message.c_str());
+      ImGui::PopStyleColor();
     }
     
     ImGui::EndChild();
@@ -479,4 +578,9 @@ void saveFunction(ScriptFunctionSettingsWindowData* windowData)
   LOG_INFO("Script function '%s' was saved with name '%s'",
            assetGetName(assetToSave).c_str(),
            windowData->saveName);
+
+  logMsg(windowData->logger,
+         LOG_MESSAGE_TYPE_SUCCESS,         
+         "Saved with name '%s'",
+         windowData->saveName);
 }
