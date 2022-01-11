@@ -9,4 +9,7 @@
 9. Add turn on/turn off button, probably only for 2+ geometries in the branch or union-only
 10. We should not be able to change script function type if it's used by some geometry or geometry should additionally recheck and update its scripts (e.g move sdf to odfs list or vice versa)
 11. add time to logger's messages
-12. instance and prototype should be two different windows 
+12. instance and prototype should be two different windows
+13. sync function for script function settings
+14. two camera control modes: FPS-like, righ-click-like
+15. clear log history button

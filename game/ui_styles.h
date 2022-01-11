@@ -10,6 +10,8 @@
 #define LogInfoClr ImColor(66, 135, 246, 255)
 #define LogSuccessClr ImColor(23, 217, 11, 255)
 
+#define InvisibleClr ImColor(0, 0, 0, 0)
+
 #define DeleteClr ImColor(160, 0, 0, 255)
 #define BrightDeleteClr ImColor(200, 0, 0, 255)
 #define DarkDeleteClr ImColor(80, 0, 0, 255)

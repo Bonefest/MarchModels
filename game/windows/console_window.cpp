@@ -1,6 +1,7 @@
 #include <list>
 #include <deque>
 
+#include <utils.h>
 #include <logging.h>
 #include <imgui/imgui.h>
 #include <event_system.h>
@@ -26,8 +27,8 @@ struct ConsoleWindowData
   int32 historyIdx = 0;
   
   char textBuffer[MAX_BUF_SIZE]{};
-  
-  uint32 filterType = (uint32)LOG_MESSAGE_TYPE_COUNT;
+
+  uint8 filterTypes = 0xFF;
 };
 
 bool8 logMessageCallback(EventData data, void* sender, void* listener)
@@ -108,15 +109,25 @@ static void consoleWindowDraw(Window* window, float64 delta)
   ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, float2(hItemSpace, style.ItemSpacing.y));
   ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
 
-    const char* items[] = {"error", "warning", "verbose", "info", "success", "all"};
+    const char* items[] = {"error", "warning", "verbose", "info", "success"};
     if(ImGui::BeginCombo("##Console_filter_combo", "", ImGuiComboFlags_NoPreview))
     {
-      for(uint32 i = 0; i <= (uint32)LOG_MESSAGE_TYPE_COUNT; i++)
+      if(ImGui::Selectable("none", false))
       {
-        if(ImGui::Selectable(items[i], data->filterType == i))
+        data->filterTypes = 0;
+      }
+      
+      for(uint32 i = 0; i < (uint32)ARRAY_SIZE(items); i++)
+      {
+        if(ImGui::Selectable(items[i], (data->filterTypes & (1 << i)) == (1 << i)))
         {
-          data->filterType = i;
+          data->filterTypes ^= (1 << i);
         }
+      }
+
+      if(ImGui::Selectable("all", false))
+      {
+        data->filterTypes = 0xFF;
       }
 
       ImGui::EndCombo();
@@ -159,18 +170,35 @@ static void consoleWindowDraw(Window* window, float64 delta)
   ImGui::PopStyleVar(2);
 
   // Rendering list of messages
+  float2 avalReg = ImGui::GetContentRegionAvail();
+  
   ImGui::PushStyleVar(ImGuiStyleVar_DisabledAlpha, 1.0f);
   ImGui::PushStyleColor(ImGuiCol_Header, (float4)ImColor(32, 32, 32, 255));    
     uint32 messageIdx = 1;
     for(const LogMessageData& message: data->messages)
     {
-      if((uint32)message.type != data->filterType && data->filterType != (uint32)LOG_MESSAGE_TYPE_COUNT)
+      if( (data->filterTypes & (1 << (uint8)message.type)) != (1 << (uint8)message.type) )
       {
         continue;
       }
 
+      float2 cursorPosBeforeWc = ImGui::GetCursorPos();
+      float2 cursorPosBefore = ImGui::GetCursorScreenPos();
+      
+      ImGui::PushStyleColor(ImGuiCol_Text, (float4)InvisibleClr);
+        ImGui::TextWrapped("%s", message.message.c_str());
+      ImGui::PopStyleColor();
+      
+      float2 cursorPosAfter = ImGui::GetCursorScreenPos();
+
+      ImGui::GetWindowDrawList()->AddRectFilled(cursorPosBefore,
+                                                float2(cursorPosBefore.x + avalReg.x, cursorPosAfter.y),
+                                                messageIdx % 2 == 0 ? ImColor(20, 20, 35, 255) : ImColor(10, 10, 10, 255));
+
+      ImGui::SetCursorPos(cursorPosBeforeWc);
+      
       ImGui::PushStyleColor(ImGuiCol_Text, (float4)message.color);
-        ImGui::Selectable(message.message.c_str(), messageIdx % 2, ImGuiSelectableFlags_Disabled);
+        ImGui::TextWrapped("%s", message.message.c_str());
       ImGui::PopStyleColor();
 
       messageIdx++;

@@ -200,6 +200,8 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
         geometryRemoveFunction(data->owner, data->function);
         data->function = AssetPtr(scriptFunctionClone(assetFromManager));
         geometryAddFunction(data->owner, data->function);
+
+        logMsg(data->logger, LOG_MESSAGE_TYPE_SUCCESS, "Forked to an instance");
     }
   }
   else
@@ -215,6 +217,8 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
       geometryRemoveFunction(data->owner, data->function);
       data->function = assetFromManager;
       geometryAddFunction(data->owner, data->function);
+
+      logMsg(data->logger, LOG_MESSAGE_TYPE_SUCCESS, "Unforked back to the prototype");      
     }
 
     // if(ImGui::SmallButton("[Sync]") ...
@@ -495,8 +499,8 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
     {
       float2 cursorPosBeforeWc = ImGui::GetCursorPos();
       float2 cursorPosBefore = ImGui::GetCursorScreenPos();
-      ImGui::PushStyleColor(ImGuiCol_Text, float4(0.0f, 0.0f, 0.0f, 0.0f));
-      ImGui::TextWrapped("%s", msgIt->message.c_str());
+      ImGui::PushStyleColor(ImGuiCol_Text, (float4)InvisibleClr);
+        ImGui::TextWrapped("%s", msgIt->message.c_str());
       ImGui::PopStyleColor();
       float2 cursorPosAfter = ImGui::GetCursorScreenPos();
 
@@ -508,7 +512,7 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
       ImGui::SetCursorPos(cursorPosBeforeWc);
 
       ImGui::PushStyleColor(ImGuiCol_Text, (float4)logTypeToClr(msgIt->type));
-      ImGui::TextWrapped("%s", msgIt->message.c_str());
+        ImGui::TextWrapped("%s", msgIt->message.c_str());
       ImGui::PopStyleColor();
     }
     
