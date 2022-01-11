@@ -108,7 +108,7 @@ static void consoleWindowDraw(Window* window, float64 delta)
   ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, float2(hItemSpace, style.ItemSpacing.y));
   ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
 
-    const char* items[] = {"error", "warning", "verbose", "info", "all"};
+    const char* items[] = {"error", "warning", "verbose", "info", "success", "all"};
     if(ImGui::BeginCombo("##Console_filter_combo", "", ImGuiComboFlags_NoPreview))
     {
       for(uint32 i = 0; i <= (uint32)LOG_MESSAGE_TYPE_COUNT; i++)

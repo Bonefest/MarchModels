@@ -13,6 +13,7 @@
 
 #include "ui_utils.h"
 #include "ui_styles.h"
+#include "editor_utils.h"
 #include "window_manager.h"
 #include "assets_manager_window.h"
 #include "script_function_settings_window.h"
@@ -33,7 +34,7 @@ struct AssetsCategoryData
   AssetType categoryAssetType;
   const char* categoryName;
   const char* dataName;
-  Asset*(*create)();
+  AssetPtr(*create)();
   void(*edit)(AssetPtr asset);
 };
 
@@ -43,13 +44,13 @@ static void assetsManagerWindowUpdate(Window* window, float64 delta);
 static void assetsManagerWindowDraw(Window* window, float64 delta);
 static void assetsManagerWindowProcessInput(Window* window, const EventData& eventData, void* sender);
 
-static Asset* createGeometryAsset() { /** TODO */ }
+static AssetPtr createGeometryAsset() { /** TODO */ }
 static void editGeometryAsset(AssetPtr asset) { /** TODO */ }
 
-static Asset* createScriptFunctionAsset();
+static AssetPtr createScriptFunctionAsset();
 static void editScriptFunctionAsset(AssetPtr asset);
 
-static Asset* createMaterialAsset() { /** TODO */ }
+static AssetPtr createMaterialAsset() { /** TODO */ }
 static void editMaterialAsset(AssetPtr asset) { /** TODO */ }
 
 static unordered_map<AssetType, AssetsCategoryData> categoryData =
@@ -158,10 +159,10 @@ static void drawAssetsCategory(Window* window, const AssetsCategoryData& categor
           sprintf(newAssetName, "%s%d", categoryData.dataName, idx++);
         } while(assetsManagerHasAsset(newAssetName) == TRUE);
 
-        Asset* newAsset = categoryData.create();
+        AssetPtr newAsset = categoryData.create();
         assetSetName(newAsset, newAssetName);
 
-        assetsManagerAddAsset(AssetPtr(newAsset));
+        assetsManagerAddAsset(newAsset);
       }
     ImGui::PopStyleColor();
     
@@ -284,12 +285,9 @@ void assetsManagerWindowProcessInput(Window* window, const EventData& eventData,
   
 }
 
-Asset* createScriptFunctionAsset()
+AssetPtr createScriptFunctionAsset()
 {
-  Asset* newSF = nullptr;
-  assert(createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF, "", &newSF));
-
-  return newSF;
+  return AssetPtr(scriptFunctionClone(createDefaultSDF()));
 }
 
 void editScriptFunctionAsset(AssetPtr asset)

@@ -47,11 +47,13 @@ ENGINE_API const std::deque<LogMessage>& logGetMessages(Logger* logger);
   #define LOG_WARNING(format, ...) logMsg(nullptr, LOG_MESSAGE_TYPE_WARNING, format __VA_OPT__(,) __VA_ARGS__)
   #define LOG_INFO(format, ...) logMsg(nullptr, LOG_MESSAGE_TYPE_INFO, format __VA_OPT__(,) __VA_ARGS__)
   #define LOG_VERBOSE(format, ...) logMsg(nullptr, LOG_MESSAGE_TYPE_VERBOSE, format __VA_OPT__(,) __VA_ARGS__)
+  #define LOG_SUCCESS(format, ...) logMsg(nullptr, LOG_MESSAGE_TYPE_SUCCESS, format __VA_OPT__(,) __VA_ARGS__)
 
 #else
 
   #define LOG_WARNING(format, ...)
   #define LOG_INFO(format, ...)
   #define LOG_VERBOSE(format, ...)
+  #define LOG_SUCCESS(format, ...)
 
 #endif

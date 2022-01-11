@@ -86,11 +86,6 @@ static bool8 notifyGeometryScriptFunctionHasChanged(Asset* geometry, void* chang
   return FALSE;
 }
 
-static void addLogMessage(ScriptFunctionSettingsWindowData* windowData, const char* message, float4 color)
-{
-
-}
-
 bool8 createScriptFunctionSettingsWindow(AssetPtr owner, AssetPtr function, Window** outWindow)
 {
   WindowInterface interface = {};
@@ -413,8 +408,8 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
         bool8 argNameAlreadyExists = args.find(data->newArgName) != args.end();
 
 
-        ImGui::BeginDisabled(argNameAlreadyExists ? TRUE : FALSE);
-        if(ImGui::Button("Register") && strlen(data->newArgName) > 0)
+        ImGui::BeginDisabled((argNameAlreadyExists || strlen(data->newArgName) == 0) ? TRUE : FALSE);
+        if(ImGui::Button("Register"))
         {
           if(argNameAlreadyExists == FALSE)
           {

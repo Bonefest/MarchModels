@@ -1,5 +1,6 @@
 #include <stdarg.h>
 
+#include <ctime>
 #include <cstdio>
 #include <cstring>
 
@@ -35,15 +36,15 @@ static const int32 logMessageTypeToColor[LOG_MESSAGE_TYPE_COUNT] =
   220,
   126,
   32,
-  16,
+  46,
 };
 
 static const char* logMessageTypeToPrefix[LOG_MESSAGE_TYPE_COUNT] =
 {
-  "(!)   [ERROR]",
+  "(!) [ERROR]  ",
   "(?) [WARNING]",
   "(#) [VERBOSE]",
-  "(*)    [INFO]",
+  "(*) [INFO]   ",
   "(+) [SUCCESS]",
 };
 
@@ -70,6 +71,7 @@ bool8 createLogger(uint32 maxMessages,
   logger->maxMessages = maxMessages;
   logger->outputToStdout = outputToStdout;
   logger->generateEvents = generateEvents;
+  logger->prependTime = prependTime;
   
   return TRUE;
 }
@@ -86,7 +88,7 @@ void destroyLogger(Logger* logger)
 
 bool8 initGlobalLogger(uint32 maxMessages, const char* outputFileName)
 {
-  return createLogger(maxMessages, TRUE, TRUE, FALSE, outputFileName, &globalLogger);
+  return createLogger(maxMessages, TRUE, TRUE, TRUE, outputFileName, &globalLogger);
 }
 
 void shutdownGlobalLogger()
@@ -111,8 +113,17 @@ void logMsg(Logger* logger, LogMessageType type, const char* format, ...)
   
   char buf[16384] = {};
 
-  // Appending prefix
-  uint32 prefixSize = sprintf(buf, "%s ", logMessageTypeToPrefix[type]);
+  uint32 prefixSize = 0;
+  if(logger->prependTime == TRUE)
+  {
+    std::time_t rawTime = std::time(0);
+    std::tm* currentTime = std::localtime(&rawTime);
+    
+    prefixSize = sprintf(buf, "<%02d:%02d:%02d> ", currentTime->tm_hour, currentTime->tm_min, currentTime->tm_sec);
+  }
+  
+  // Prepending log type prefix
+  prefixSize += sprintf(buf + prefixSize, "%s ", logMessageTypeToPrefix[type]);
   
   // Formatting message
   va_list args;
@@ -127,7 +138,7 @@ void logMsg(Logger* logger, LogMessageType type, const char* format, ...)
     logData.type = EVENT_TYPE_LOG_MESSAGE;
     logData.u32[0] = type;
     logData.u32[1] = msgSize;
-    logData.ptr[0] = buf + prefixSize;
+    logData.ptr[0] = buf;
 
     triggerEvent(logData);
   }

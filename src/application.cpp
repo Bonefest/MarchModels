@@ -255,7 +255,7 @@ static bool8 initApplication()
   }
   else
   {
-    LOG_INFO("Event system has been initialized successfully!");
+    LOG_SUCCESS("Event system has been initialized successfully!");
   }
   
   /** --- GLFW initialization ---------------------------------------------- */
@@ -266,7 +266,7 @@ static bool8 initApplication()
   }
   else
   {
-    LOG_INFO("GLFW has been initialized successfully!");
+    LOG_SUCCESS("GLFW has been initialized successfully!");
   }
 
   /** --- ImGUI initialization --------------------------------------------- */
@@ -277,7 +277,7 @@ static bool8 initApplication()
   }
   else
   {
-    LOG_INFO("ImGUI has been initialized successfully!");
+    LOG_SUCCESS("ImGUI has been initialized successfully!");
   }
 
   /** --- Shader manager initialization ----------------------------------- */
@@ -288,7 +288,7 @@ static bool8 initApplication()
   }
   else
   {
-    LOG_INFO("Shader manager has been initialized successfully!");
+    LOG_SUCCESS("Shader manager has been initialized successfully!");
   }
 
   if(preloadDefaultShaders() == FALSE)
@@ -298,7 +298,7 @@ static bool8 initApplication()
   }
   else
   {
-    LOG_INFO("Default shaders were preloaded successfully!");
+    LOG_SUCCESS("Default shaders were preloaded successfully!");
   }
   
   /** --- Lua system initialization ---------------------------------------- */
@@ -309,7 +309,7 @@ static bool8 initApplication()
   }
   else
   {
-    LOG_INFO("Lua system has been initialized successfully!");
+    LOG_SUCCESS("Lua system has been initialized successfully!");
   }
 
   if(initializeRenderer() == FALSE)
@@ -319,7 +319,7 @@ static bool8 initApplication()
   }
   else
   {
-    LOG_INFO("Rendering system has been initialize successfully!");
+    LOG_SUCCESS("Rendering system has been initialize successfully!");
   }
   
   /** --- Game initialization ---------------------------------------------- */
@@ -331,7 +331,7 @@ static bool8 initApplication()
   }
   else
   {
-    LOG_INFO("Game \"%s\" has been initialized successfully!", application.name);
+    LOG_SUCCESS("Game \"%s\" has been initialized successfully!", application.name);
   }
   
   application.initialized = TRUE;
