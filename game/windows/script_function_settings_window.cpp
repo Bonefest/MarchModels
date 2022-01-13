@@ -29,6 +29,9 @@ struct ArgumentDesc
 
 static const vector<ArgumentDesc> builtinArgsDescs =
 {
+  {"p", "(IDF/SDF only) incoming point in world space"},
+  {"d", "(ODF only) outcoming distance"},
+  
   {"params.time", "current time"},
   {"params.gamma", "power used for gamma-correction decoding"},
   {"params.invGamma", "power used for gamma-correction encoding"},
