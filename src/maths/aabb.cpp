@@ -76,7 +76,7 @@ AABB AABB::genTransformed(float4x4 transformation)
   float3 cMin = float3(), cMax = float3();
   for(uint32 i = 0; i < 8; i++)
   {
-    float3 vertex = mul(transformation, getVertex(i));
+    float3 vertex = mul(transformation, centered.getVertex(i));
     cMin.x = std::min(cMin.x, vertex.x);
     cMin.y = std::min(cMin.y, vertex.y);
     cMin.z = std::min(cMin.z, vertex.z);
@@ -98,11 +98,27 @@ void AABB::transform(float4x4 transformation)
   *this = genTransformed(transformation);
 }
 
-AABB AABB::operator|=(const AABB& aabb) { /** TODO */ }
-AABB AABB::operator|(const AABB& aabb) const { /** TODO */ }
+AABB AABB::operator|(const AABB& aabb) const
+{
+  return AABBUnion(*this, aabb);
+}
 
-AABB AABB::operator&=(const AABB& aabb) { /** TODO */ }
-AABB AABB::operator&(const AABB& aabb) const { /** TODO */ }
+AABB& AABB::operator|=(const AABB& aabb)
+{
+  *this = AABBUnion(*this, aabb);
+  return *this;
+}
+
+AABB AABB::operator&(const AABB& aabb) const
+{
+  return AABBIntersection(*this, aabb);
+}
+
+AABB& AABB::operator&=(const AABB& aabb)
+{
+  *this = AABBIntersection(*this, aabb);
+  return *this;
+}
 
 float3 AABB::getCenter() const
 {
@@ -153,4 +169,78 @@ float3 AABB::getDimensions() const
 {
   return max - min;
 }
-  
+
+bool8 AABB::intersects(const AABB&& aabb) const
+{
+  return AABBIntersect(*this, aabb);
+}
+
+bool8 AABB::isUnbounded() const
+{
+  return min.x == negInf ||
+         min.y == negInf ||
+         min.z == negInf ||
+         max.x == posInf ||
+         max.y == posInf ||
+         max.z == posInf;
+}
+
+AABB AABBCentered(float32 centerX, float32 centerY, float32 centerZ,
+                  float32 width, float32 height, float32 depth)
+{
+  return AABB::createWithCenter(centerX, centerY, centerZ,
+                                width, height, depth);
+}
+
+AABB AABBCentered(float3 center, float3 dimensions)
+{
+  return AABB::createWithCenter(center, dimensions);
+}
+
+AABB AABBUnion(const AABB& aabb1, const AABB& aabb2)
+{
+  float3 unionMin =
+  {
+    min(aabb1.min.x, aabb2.min.x),
+    min(aabb1.min.y, aabb2.min.y),
+    min(aabb1.min.z, aabb2.min.z),    
+  };
+
+  float3 unionMax =
+  {
+    max(aabb1.max.x, aabb2.max.x),
+    max(aabb1.max.y, aabb2.max.y),
+    max(aabb1.max.z, aabb2.max.z),    
+  };
+
+  return AABB(unionMin, unionMax);
+}
+
+AABB AABBIntersection(const AABB& aabb1, const AABB& aabb2)
+{
+  float3 interMin =
+  {
+    max(aabb1.min.x, aabb2.min.x),
+    max(aabb1.min.y, aabb2.min.y),
+    max(aabb1.min.z, aabb2.min.z),    
+  };
+
+  float3 interMax =
+  {
+    min(aabb1.max.x, aabb2.max.x),
+    min(aabb1.max.y, aabb2.max.y),
+    min(aabb1.max.z, aabb2.max.z),    
+  };
+
+  return AABB(interMin, interMax);
+}
+
+bool8 AABBIntersect(const AABB& aabb1, const AABB& aabb2)
+{
+  return aabb1.min.x < aabb2.max.x && // AABB1's Left-most   < AABB2's Right-most
+         aabb1.min.y < aabb2.max.y && // AABB1's Bottom-most < AABB2's Top-most
+         aabb1.min.z < aabb2.max.z && // AABB1's Near-most   < AABB2's Far-most
+         aabb1.max.x > aabb2.min.x && // AABB1's Right-most  > AABB2's Left-most
+         aabb1.max.y > aabb2.min.y && // AABB1's Top-most    > AABB2's Bottom-most
+         aabb1.max.z > aabb2.min.z;   // AABB1's Far-most    > AABB2's Near-most    
+}

@@ -32,10 +32,10 @@ struct AABB
   void transform(float4x4 transformation);
   AABB genTransformed(float4x4 transformation);
 
-  AABB operator|=(const AABB& aabb);
+  AABB& operator|=(const AABB& aabb);
   AABB operator|(const AABB& aabb) const;
 
-  AABB operator&=(const AABB& aabb);
+  AABB& operator&=(const AABB& aabb);
   AABB operator&(const AABB& aabb) const;
 
   //   (max)         
@@ -66,7 +66,7 @@ struct AABB
 
   float3 getDimensions() const;
 
-  bool8 isIntersect(const AABB&& aabb) const;
+  bool8 intersects(const AABB&& aabb) const;
   bool8 isUnbounded() const;
   
   float3 min = float3();
@@ -77,9 +77,9 @@ AABB AABBCentered(float32 centerX, float32 centerY, float32 centerZ,
                   float32 width, float32 height, float32 depth);
 
 AABB AABBCentered(float3 center, float3 dimensions);
-                  
 
 AABB AABBUnion(const AABB& lop, const AABB& rop);
 AABB AABBIntersection(const AABB& lop, const AABB& rop);
+bool8 AABBIntersect(const AABB& lop, const AABB& rop);
 
 
