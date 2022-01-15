@@ -10,6 +10,7 @@
   #define GLOBAL_PARAMS_UBO_BINDING       0
   #define GEOMETRY_TRANSFORMS_UBO_BINDING 1
   #define STACKS_SSBO_BINDING             2
+  #define AABB_CALCULATION_SSBO_BINDING   3
 
   #define MAX_STACK_SIZE                  8
   #define INF_DISTANCE                    77777.0
@@ -35,7 +36,6 @@
     GeometryData geometries[MAX_STACK_SIZE];
   };
 
-
   #if !defined(__cplusplus)
     GeometryData createGeometryData(float32 distance, uint32 id)
     {
@@ -58,6 +58,7 @@
     float32  _gap1;
     float32  _gap2;
     float32  _gap3;    
+    //float3   worldSize;
     
     uint32   pixelGapX;
     uint32   pixelGapY;
@@ -70,6 +71,9 @@
     uint2    gapResolution;
     float2   invGapResolution;
 
+    uint2    AABBCalculationResolution;
+    uint2    invAABBCalculationResolution;    
+    
     float4   camPosition;
     quat     camOrientation;
     float4x4 camNDCCameraMat;
@@ -87,6 +91,12 @@
     float4x4 worldGeoMat;
     float4x4 geoParentMat;
     float4x4 parentGeoMat;
+  };
+
+  struct AABBCalculationBufferParameters
+  {
+    uint3 minPixelCoords;
+    uint3 maxPixelCoords;
   };
 
 #endif
