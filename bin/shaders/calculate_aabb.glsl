@@ -46,6 +46,7 @@ layout(std140, binding = AABB_CALCULATION_SSBO_BINDING) buffer GeometryTransform
 };
 
 layout(location = 0) uniform uint32 calculationIteration;
+layout(location = 1) uniform float2 invResolution;
 
 void main()
 {
@@ -56,7 +57,7 @@ void main()
   float2 offset = PoissonSamples[calculationIteration] / POISSON_DISK_RADIUS / params.worldSize;
   
   // [0, resolution.x) -> [-WORLD_SIZE * 0.5, WORLD_SIZE * 0.5]
-  float2 rayStartPos = (ifragCoord.xy * params.invAABBCalculationResolution - 0.5) * params.worldSize + offset;
+  float2 rayStartPos = (ifragCoord.xy * params.invResolution - 0.5) * params.worldSize + offset;
 
   // Point moving along z axis, XY coordinates are fixed
   float3 pXYSide = float3(rayStartPos, -params.worldSize * 0.5);
@@ -67,8 +68,8 @@ void main()
   bool pXYSideHasIntersection = false;
   bool pYZSideHasIntersection = false;  
 
-  // Adaptive factor: samples in range [12, 52] -> threshold factor [1.2, 2] 
-  float32 factor = (32 - 0.02 * POISSON_SAMPLES_COUNT) + 1.2;
+  // Adaptive factor: samples in range [12, 52] -> threshold factor [1.5, 1.2] 
+  float32 factor = (1.0 - (POISSON_SAMPLES_COUNT - 12.0) / 40.0) * 0.3 + 1.2;
   float32 threshold = params.intersectionThreshold * factor;
   
   for(uint32 i = 0; i < iterationsCount; i++)
@@ -104,8 +105,8 @@ void main()
 
   if(pYZSideHasIntersection)
   {
-    uint32 fpZ = floatToFixedPoint(pYZSide.y);
-    uint32 fpY = floatToFixedPoint(pYZSide.x);    
+    uint32 fpZ = floatToFixedPoint(pYZSide.z);
+    uint32 fpY = floatToFixedPoint(pYZSide.y);    
     
     atomicMin(aabbParams.min.z, fpZ);
     atomicMax(aabbParams.max.z, fpZ);

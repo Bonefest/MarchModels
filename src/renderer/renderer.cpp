@@ -9,6 +9,7 @@
 #include "passes/normals_calculation_pass.h"
 #include "passes/normals_visualization_pass.h"
 #include "passes/distances_visualization_pass.h"
+#include "passes/geometry_native_aabb_calculation_pass.h"
 
 #include "renderer.h"
 
@@ -238,6 +239,7 @@ static bool8 initializeRenderPasses()
   INIT(createIDsVisualizationPass, &data.idsVisualizationPass);
   INIT(createNormalsVisualizationPass, &data.normalsVisualizationPass);
   INIT(createLDRToFilmCopyPass, &data.ldrToFilmPass);
+  INIT(initializeAABBCalculationPass);
   
   return TRUE;
 }
@@ -249,7 +251,8 @@ static void destroyRenderPasses()
   destroyRenderPass(data.distancesVisualizationPass);
   destroyRenderPass(data.idsVisualizationPass);
   destroyRenderPass(data.normalsVisualizationPass);
-  destroyRenderPass(data.ldrToFilmPass);  
+  destroyRenderPass(data.ldrToFilmPass);
+  destroyAABBCalculationPass();
 }
 
 bool8 initializeRenderer()

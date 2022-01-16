@@ -16,3 +16,5 @@ ENGINE_API void pushBlend(GLenum modeRGB, GLenum modeAlpha,
 ENGINE_API bool8 popBlend();
 
 ENGINE_API void drawTriangleNoVAO();
+
+

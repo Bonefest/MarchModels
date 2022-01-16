@@ -4,9 +4,11 @@ using std::string;
 using std::vector;
 
 #include "logging.h"
+#include "maths/aabb.h"
 #include "shader_build.h"
 #include "shader_manager.h"
 #include "memory_manager.h"
+#include "renderer/passes/geometry_native_aabb_calculation_pass.h"
 
 #include "geometry.h"
 
@@ -31,6 +33,10 @@ struct Geometry
   float4x4 transformToLocalFromParent;
   float4x4 transformToParentFromLocal;
 
+  AABB nativeAABB;
+  AABB dynamicAABB;
+  AABB finalAABB;
+  
   ShaderProgram* drawProgram;
   ShaderProgram* aabbProgram;
 
@@ -537,11 +543,6 @@ static void geometryRecalculateIDs(Asset* geometry)
   assert(idCounter < 65535);
 }
 
-static bool8 geometryRecalculateNativeAABB(Asset* geometry)
-{
-  // TODO: move it out to the renderer
-}
-
 // ----------------------------------------------------------------------------
 // Geometry common interface
 // ----------------------------------------------------------------------------
@@ -608,7 +609,7 @@ void geometryUpdate(Asset* geometry, float64 delta)
       {
         if(geometryRebuildAABBCalculationProgram(geometry) == TRUE)
         {
-          geometryRecalculateNativeAABB(geometry);
+          geometryData->nativeAABB = AABBCalculationPassCalculateAABB(geometry);
         }
         else
         {

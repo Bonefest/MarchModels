@@ -50,7 +50,7 @@ struct RenderingParameters
   float32 tone;
   float32 gamma = 2.2f;
   float32 intersectionThreshold = 0.1f;
-  float32 worldSize = 100.0f;
+  float32 worldSize = 50.0f;
   
   RendererShadingMode shadingMode = RS_VISUALIZE_DISTANCES;
 
@@ -76,6 +76,8 @@ ENGINE_API bool8 rendererRenderScene(Film* film,
                                      Scene* scene,
                                      Camera* camera,
                                      const RenderingParameters& params);
+
+
 
 ENGINE_API GLuint rendererGetResourceHandle(RendererResourceType type);
 

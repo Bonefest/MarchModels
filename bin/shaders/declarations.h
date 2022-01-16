@@ -69,9 +69,6 @@
 
     uint2    gapResolution;
     float2   invGapResolution;
-
-    uint2    AABBCalculationResolution;
-    uint2    invAABBCalculationResolution;    
     
     float4   camPosition;
     quat     camOrientation;
@@ -94,8 +91,8 @@
 
   struct AABBCalculationBufferParameters
   {
-    uint3 min;
-    uint3 max;
+    uint4 min;
+    uint4 max;
   };
 
 #endif
