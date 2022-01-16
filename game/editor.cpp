@@ -126,6 +126,7 @@ void shutdownEditor(Application* app)
 void editorUpdate(Application* app, float64 delta)
 {
   windowManagerUpdate(delta);
+  updateScene(editorData.currentScene, delta);
 }
 
 static void prepareDockingLayout(float2 screenSize, float2 screenOffset)

@@ -31,7 +31,8 @@ struct Geometry
   float4x4 transformToLocalFromParent;
   float4x4 transformToParentFromLocal;
 
-  ShaderProgram* program;
+  ShaderProgram* drawProgram;
+  ShaderProgram* aabbProgram;
 
   bool8 needRebuild;
   bool8 dirty;
@@ -253,8 +254,7 @@ static void geometryGenerateDistancesCombinationCode(Asset* geometry, ShaderBuil
 
 }
 
-// NOTE: Leaf geometry uses IDFs, SDF and ODFs (only related to the geometry)
-static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
+static void geometryGenerateTransformCode(Asset* geometry, ShaderBuild* build, bool8 applyGeometryTransform)
 {
   // collect all parents (in order from the root to the leaf)
   vector<Asset*> parents;
@@ -303,7 +303,18 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   // 2. SDF is defined in local coordinates, but the geometry which uses SDF has a transformation:
   // apply transformation to the point, converting from world space to local space. Then calculate
   // SDF itself.
-  shaderBuildAddCode(build, "\tfloat4 tp = geo.worldGeoMat * float4(p, 1.0);");
+
+  // Apply transform only if requested (sometimes we may need to render relatively the origin,
+  // e.g during AABB calculation)
+  if(applyGeometryTransform == TRUE)
+  {
+    shaderBuildAddCode(build, "\tfloat4 tp = geo.worldGeoMat * float4(p, 1.0);");
+  }
+  else
+  {
+    shaderBuildAddCode(build, "\tfloat4 tp = float4(p, 1.0);");
+  }
+  
   shaderBuildAddCode(build, "\tfloat32 d = SDF(tp.xyz);");
   
   // 3. Transform distance via ODFs
@@ -316,6 +327,13 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   shaderBuildAddCode(build, "\treturn d;");
   shaderBuildAddCode(build, "}");
 
+}
+
+// NOTE: Leaf geometry uses IDFs, SDF and ODFs (only related to the geometry)
+static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
+{
+  geometryGenerateTransformCode(geometry, build, /** Use transformation of geometry */ TRUE);
+  
   // generate a main function:
   // -------------------------
   shaderBuildAddCode(build, "void main() {");
@@ -361,7 +379,7 @@ static void geometryGenerateBranchCode(Asset* geometry, ShaderBuild* build)
   // 2. Apply ODFs to the distance  
   for(uint32 i = 0; i < odfs.size(); i++)
   {
-    shaderBuildAddCode(build, "geometry.distance = ODF%u(geometry.distance);");
+    shaderBuildAddCode(build, "\tgeometry.distance = ODF%u(geometry.distance);");
   }
 
   // 3. Combine distance with last distance on stack (if needed)
@@ -372,7 +390,7 @@ static void geometryGenerateBranchCode(Asset* geometry, ShaderBuild* build)
   shaderBuildAddCode(build, "}");
 }
 
-static bool8 geometryRebuild(Asset* geometry)
+static bool8 geometryRebuildDrawProgram(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
 
@@ -413,10 +431,57 @@ static bool8 geometryRebuild(Asset* geometry)
   
   destroyShaderBuild(build);
 
-  if(geometryData->program != nullptr)
+  ShaderProgram* shaderProgram = nullptr;
+  assert(createShaderProgram(&shaderProgram));
+
+  shaderProgramAttachShader(shaderProgram, vertexShader);  
+  shaderProgramAttachShader(shaderProgram, fragmentShader);
+
+  if(linkShaderProgram(shaderProgram) == FALSE)
   {
-    destroyShaderProgram(geometryData->program);
+    return FALSE;
   }
+
+  if(geometryData->drawProgram != nullptr)
+  {
+    destroyShaderProgram(geometryData->drawProgram);
+  }
+  
+  geometryData->drawProgram = shaderProgram;
+
+  return TRUE;
+}
+
+static bool8 geometryRebuildAABBCalculationProgram(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+
+  ShaderBuild* build = nullptr;
+  assert(createShaderBuild(&build));
+
+  shaderBuildAddVersion(build, 430, "core");
+
+  assert(shaderBuildIncludeFile(build, "shaders/common.glsl") == TRUE);  
+
+  geometryGenerateTransformCode(geometry, build, /** Use transformation of geometry */ FALSE);  
+
+  assert(shaderBuildIncludeFile(build, "shaders/calculate_aabb.glsl") == TRUE);    
+  
+  ShaderPtr fragmentShader = shaderBuildGenerateShader(build, GL_FRAGMENT_SHADER);
+  if(fragmentShader == nullptr)
+  {
+    LOG_ERROR("Cannot generate a shader for geometry!");
+    return FALSE;
+  }
+
+  ShaderPtr vertexShader = shaderManagerGetShader("triangle.vert");
+  if(vertexShader == nullptr)
+  {
+    LOG_ERROR("Cannot load a triangle vertex shader!");
+    return FALSE;
+  }
+  
+  destroyShaderBuild(build);
 
   ShaderProgram* shaderProgram = nullptr;
   assert(createShaderProgram(&shaderProgram));
@@ -428,9 +493,13 @@ static bool8 geometryRebuild(Asset* geometry)
   {
     return FALSE;
   }
+
+  if(geometryData->aabbProgram != nullptr)
+  {
+    destroyShaderProgram(geometryData->aabbProgram);
+  }
   
-  geometryData->program = shaderProgram;
-  geometryData->needRebuild = FALSE;
+  geometryData->aabbProgram = shaderProgram;
 
   return TRUE;
 }
@@ -468,6 +537,11 @@ static void geometryRecalculateIDs(Asset* geometry)
   assert(idCounter < 65535);
 }
 
+static bool8 geometryRecalculateNativeAABB(Asset* geometry)
+{
+  // TODO: move it out to the renderer
+}
+
 // ----------------------------------------------------------------------------
 // Geometry common interface
 // ----------------------------------------------------------------------------
@@ -489,7 +563,8 @@ bool8 createGeometry(const string& name, Asset** outGeometry)
   geometryData->orientation = quat(0.0f, 0.0f, 0.0f, 1.0f);
   geometryData->needRebuild = TRUE;  
   geometryData->dirty = TRUE;
-  geometryData->program = nullptr;
+  geometryData->drawProgram = nullptr;
+  geometryData->aabbProgram = nullptr;  
   
   assetSetInternalData(*outGeometry, geometryData);
   
@@ -506,13 +581,65 @@ void geometryDestroy(Asset* geometry)
   geometryData->odfs.clear();
   geometryData->sdf = AssetPtr(nullptr);
 
-  if(geometryData->program != nullptr)
+  if(geometryData->drawProgram != nullptr)
   {
-    destroyShaderProgram(geometryData->program);
-    geometryData->program = nullptr;
+    destroyShaderProgram(geometryData->drawProgram);
+    geometryData->drawProgram = nullptr;
+  }
+
+  if(geometryData->aabbProgram != nullptr)
+  {
+    destroyShaderProgram(geometryData->aabbProgram);
+    geometryData->aabbProgram = nullptr;
   }
   
   engineFreeObject(geometryData, MEMORY_TYPE_GENERAL);
+}
+
+void geometryUpdate(Asset* geometry, float64 delta)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+
+  if(geometryData->needRebuild == TRUE)
+  {
+    if(geometryRebuildDrawProgram(geometry) == TRUE)
+    {
+      if(geometryIsLeaf(geometry))
+      {
+        if(geometryRebuildAABBCalculationProgram(geometry) == TRUE)
+        {
+          geometryRecalculateNativeAABB(geometry);
+        }
+        else
+        {
+          LOG_ERROR("Geometry rebuild of AABB calculation program has failed!");
+
+          if(geometryData->aabbProgram != nullptr)
+          {
+            destroyShaderProgram(geometryData->aabbProgram);
+            geometryData->aabbProgram = nullptr;
+          }          
+        }
+      }
+
+      geometryData->needRebuild = FALSE;
+    }
+    else
+    {
+      LOG_ERROR("Geometry rebuild of draw program has failed!");
+
+      if(geometryData->drawProgram != nullptr)
+      {
+        destroyShaderProgram(geometryData->drawProgram);
+        geometryData->drawProgram = nullptr;
+      }
+    }
+  }
+
+  for(auto child: geometryData->children)
+  {
+    geometryUpdate(child, delta);
+  }
 }
 
 void geometrySetScale(Asset* geometry, float32 scale)
@@ -953,19 +1080,16 @@ bool8 geometryNeedRebuild(Asset* geometry)
   return geometryData->needRebuild;
 }
 
-ShaderProgram* geometryGetProgram(Asset* geometry)
+ShaderProgram* geometryGetDrawProgram(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
-  
-  if(geometryData->needRebuild == TRUE)
-  {
-    if(geometryRebuild(geometry) == FALSE)
-    {
-      return nullptr;
-    }
-  }
+  return geometryData->drawProgram;
+}
 
-  return geometryData->program;
+ShaderProgram* geometryGetAABBProgram(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  return geometryData->aabbProgram;
 }
 
 bool8 geometryTraversePostorder(Asset* geometry, fpTraverseFunction traverseFunction, void* userData)

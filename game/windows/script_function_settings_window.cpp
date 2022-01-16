@@ -280,7 +280,9 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
     std::string previousCode = scriptFunctionGetRawCode(data->function);
     scriptFunctionSetCode(data->function, data->codeBuf);
 
-    bool8 compilationSucceeded = geometryGetProgram(data->dummyGeometry) != nullptr ? TRUE : FALSE;
+    geometryUpdate(data->dummyGeometry, 0.0f);
+    bool8 compilationSucceeded = geometryGetDrawProgram(data->dummyGeometry) != nullptr ? TRUE : FALSE;
+    
     if(compilationSucceeded == TRUE)
     {
       geometryTraversePostorder(sceneGetGeometryRoot(editorGetCurrentScene()),

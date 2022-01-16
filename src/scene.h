@@ -20,6 +20,8 @@ struct IntersectionDetails
 ENGINE_API bool8 createScene(Scene** outScene);
 ENGINE_API void destroyScene(Scene* scene);
 
+ENGINE_API void updateScene(Scene* scene, float64 delta);
+
 ENGINE_API void sceneAddGeometry(Scene* scene, AssetPtr geometry);
 ENGINE_API bool8 sceneRemoveGeometry(Scene* scene, AssetPtr geometry);
 ENGINE_API std::vector<AssetPtr>& sceneGetChildren(Scene* scene);

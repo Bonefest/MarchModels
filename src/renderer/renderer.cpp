@@ -71,6 +71,7 @@ static void rendererSetupGlobalParameters(Film* film,
   parameters.invGamma = 1.0 / params.gamma;
 
   parameters.intersectionThreshold = params.intersectionThreshold;
+  parameters.worldSize = params.worldSize;
   
   parameters.resolution = filmGetSize(film);
   parameters.invResolution = float2(1.0f / parameters.resolution.x, 1.0f / parameters.resolution.y);

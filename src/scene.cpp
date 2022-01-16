@@ -35,6 +35,15 @@ void destroyScene(Scene* scene)
   engineFreeObject(scene, MEMORY_TYPE_GENERAL);
 }
 
+void updateScene(Scene* scene, float64 delta)
+{
+  const std::vector<AssetPtr>& children = geometryGetChildren(scene->geometryRoot);
+  for(auto child: children)
+  {
+    geometryUpdate(child, delta);
+  }
+}
+
 void sceneAddGeometry(Scene* scene, AssetPtr geometry)
 {
   geometryAddChild(scene->geometryRoot, geometry);

@@ -56,7 +56,11 @@ static void drawGeometryInorder(AssetPtr geometry)
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
   }
   
-  ShaderProgram* geometryProgram = geometryGetProgram(geometry);
+  ShaderProgram* geometryProgram = geometryGetDrawProgram(geometry);
+  if(geometryProgram == nullptr)
+  {
+    return;
+  }
 
   GeometryTransformParameters geoTransforms = {};
   geoTransforms.position = float4(geometryGetPosition(geometry), 1.0);

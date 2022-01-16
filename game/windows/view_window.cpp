@@ -194,7 +194,7 @@ static void viewWindowOnSettingsWindowShutdown(Window* window, Window* settingsW
 
 static RenderingParameters& viewWindowGetRenderingParameters(Window* window)
 {
-  ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);    
+  ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);
   return data->renderingParameters;  
 }
 

@@ -50,6 +50,7 @@ struct RenderingParameters
   float32 tone;
   float32 gamma = 2.2f;
   float32 intersectionThreshold = 0.1f;
+  float32 worldSize = 100.0f;
   
   RendererShadingMode shadingMode = RS_VISUALIZE_DISTANCES;
 

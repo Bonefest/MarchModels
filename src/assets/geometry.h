@@ -28,6 +28,7 @@ static const AssetType ASSET_TYPE_GEOMETRY = 0xe6593c2d;
 // Geometry common interface
 // ----------------------------------------------------------------------------
 ENGINE_API bool8 createGeometry(const std::string& name, Asset** outGeometry);
+ENGINE_API void geometryUpdate(Asset* geometry, float64 delta);
 
 ENGINE_API void geometrySetScale(Asset* geometry, float32 scale);
 ENGINE_API float32 geometryGetScale(Asset* geometry);
@@ -81,7 +82,8 @@ ENGINE_API float3 geometryCalculateNormal(Asset* geometry, float3 p);
 
 
 ENGINE_API bool8 geometryNeedRebuild(Asset* geometry);
-ENGINE_API ShaderProgram* geometryGetProgram(Asset* geometry);
+ENGINE_API ShaderProgram* geometryGetDrawProgram(Asset* geometry);
+ENGINE_API ShaderProgram* geometryGetAABBProgram(Asset* geometry);
 
 typedef bool8(*fpTraverseFunction)(Asset* geometry, void* userData);
 ENGINE_API bool8 geometryTraversePostorder(Asset* geometry,
