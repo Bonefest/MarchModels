@@ -16,3 +16,4 @@
 16. ability to change center of mass
 17. text input for time
 18. visualize three types of AABBs (native, dynamic, final)
+19. manual AABB setup

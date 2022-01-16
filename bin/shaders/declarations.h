@@ -55,15 +55,14 @@
     float32  invGamma;
 
     float32  intersectionThreshold;
+    float32  worldSize;
     float32  _gap1;
-    float32  _gap2;
-    float32  _gap3;    
-    //float3   worldSize;
+    float32  _gap2;    
     
     uint32   pixelGapX;
     uint32   pixelGapY;
     uint32   rasterItersMaxCount;
-    uint32   _gap4;
+    uint32   _gap3;
     
     uint2    resolution;
     float2   invResolution;
@@ -95,8 +94,8 @@
 
   struct AABBCalculationBufferParameters
   {
-    uint3 minPixelCoords;
-    uint3 maxPixelCoords;
+    uint3 min;
+    uint3 max;
   };
 
 #endif
