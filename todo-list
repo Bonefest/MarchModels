@@ -11,9 +11,11 @@
 11. add time to logger's messages
 12. instance and prototype should be two different windows
 13. sync function for script function settings
-14. two camera control modes: FPS-like, righ-click-like
+14. two camera control modes: FPS-like, righ-click-like; ability to rotate selected geometry with right-click-like mode and move with pressed left button
 15. clear log history button
 16. ability to change center of mass
 17. text input for time
 18. visualize three types of AABBs (native, dynamic, final)
 19. manual AABB setup
+20. check native aabb size, decide whether it's bounded
+21. config settings manager (window with cvars)

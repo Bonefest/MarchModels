@@ -40,6 +40,9 @@ struct Geometry
   ShaderProgram* drawProgram;
   ShaderProgram* aabbProgram;
 
+  bool8 bounded;
+  bool8 aabbAutomaticallyCalculated;
+  bool8 needAABBRecalculation;
   bool8 needRebuild;
   bool8 dirty;
   
@@ -514,6 +517,7 @@ static void geometryMarkNeedRebuild(Asset* geometry, bool8 forwardToChildren)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   geometryData->needRebuild = TRUE;
+  geometryData->needAABBRecalculation = TRUE;
 
   if(forwardToChildren == TRUE)
   {
@@ -562,7 +566,10 @@ bool8 createGeometry(const string& name, Asset** outGeometry)
   geometryData->scale = 1.0f;
   geometryData->position = float3(0.0f, 0.0f, 0.0f);
   geometryData->orientation = quat(0.0f, 0.0f, 0.0f, 1.0f);
-  geometryData->needRebuild = TRUE;  
+  geometryData->bounded = TRUE;  
+  geometryData->aabbAutomaticallyCalculated = TRUE;  
+  geometryData->needAABBRecalculation = TRUE;    
+  geometryData->needRebuild = TRUE;
   geometryData->dirty = TRUE;
   geometryData->drawProgram = nullptr;
   geometryData->aabbProgram = nullptr;  
@@ -607,11 +614,7 @@ void geometryUpdate(Asset* geometry, float64 delta)
     {
       if(geometryIsLeaf(geometry))
       {
-        if(geometryRebuildAABBCalculationProgram(geometry) == TRUE)
-        {
-          geometryData->nativeAABB = AABBCalculationPassCalculateAABB(geometry);
-        }
-        else
+        if(geometryRebuildAABBCalculationProgram(geometry) == FALSE)
         {
           LOG_ERROR("Geometry rebuild of AABB calculation program has failed!");
 
@@ -635,6 +638,12 @@ void geometryUpdate(Asset* geometry, float64 delta)
         geometryData->drawProgram = nullptr;
       }
     }
+  }
+
+  if(geometryData->needAABBRecalculation == TRUE && geometryData->aabbAutomaticallyCalculated == TRUE)
+  {
+    geometryData->nativeAABB = AABBCalculationPassCalculateAABB(geometry);
+    geometryData->needAABBRecalculation = FALSE;
   }
 
   for(auto child: geometryData->children)
@@ -992,87 +1001,69 @@ float4x4 geometryGetGeoParentMat(Asset* geometry)
   return geometryData->transformToParentFromLocal;
 }
 
-
-float32 geometryCalculateDistanceToPoint(Asset* geometry,
-                                         float3 p,
-                                         Asset** outClosestLeafGeometry)
+void geometrySetBounded(Asset* geometry, bool8 bounded)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
-  
-  for(AssetPtr idf: geometryData->idfs)
-  {
-    p = executeIDF(idf, p);
-  }
 
-  float32 distance = 0.0f;
-  
-  if(geometryIsBranch(geometry))
-  {
-    Asset* closestGeometry;
-    
-    float32 closestDistance = geometryCalculateDistanceToPoint(geometryData->children.front(), p, &closestGeometry);
-    for(auto childIt = geometryData->children.begin() + 1; childIt != geometryData->children.end(); childIt++)
-    {
-      Asset* childClosestGeometry;
-      float32 childDistance = geometryCalculateDistanceToPoint(*childIt, p, &childClosestGeometry);
-
-      distance = combineDistances(geometry,
-                                  closestDistance,
-                                  childDistance,
-                                  closestGeometry,
-                                  childClosestGeometry,
-                                  &closestGeometry);
-    }
-
-    distance = closestDistance;
-  }
-  else
-  {
-    // NOTE: To use transformations in SDF, we need to translate point in local space. That's because
-    // SDF is expressed in local space. For example, sdf of sphere should be expressed relative to the
-    // local origin.
-    //
-    // TODO: If a geometry has scaling, this transformation will be wrong!
-    float3 transformedP = geometryTransformToLocal(geometry, p);
-    
-    distance = executeSDF(geometryData->sdf, transformedP);
-    if(outClosestLeafGeometry != nullptr)
-    {
-      *outClosestLeafGeometry = geometry;
-    }
-  }
-
-  for(AssetPtr odf: geometryData->odfs)
-  {
-    distance = executeODF(odf, distance);
-  }
-
-  return distance;
+  geometryData->bounded = bounded;
 }
 
-// NOTE: Calculates normal using finite differences.
-// We can optimized it in the next ways:
-//   1) Pass already calculated distance, so we don't need to calculate it here
-//   2) Pass already found leaf geometry and use only its sdf, so we don't need to traverse
-//      the whole geometry's hierarchy (we still need to consider parent's ODFs/IDFs though)
-float3 geometryCalculateNormal(Asset* geometry, float3 p)
+bool8 geometryIsBounded(Asset* geometry)
 {
-  // NOTE: If geometry is not root - find its root and use that instead.
-  // We need to use root of the hierarchy, because otherwise IDFs and ODFs of its parents won't
-  // be accounted for.
-  if(!geometryIsRoot(geometry))
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  return geometryData->bounded;
+}
+
+void geometrySetAABBAutomaticallyCalculated(Asset* geometry, bool8 automatically)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  geometryData->aabbAutomaticallyCalculated = automatically;
+  if(automatically == TRUE)
   {
-    return geometryCalculateNormal(geometryGetRoot(geometry), p);
+    geometryMarkAsNeedAABBRecalculation(geometry);
   }
+}
 
-  float32 distance = geometryCalculateDistanceToPoint(geometry, p);
-  
-  float32 step = 0.001f;
-  float32 x = geometryCalculateDistanceToPoint(geometry, p + float3(step, 0.0f, 0.0f)) - distance;
-  float32 y = geometryCalculateDistanceToPoint(geometry, p + float3(0.0f, step, 0.0f)) - distance;
-  float32 z = geometryCalculateDistanceToPoint(geometry, p + float3(0.0f, 0.0f, step)) - distance;    
+bool8 geometryAABBIsAutomaticallyCalculated(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  return geometryData->aabbAutomaticallyCalculated;
+}
 
-  return normalize(float3(x, y, z) / step);
+void geometrySetNativeAABB(Asset* geometry, const AABB& nativeAABB)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  geometryData->nativeAABB = nativeAABB;
+}
+
+const AABB& geometryGetNativeAABB(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  return geometryData->nativeAABB;
+}
+
+const AABB& geometryGetDynamicAABB(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  return geometryData->dynamicAABB;
+}
+
+const AABB& geometryGetFinalAABB(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  return geometryData->finalAABB;
+}
+
+void geometryMarkAsNeedAABBRecalculation(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  geometryData->needAABBRecalculation = TRUE;
+}
+
+bool8 geometryNeedAABBRecalculation(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  return geometryData->needAABBRecalculation;
 }
 
 bool8 geometryNeedRebuild(Asset* geometry)

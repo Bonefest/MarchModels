@@ -194,6 +194,47 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
 
   geometrySetOrientation(data->geometry, normalize(orientation));
 
+  // AABB Settings
+  if(ImGui::TreeNode("AABB settings"))
+  {
+    bool automatic = geometryAABBIsAutomaticallyCalculated(data->geometry);
+    bool bounded = geometryIsBounded(data->geometry);
+    AABB nativeAABB = geometryGetNativeAABB(data->geometry);
+    
+    if(ImGui::Checkbox("Automatic", &automatic))
+    {
+      geometrySetAABBAutomaticallyCalculated(data->geometry, automatic);
+    }
+
+    ImGui::BeginDisabled(automatic);
+
+    ImGui::SameLine();
+    if(ImGui::Checkbox("Bounded", &bounded))
+    {
+      geometrySetBounded(data->geometry, bounded);
+    }
+
+    ImGui::EndDisabled();
+    
+    ImGui::SameLine();
+    if(ImGui::Button("Force recalculation"))
+    {
+      geometryMarkAsNeedAABBRecalculation(data->geometry);
+    }
+
+    ImGui::BeginDisabled(automatic);
+    
+    ImGui::Text("Native AABB");
+    ImGui::SliderFloat3("Minimal", &nativeAABB.min[0], -20.0, 20.0);
+    ImGui::SliderFloat3("Maximal", &nativeAABB.max[0], -20.0, 20.0);    
+
+    geometrySetNativeAABB(data->geometry, nativeAABB);
+    
+    ImGui::EndDisabled();
+    
+    ImGui::TreePop();
+  }
+  
   // Script functions list
   if(ImGui::TreeNode("Attached script functions"))
   {

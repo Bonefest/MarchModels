@@ -13,7 +13,8 @@
 
 const vec2 PoissonSamples[POISSON_SAMPLES_COUNT] = vec2[POISSON_SAMPLES_COUNT]
 (
-  vec2(-0.326f, -0.406f),
+  //vec2(-0.326f, -0.406f),
+  vec2( 0.0f,    0.0f),
   vec2(-0.840f, -0.074f),
   vec2(-0.696f,  0.457f),
   vec2(-0.203f,  0.621f),

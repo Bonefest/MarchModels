@@ -57,7 +57,7 @@ void main()
   float2 offset = PoissonSamples[calculationIteration] / POISSON_DISK_RADIUS / params.worldSize;
   
   // [0, resolution.x) -> [-WORLD_SIZE * 0.5, WORLD_SIZE * 0.5]
-  float2 rayStartPos = (ifragCoord.xy * params.invResolution - 0.5) * params.worldSize + offset;
+  float2 rayStartPos = (ifragCoord.xy * invResolution - 0.5) * params.worldSize + offset;
 
   // Point moving along z axis, XY coordinates are fixed
   float3 pXYSide = float3(rayStartPos, -params.worldSize * 0.5);

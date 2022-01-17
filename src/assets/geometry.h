@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "program.h"
+#include "maths/aabb.h"
 #include "maths/common.h"
 #include "assets/script_function.h"
 
@@ -60,9 +61,6 @@ ENGINE_API bool8 geometryIsRoot(Asset* geometry);
 ENGINE_API bool8 geometryIsBranch(Asset* geometry);
 ENGINE_API bool8 geometryIsLeaf(Asset* geometry);
 
-// ENGINE_API AABB geometryGetAABB(Asset* geometry);
-// ENGINE_API float32 geometryGetRadius(Asset* geometry);
-
 ENGINE_API float3 geometryTransformToParent(Asset* geometry, float3 p);
 ENGINE_API float3 geometryTransformFromParent(Asset* geometry, float3 p);
 ENGINE_API float3 geometryTransformToLocal(Asset* geometry, float3 p);
@@ -73,15 +71,21 @@ ENGINE_API float4x4 geometryGetGeoWorldMat(Asset* geometry);
 ENGINE_API float4x4 geometryGetParentGeoMat(Asset* geometry);
 ENGINE_API float4x4 geometryGetGeoParentMat(Asset* geometry);
 
-ENGINE_API float32 geometryCalculateDistanceToPoint(Asset* geometry,
-                                                    float3 p,
-                                                    Asset** outClosestLeafGeometry = nullptr);
+ENGINE_API void geometrySetBounded(Asset* geometry, bool8 bounded);
+ENGINE_API bool8 geometryIsBounded(Asset* geometry);
 
-// WARNING: Highly unoptimized!
-ENGINE_API float3 geometryCalculateNormal(Asset* geometry, float3 p);
+ENGINE_API void geometrySetAABBAutomaticallyCalculated(Asset* geometry, bool8 automatically);
+ENGINE_API bool8 geometryAABBIsAutomaticallyCalculated(Asset* geometry);
 
+ENGINE_API void geometrySetNativeAABB(Asset* geometry, const AABB& nativeAABB);
+ENGINE_API const AABB& geometryGetNativeAABB(Asset* geometry);
+ENGINE_API const AABB& geometryGetDynamicABB(Asset* geometry);
+ENGINE_API const AABB& geometryGetFinalAABB(Asset* geometry);
 
+ENGINE_API void geometryMarkAsNeedAABBRecalculation(Asset* geometry);
+ENGINE_API bool8 geometryNeedAABBRecalculation(Asset* geometry);
 ENGINE_API bool8 geometryNeedRebuild(Asset* geometry);
+
 ENGINE_API ShaderProgram* geometryGetDrawProgram(Asset* geometry);
 ENGINE_API ShaderProgram* geometryGetAABBProgram(Asset* geometry);
 
