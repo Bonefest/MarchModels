@@ -284,11 +284,23 @@ static void geometryGenerateTransformCode(Asset* geometry, ShaderBuild* build, b
   }
 
   // register SDF
-  shaderBuildAddFunction(build,
-                         "float32",
-                         "SDF",
-                         "float3 p",
-                         scriptFunctionGetGLSLCode(geometryGetSDF(geometry)).c_str());
+  AssetPtr sdf = geometryGetSDF(geometry);
+  if(sdf != nullptr)
+  {
+    shaderBuildAddFunction(build,
+                           "float32",
+                           "SDF",
+                           "float3 p",
+                           scriptFunctionGetGLSLCode(geometryGetSDF(geometry)).c_str());
+  }
+  else
+  {
+    shaderBuildAddFunction(build,
+                           "float32",
+                           "SDF",
+                           "float3 p",
+                           "return 1.0;");
+  }
   
   // register ODFs (only of the geometry)
   const std::vector<AssetPtr>& odfs = geometryGetODFs(geometry);
@@ -517,7 +529,6 @@ static void geometryMarkNeedRebuild(Asset* geometry, bool8 forwardToChildren)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   geometryData->needRebuild = TRUE;
-  geometryData->needAABBRecalculation = TRUE;
 
   if(forwardToChildren == TRUE)
   {
@@ -705,17 +716,20 @@ void geometryAddFunction(Asset* geometry, AssetPtr function)
   {
     geometryData->sdf = function;
     geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);
+    geometryMarkAsNeedAABBRecalculation(geometry);
   }
   else if(type == SCRIPT_FUNCTION_TYPE_IDF)
   {
     geometryData->idfs.push_back(function);
     // NOTE: Children also should be marked, because IDFs are integrated into leafs
-    geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);    
+    geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);
+    geometryMarkAsNeedAABBRecalculation(geometry);    
   }
   else if(type == SCRIPT_FUNCTION_TYPE_ODF)
   {
     geometryData->odfs.push_back(function);
-    geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);        
+    geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);
+    geometryMarkAsNeedAABBRecalculation(geometry);    
   }
 
 }
@@ -731,6 +745,7 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
     {
       geometryData->sdf = AssetPtr(nullptr);
       geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);
+      geometryMarkAsNeedAABBRecalculation(geometry);      
       return TRUE;
     }
 
@@ -743,6 +758,7 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
     {
       geometryData->idfs.erase(idfIt);
       geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);
+      geometryMarkAsNeedAABBRecalculation(geometry);      
       return TRUE;
     }
 
@@ -755,6 +771,7 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
     {
       geometryData->odfs.erase(odfIt);
       geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);
+      geometryMarkAsNeedAABBRecalculation(geometry);      
       return TRUE;
     }
 
@@ -768,6 +785,7 @@ void geometryNotifyFunctionHasChanged(Asset* geometry, Asset* function)
 {
   ScriptFunctionType type = scriptFunctionGetType(function);
   geometryMarkNeedRebuild(geometry, /** Mark children */ type == SCRIPT_FUNCTION_TYPE_IDF ? TRUE : FALSE);
+  geometryMarkAsNeedAABBRecalculation(geometry);  
 }
 
 uint32 geometryGetID(Asset* geometry)
@@ -1128,7 +1146,8 @@ bool8 geometryRemoveChild(Asset* geometry, Asset* child)
 
   geometryData->children.erase(childIt);
 
-  geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);    
+  geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);
+  geometryMarkAsNeedAABBRecalculation(geometry);  
 
   geometryRecalculateIDs(geometry);
   

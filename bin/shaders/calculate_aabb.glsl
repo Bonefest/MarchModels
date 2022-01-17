@@ -70,7 +70,7 @@ void main()
 
   // Adaptive factor: samples in range [12, 52] -> threshold factor [1.5, 1.2] 
   float32 factor = (1.0 - (POISSON_SAMPLES_COUNT - 12.0) / 40.0) * 0.3 + 1.2;
-  float32 threshold = params.intersectionThreshold * factor;
+  float32 threshold = max(params.intersectionThreshold, 0.1) * factor;
   
   for(uint32 i = 0; i < iterationsCount; i++)
   {
