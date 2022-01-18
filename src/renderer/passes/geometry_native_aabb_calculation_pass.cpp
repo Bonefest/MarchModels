@@ -43,8 +43,9 @@ void destroyAABBCalculationPass()
 
 AABB AABBCalculationPassCalculateAABB(Asset* geometry)
 {
-  const uint32 iterationsCount = 12;
-  const uint32 viewportSize = 1000;
+  const static uint32& iterationsCount = CVarSystemReadUint("egine_AABBCalculation_IterationsCount");
+  const static uint32& viewportSize = CVarSystemReadUint("engine_AABBCalculation_RaysPerIteration");
+  const static uint32& localWorkgroupSize = CVarSystemReadUint("engine_AABBCalculation_LocalWorkGroupSize");  
 
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, data.aabbBufferHandle);
 
@@ -70,7 +71,9 @@ AABB AABBCalculationPassCalculateAABB(Asset* geometry)
   for(uint32 i = 0; i < iterationsCount; i++)
   {
     glUniform1ui(0, i);
-    glDispatchCompute(viewportSize / 32, viewportSize / 32, 1);
+    glDispatchCompute((uint32)std::ceil(float32(viewportSize) / float32(localWorkgroupSize)),
+                      (uint32)std::ceil(float32(viewportSize) / float32(localWorkgroupSize)),
+                      1);
   }
 
   shaderProgramUse(nullptr);

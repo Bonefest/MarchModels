@@ -12,6 +12,10 @@ using std::vector;
 
 #include "geometry.h"
 
+DECLARE_CVAR(engine_AABBCalculation_IterationsCount, 12u);
+DECLARE_CVAR(engine_AABBCalculation_RaysPerIteration, 1024u);
+DECLARE_CVAR(engine_AABBCalculation_LocalWorkGroupSize, 32u);
+
 struct Geometry
 {
   // Common data
@@ -475,13 +479,19 @@ static bool8 geometryRebuildDrawProgram(Asset* geometry)
 
 static bool8 geometryRebuildAABBCalculationProgram(Asset* geometry)
 {
+  const static uint32& localWorkgroupSize = CVarSystemReadUint("engine_AABBCalculation_LocalWorkGroupSize");
+
+  LOG_INFO("%u", localWorkgroupSize);
+  
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
 
   ShaderBuild* build = nullptr;
   assert(createShaderBuild(&build));
 
   shaderBuildAddVersion(build, 430, "core");
-  shaderBuildAddCode(build, "layout(local_size_x = 32, local_size_y = 32) in;");
+  shaderBuildAddCodefln(build, "layout(local_size_x = %u, local_size_y = %u) in;",
+                        localWorkgroupSize,
+                        localWorkgroupSize);
   
   assert(shaderBuildIncludeFile(build, "shaders/common.glsl") == TRUE);  
 

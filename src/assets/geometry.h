@@ -7,6 +7,7 @@
 
 #include "program.h"
 #include "maths/aabb.h"
+#include "cvar_system.h"
 #include "maths/common.h"
 #include "assets/script_function.h"
 
