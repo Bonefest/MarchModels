@@ -481,34 +481,26 @@ static bool8 geometryRebuildAABBCalculationProgram(Asset* geometry)
   assert(createShaderBuild(&build));
 
   shaderBuildAddVersion(build, 430, "core");
-
+  shaderBuildAddCode(build, "layout(local_size_x = 32, local_size_y = 32) in;");
+  
   assert(shaderBuildIncludeFile(build, "shaders/common.glsl") == TRUE);  
 
   geometryGenerateTransformCode(geometry, build, /** Use transformation of geometry */ FALSE);  
 
   assert(shaderBuildIncludeFile(build, "shaders/calculate_aabb.glsl") == TRUE);    
   
-  ShaderPtr fragmentShader = shaderBuildGenerateShader(build, GL_FRAGMENT_SHADER);
-  if(fragmentShader == nullptr)
+  ShaderPtr computeShader = shaderBuildGenerateShader(build, GL_COMPUTE_SHADER);
+  if(computeShader == nullptr)
   {
-    LOG_ERROR("Cannot generate a shader for geometry!");
+    LOG_ERROR("Cannot generate a shader for aabb calculation!");
     return FALSE;
   }
 
-  ShaderPtr vertexShader = shaderManagerGetShader("triangle.vert");
-  if(vertexShader == nullptr)
-  {
-    LOG_ERROR("Cannot load a triangle vertex shader!");
-    return FALSE;
-  }
-  
   destroyShaderBuild(build);
 
   ShaderProgram* shaderProgram = nullptr;
   assert(createShaderProgram(&shaderProgram));
-
-  shaderProgramAttachShader(shaderProgram, vertexShader);  
-  shaderProgramAttachShader(shaderProgram, fragmentShader);
+  shaderProgramAttachShader(shaderProgram, computeShader);
 
   if(linkShaderProgram(shaderProgram) == FALSE)
   {
@@ -651,7 +643,7 @@ void geometryUpdate(Asset* geometry, float64 delta)
     }
   }
 
-  if(geometryData->needAABBRecalculation == TRUE && geometryData->aabbAutomaticallyCalculated == TRUE)
+  if(TRUE)//geometryData->needAABBRecalculation == TRUE && geometryData->aabbAutomaticallyCalculated == TRUE)
   {
     geometryData->nativeAABB = AABBCalculationPassCalculateAABB(geometry);
     geometryData->needAABBRecalculation = FALSE;

@@ -46,13 +46,18 @@ layout(std140, binding = AABB_CALCULATION_SSBO_BINDING) buffer GeometryTransform
 };
 
 layout(location = 0) uniform uint32 calculationIteration;
-layout(location = 1) uniform float2 invResolution;
+layout(location = 1) uniform uint2  resolution;
+layout(location = 2) uniform float2 invResolution;
 
 void main()
 {
   const uint32 iterationsCount = 100;
   
-  int2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);
+  int2 ifragCoord = int2(gl_GlobalInvocationID.xy);
+  if(any(greaterThanEqual(ifragCoord, resolution)))
+  {
+    return;
+  }
 
   float2 offset = PoissonSamples[calculationIteration] / POISSON_DISK_RADIUS / params.worldSize;
   
