@@ -481,8 +481,6 @@ static bool8 geometryRebuildAABBCalculationProgram(Asset* geometry)
 {
   const static uint32& localWorkgroupSize = CVarSystemReadUint("engine_AABBCalculation_LocalWorkGroupSize");
 
-  LOG_INFO("%u", localWorkgroupSize);
-  
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
 
   ShaderBuild* build = nullptr;

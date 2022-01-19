@@ -43,7 +43,7 @@ void destroyAABBCalculationPass()
 
 AABB AABBCalculationPassCalculateAABB(Asset* geometry)
 {
-  const static uint32& iterationsCount = CVarSystemReadUint("egine_AABBCalculation_IterationsCount");
+  const static uint32& iterationsCount = CVarSystemReadUint("engine_AABBCalculation_IterationsCount");
   const static uint32& viewportSize = CVarSystemReadUint("engine_AABBCalculation_RaysPerIteration");
   const static uint32& localWorkgroupSize = CVarSystemReadUint("engine_AABBCalculation_LocalWorkGroupSize");  
 

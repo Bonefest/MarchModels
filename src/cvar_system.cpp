@@ -1,6 +1,8 @@
+#include <algorithm>
 #include <unordered_map>
 
 using std::string;
+using std::transform;
 using std::unordered_map;
 
 #include "cvar_system.h"
@@ -84,6 +86,113 @@ bool8 CVarSystemRegisterBoolVar(const string& name, bool8 initValue, CVarFlags f
   data.boolCVars[name] = CVarBool { initValue, flags };
   
   return TRUE;
+}
+
+string CVarSystemReadStr(const std::string& name)
+{
+  char result[256] = {};
+  
+  auto metaInfo = data.cvarsMeta.find(name);
+  
+  if(metaInfo == data.cvarsMeta.end())
+  {
+    return result;
+  }
+
+  switch(metaInfo->second.type)
+  {
+    case CVAR_TYPE_INT: sprintf(result, "%d", CVarSystemReadInt(name)); break;
+    case CVAR_TYPE_UINT: sprintf(result, "%u", CVarSystemReadUint(name)); break;
+    case CVAR_TYPE_FLOAT: sprintf(result, "%f", CVarSystemReadFloat(name)); break;
+    case CVAR_TYPE_BOOL: sprintf(result, "%s", CVarSystemReadBool(name) == TRUE ? "true" : "false"); break;
+
+    default: assert(false);
+  }
+  
+  return result;
+}
+
+CVarParseCode CVarSystemParseStr(const std::string& name, const std::string& val)
+{
+  auto metaInfo = data.cvarsMeta.find(name);
+  
+  if(metaInfo == data.cvarsMeta.end())
+  {
+    return CVAR_PARSE_CODE_VAR_NOT_FOUND;
+  }
+
+  if((metaInfo->second.flags & CVAR_FLAG_READ_ONLY) == CVAR_FLAG_READ_ONLY)
+  {
+    return CVAR_PARSE_CODE_VAR_READ_ONLY;
+  }
+
+  switch(metaInfo->second.type)
+  {
+    case CVAR_TYPE_INT:
+    {
+      int32 ival = 0;
+      if(sscanf(val.c_str(), "%d", &ival) == 0)
+      {
+        return CVAR_PARSE_CODE_CANNOT_PARSE;
+      }
+
+      CVarSystemGetInt(name) = ival;
+      return CVAR_PARSE_CODE_SUCCESS;
+    }
+    case CVAR_TYPE_UINT:
+    {
+      uint32 uval = 0;
+      if(sscanf(val.c_str(), "%u", &uval) == 0)
+      {
+        return CVAR_PARSE_CODE_CANNOT_PARSE;
+      }
+
+      CVarSystemGetUint(name) = uval;
+      return CVAR_PARSE_CODE_SUCCESS;
+    }
+    case CVAR_TYPE_FLOAT:
+    {
+      float32 fval = 0;
+      if(sscanf(val.c_str(), "%f", &fval) == 0)
+      {
+        return CVAR_PARSE_CODE_CANNOT_PARSE;
+      }
+
+      CVarSystemGetFloat(name) = fval;
+      return CVAR_PARSE_CODE_SUCCESS;
+    }
+    case CVAR_TYPE_BOOL:
+    {
+      int32 ival = 0;
+      if(sscanf(val.c_str(), "%d", &ival) == 0)
+      {
+        string sval = val;
+        transform(sval.begin(), sval.end(), sval.begin(), [](auto c){ return tolower(c); });
+
+        if(sval == "true")
+        {
+          ival = 1;
+        }
+        else if(sval == "false")
+        {
+          ival = 0;
+        }        
+        else
+        {
+          return CVAR_PARSE_CODE_CANNOT_PARSE;          
+        }
+      }
+
+      bool8 bval = ival > 0 ? TRUE : FALSE;
+      
+      CVarSystemGetBool(name) = bval;
+      return CVAR_PARSE_CODE_SUCCESS;
+    }
+
+    default: assert(false);
+  }
+
+  return CVAR_PARSE_CODE_OTHER;
 }
 
 #define ASSERT_VAR_EXISTS(name) \

@@ -20,6 +20,15 @@ enum CVarType
   CVAR_TYPE_UNKNOWN
 };
 
+enum CVarParseCode
+{
+  CVAR_PARSE_CODE_SUCCESS,
+  CVAR_PARSE_CODE_VAR_NOT_FOUND,
+  CVAR_PARSE_CODE_VAR_READ_ONLY,
+  CVAR_PARSE_CODE_CANNOT_PARSE,
+  CVAR_PARSE_CODE_OTHER
+};
+
 template <typename T>
 struct CVarTypeTrait;
 
@@ -72,6 +81,9 @@ ENGINE_API bool8 CVarSystemRegisterIntVar(const std::string& name, int32 initVal
 ENGINE_API bool8 CVarSystemRegisterUintVar(const std::string& name, uint32 initValue, CVarFlags flags);
 ENGINE_API bool8 CVarSystemRegisterFloatVar(const std::string& name, float32 initValue, CVarFlags flags);
 ENGINE_API bool8 CVarSystemRegisterBoolVar(const std::string& name, bool8 initValue, CVarFlags flags);
+
+ENGINE_API std::string CVarSystemReadStr(const std::string& name);
+ENGINE_API CVarParseCode CVarSystemParseStr(const std::string& name, const std::string& val);
 
 ENGINE_API const int32& CVarSystemReadInt(const std::string& name);
 ENGINE_API int32& CVarSystemGetInt(const std::string& name);
