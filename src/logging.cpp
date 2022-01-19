@@ -41,10 +41,10 @@ static const int32 logMessageTypeToColor[LOG_MESSAGE_TYPE_COUNT] =
 
 static const char* logMessageTypeToPrefix[LOG_MESSAGE_TYPE_COUNT] =
 {
-  "(!) [ERROR]  ",
+  "(!) [ERROR]",
   "(?) [WARNING]",
   "(#) [VERBOSE]",
-  "(*) [INFO]   ",
+  "(*) [INFO]",
   "(+) [SUCCESS]",
 };
 

@@ -2,6 +2,7 @@
 #include <unordered_map>
 
 using std::string;
+using std::vector;
 using std::transform;
 using std::unordered_map;
 
@@ -244,6 +245,18 @@ bool8& CVarSystemGetBool(const string& name)
 {
   ASSERT_VAR_EXISTS(name);
   return data.boolCVars[name].value;
+}
+
+vector<string> CVarSystemGetRegisteredVars()
+{
+  vector<string> names;
+
+  for(auto cvarMeta: data.cvarsMeta)
+  {
+    names.push_back(cvarMeta.first);
+  }
+
+  return names;
 }
 
 CVarType CVarSystemGetVarType(const string& name)

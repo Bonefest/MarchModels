@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vector>
 #include <string>
 
 #include "defines.h"
@@ -132,6 +133,8 @@ ENGINE_API T& CVarSystemGetVar(const std::string& name)
     default: assert(false);
   }
 }
+
+ENGINE_API std::vector<std::string> CVarSystemGetRegisteredVars();
 
 #define DECLARE_CVAR(name, initValue) \
   DECLARE_CVAR_FLAGS(name, initValue, CVAR_FLAG_NONE)

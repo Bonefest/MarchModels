@@ -3,6 +3,7 @@
 
 #include <utils.h>
 #include <logging.h>
+#include <cvar_system.h>
 #include <imgui/imgui.h>
 #include <event_system.h>
 #include <memory_manager.h>
@@ -61,7 +62,7 @@ int inputTextCallback(ImGuiInputTextCallbackData* data)
     {
       windowData->historyIdx = (windowData->historyIdx + 1) % historySize;
     }
-    else
+    else if(data->EventKey == ImGuiKey_DownArrow)
     {
       windowData->historyIdx = (windowData->historyIdx + historySize - 1) % historySize;
     }
@@ -73,7 +74,57 @@ int inputTextCallback(ImGuiInputTextCallbackData* data)
     data->CursorPos = data->BufTextLen;
     data->BufDirty = true;
   }
+  else if((data->EventFlag & ImGuiInputTextFlags_CallbackCompletion) == ImGuiInputTextFlags_CallbackCompletion)
+  {
+    if(data->EventKey == ImGuiKey_Tab)
+    {
+      if(data->Buf[0] != '/')
+      {
+        return 0;
+      }
+      
+      std::string targetPrefix = data->Buf + 1;
+      std::string closestMatch = "";
+      
+      std::vector<std::string> cvarNames = CVarSystemGetRegisteredVars();
 
+      for(std::string name: cvarNames)
+      {
+        if(targetPrefix == name.substr(0, targetPrefix.size()))
+        {
+          if(closestMatch.empty())
+          {
+            closestMatch = name;
+          }
+          else
+          {
+            // Find the first character where current closest match is different from given name
+            uint32 diffPos = targetPrefix.size();
+            for(; diffPos < std::min(closestMatch.size(), name.size()); diffPos++)
+            {
+              if(name[diffPos] != closestMatch[diffPos])
+              {
+                break;
+              }
+            }
+
+            closestMatch = closestMatch.substr(0, diffPos);
+          }
+        }
+      }
+      
+      if(!closestMatch.empty())
+      {
+        sprintf(data->Buf, "/%s", closestMatch.c_str());
+        data->BufTextLen = strlen(data->Buf);
+        data->CursorPos = data->BufTextLen;
+        data->BufDirty = true;        
+      }
+       
+    }
+
+  }
+  
   return 0;
 }
 
@@ -141,7 +192,9 @@ static void consoleWindowDraw(Window* window, float64 delta)
 
     ImGui::SetNextItemWidth(inputTextWidth);
     const ImGuiInputTextFlags inputTextFlags = ImGuiInputTextFlags_EnterReturnsTrue |
-      ImGuiInputTextFlags_CallbackHistory;
+      ImGuiInputTextFlags_CallbackHistory |
+      ImGuiInputTextFlags_CallbackCompletion;
+    
     if(ImGui::InputText("##Console_search_text",
                         data->textBuffer,
                         MAX_BUF_SIZE,
@@ -156,14 +209,55 @@ static void consoleWindowDraw(Window* window, float64 delta)
       if(eventData.u32[0] > 0)
       {
         triggerEvent(eventData, window);
-        LOG_INFO(data->textBuffer);
 
+        // If command is written
+        if(data->textBuffer[0] == '/')
+        {
+          std::string command = (data->textBuffer + 1);
+          auto spacePos = command.find(' ');
+
+          // Reading cvar value
+          if(spacePos == std::string::npos)
+          {
+            std::string cvarValue = CVarSystemReadStr(command);
+            if(!cvarValue.empty())
+            {
+              LOG_INFO("%s = %s", command.c_str(), cvarValue.c_str());
+            }
+            else
+            {
+              LOG_ERROR("Var '%s' is not found!", command.c_str());
+            }
+          }
+          // Writing cvar value
+          else
+          {
+            std::string varName = command.substr(0, spacePos);
+            std::string params = command.substr(spacePos + 1);
+
+            CVarParseCode code = CVarSystemParseStr(varName, params);
+            switch(code)
+            {
+              case CVAR_PARSE_CODE_SUCCESS: LOG_SUCCESS("%s = %s", varName.c_str(), params.c_str()); break;
+              case CVAR_PARSE_CODE_VAR_NOT_FOUND: LOG_ERROR("Var '%s' is not found!", varName.c_str()); break;
+              case CVAR_PARSE_CODE_VAR_READ_ONLY: LOG_ERROR("Var '%s' is read only!", varName.c_str()); break;
+              case CVAR_PARSE_CODE_CANNOT_PARSE: LOG_ERROR("Cannot parse '%s'!", params.c_str()); break;
+
+              default: assert(false);
+            }
+          }
+        }
+        
         // TODO: In future we may want to add only successful messages
         // TODO: insert is too costly operation!
         data->history.insert(data->history.begin(), data->textBuffer);
         data->historyIdx = 0;
 
         data->textBuffer[0] = '\0';
+      }
+      else
+      {
+        LOG_INFO(data->textBuffer);        
       }
     }
 
