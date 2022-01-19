@@ -651,7 +651,7 @@ void geometryUpdate(Asset* geometry, float64 delta)
     }
   }
 
-  if(TRUE)//geometryData->needAABBRecalculation == TRUE && geometryData->aabbAutomaticallyCalculated == TRUE)
+  if(geometryData->needAABBRecalculation == TRUE && geometryData->aabbAutomaticallyCalculated == TRUE)
   {
     geometryData->nativeAABB = AABBCalculationPassCalculateAABB(geometry);
     geometryData->needAABBRecalculation = FALSE;

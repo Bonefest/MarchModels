@@ -70,6 +70,15 @@ void main()
   // Point moving along x axis, YZ coordinates are fixed
   float3 pYZSide = float3(-params.worldSize * 0.5, rayStartPos.yx);
 
+  // If ray will be inside of AABB - discard the fragment, since it's surely won't
+  // enlarge the AABB.
+  // (for small objects this optimization hits performance)
+  // if(all(lessThan(float3(pXYSide.xy, pYZSide.z), float3(aabbParams.max.xyz))) &&
+  //    all(greaterThan(float3(pXYSide.xy, pYZSide.z), float3(aabbParams.min.xyz))))
+  // {
+  //   return;
+  // }
+
   bool pXYSideHasIntersection = false;
   bool pYZSideHasIntersection = false;  
 
