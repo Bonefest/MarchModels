@@ -226,6 +226,11 @@ bool8 windowIsFocused(Window* window)
   return window->focused;
 }
 
+bool8 windowIsHovered(Window* window)
+{
+  return window->hovered;
+}
+
 void windowClearAllStyles(Window* window)
 {
   window->styles.clear();

@@ -109,6 +109,11 @@ quat cameraGetOrientation(Camera* camera)
   return camera->orientation;
 }
 
+void cameraSetOrientation(Camera* camera, float3 eulerAngles)
+{
+  cameraSetOrientation(camera, eulerAngles.x, eulerAngles.y);
+}
+
 void cameraSetOrientation(Camera* camera, float32 yaw, float32 pitch)
 {
   camera->dirty = TRUE;

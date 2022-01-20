@@ -1,6 +1,9 @@
+#include <imgui/imgui.h>
+
 #include <utils.h>
 #include <stopwatch.h>
-#include <imgui/imgui.h>
+#include <application.h>
+#include <cvar_system.h>
 #include <memory_manager.h>
 #include <renderer/renderer.h>
 #include <samplers/center_sampler.h>
@@ -10,6 +13,16 @@
 #include "view_window.h"
 
 using namespace march;
+
+DECLARE_CVAR(editor_ViewWindow_MouseSensitivity, 0.01f);
+DECLARE_CVAR(editor_ViewWindow_CameraSpeed, 10.0f);
+
+enum ViewControlMode
+{
+  VIEW_CONTROL_MODE_NONE,  
+  VIEW_CONTROL_MODE_HOLD,
+  VIEW_CONTROL_MODE_FIXED  
+};
 
 struct ViewSettingsWindowData;
 struct ViewWindowData
@@ -22,6 +35,7 @@ struct ViewWindowData
   Stopwatch refreshStopwatch;
   Time refreshPeriod;
 
+  ViewControlMode controlMode;
   bool8 requestedRedrawImage;
 
   WindowPtr settingsWindow;  
@@ -46,7 +60,38 @@ static void shutdownViewWindow(Window* window)
 
 static void updateViewWindow(Window* window, float64 delta)
 {
+  ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);
+  GLFWwindow* glfwWindow = applicationGetWindow();  
+  
+  if(data->controlMode != VIEW_CONTROL_MODE_NONE)
+  {
+    const static float32& cameraSpeed = CVarSystemReadFloat("editor_ViewWindow_CameraSpeed");
 
+    Camera* camera = imageIntegratorGetCamera(data->integrator);
+    
+    float3 camPosition = cameraGetPosition(camera);
+    float4x4 camWorldBasis = cameraGetCameraWorldMat(camera);
+
+    if(glfwGetKey(glfwWindow, GLFW_KEY_A) == GLFW_PRESS)
+    {
+      camPosition += camWorldBasis[0].xyz() * cameraSpeed * float32(delta);
+    }
+    else if(glfwGetKey(glfwWindow, GLFW_KEY_D) == GLFW_PRESS)
+    {
+      camPosition -= camWorldBasis[0].xyz() * cameraSpeed * float32(delta);
+    }
+
+    if(glfwGetKey(glfwWindow, GLFW_KEY_W) == GLFW_PRESS)
+    {
+      camPosition += camWorldBasis[2].xyz() * cameraSpeed * float32(delta);
+    }
+    else if(glfwGetKey(glfwWindow, GLFW_KEY_S) == GLFW_PRESS)
+    {
+      camPosition -= camWorldBasis[2].xyz() * cameraSpeed * float32(delta);
+    }
+
+    cameraSetPosition(camera, camPosition);
+  }
 }
 
 static void updateViewWindowSize(Window* window, uint2 size)
@@ -183,7 +228,64 @@ static void processInputViewWindow(Window* window,
                                    const EventData& eventData,
                                    void* sender)
 {
-  
+  ImGuiIO& io = ImGui::GetIO();  
+  ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);
+  GLFWwindow* glfwWindow = applicationGetWindow();
+  Camera* camera = imageIntegratorGetCamera(data->integrator);
+
+  if(eventData.type == EVENT_TYPE_BUTTON_PRESSED)
+  {
+    if(eventData.i32[0] == GLFW_MOUSE_BUTTON_RIGHT &&
+       windowIsFocused(window) == TRUE &&
+       windowIsHovered(window) == TRUE)
+    {
+      data->controlMode = VIEW_CONTROL_MODE_HOLD;
+      io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+      glfwSetInputMode(glfwWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+      glfwSetCursorPos(glfwWindow, 0.0, 0.0);      
+    }
+  }
+  else if(eventData.type == EVENT_TYPE_BUTTON_RELEASED)
+  {
+    if(eventData.i32[0] == GLFW_MOUSE_BUTTON_RIGHT && data->controlMode == VIEW_CONTROL_MODE_HOLD)
+    {
+      data->controlMode = VIEW_CONTROL_MODE_NONE;      
+      io.ConfigFlags &= ~(ImGuiConfigFlags_NoMouse);
+      glfwSetInputMode(glfwWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);      
+    }
+  }
+  else if(eventData.type == EVENT_TYPE_KEY_PRESSED)
+  {
+    if(eventData.i32[0] == GLFW_KEY_F && data->controlMode == VIEW_CONTROL_MODE_HOLD)
+    {
+      data->controlMode = VIEW_CONTROL_MODE_FIXED;
+    }
+    else if(eventData.i32[0] == GLFW_KEY_ESCAPE && data->controlMode == VIEW_CONTROL_MODE_FIXED)
+    {
+      data->controlMode = VIEW_CONTROL_MODE_NONE;      
+      io.ConfigFlags &= ~(ImGuiConfigFlags_NoMouse);
+      glfwSetInputMode(glfwWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+  }
+  else if(eventData.type == EVENT_TYPE_CURSOR_MOVED)
+  {
+    if(data->controlMode != VIEW_CONTROL_MODE_NONE)
+    {
+      const static float32& sensitivity = CVarSystemReadFloat("editor_ViewWindow_MouseSensitivity");
+      
+      float32 dx = eventData.f32[0] * sensitivity;
+      float32 dy = eventData.f32[1] * sensitivity;
+
+
+      float3 eulerAngles = cameraGetEulerAngles(camera);
+      eulerAngles.x += -dx;
+      eulerAngles.y +=  dy;
+
+      cameraSetOrientation(camera, eulerAngles);
+
+      glfwSetCursorPos(glfwWindow, 0.0, 0.0);
+    }
+  }
 }
 
 static void viewWindowOnSettingsWindowShutdown(Window* window, Window* settingsWindow)

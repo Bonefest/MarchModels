@@ -29,6 +29,7 @@ ENGINE_API void cameraSetOrientation(Camera* camera, float3 axis, float32 angle)
 ENGINE_API void cameraSetOrientation(Camera* camera, quat orientation);
 ENGINE_API quat cameraGetOrientation(Camera* camera);
 
+ENGINE_API void cameraSetOrientation(Camera* camera, float3 eulerAngles);
 ENGINE_API void cameraSetOrientation(Camera* camera, float32 yaw, float32 pitch);
 
 // WARNING: It doesn't calculate roll now
