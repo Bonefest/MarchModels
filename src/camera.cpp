@@ -116,6 +116,17 @@ void cameraSetOrientation(Camera* camera, float3 eulerAngles)
 
 void cameraSetOrientation(Camera* camera, float32 yaw, float32 pitch)
 {
+  // NOTE: We need to clamp pitch in range [-89, 89] degrees because
+  // +- 90 degrees pitch is ambigious: later, when we need to deduce
+  // eueler angles from quaternion, we cannot correctly decide what
+  // yaw the camera has (it could have both 0 and 180 degrees).
+  //
+  // Solutions:
+  // 1) Simply clamp, as we do here
+  // 2) Store euler angles directly and use them instead. (more flexible)
+  
+  pitch = clamp(pitch, -toRad(89.0f), toRad(89.0f));
+  
   camera->dirty = TRUE;
   camera->orientation = qmul(rotation_quat(float3(0.0f, 1.0f, 0.0f), yaw),
                              rotation_quat(float3(1.0f, 0.0f, 0.0f), pitch)); 
@@ -132,6 +143,7 @@ float3 cameraGetEulerAngles(Camera* camera)
   float32 yaw = atan2(axis.x, axis.z);
 
   // NOTE: We need to negate pitch, because positive rotation around x axis is going in opposite order
+  // (we imagine that's going upward, while in reality it's going downward)
   return float3(yaw, -pitch, 0.0f);
 }
 
