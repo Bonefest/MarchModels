@@ -37,11 +37,7 @@ void destroyScene(Scene* scene)
 
 void updateScene(Scene* scene, float64 delta)
 {
-  const std::vector<AssetPtr>& children = geometryGetChildren(scene->geometryRoot);
-  for(auto child: children)
-  {
-    geometryUpdate(child, delta);
-  }
+  geometryUpdate(scene->geometryRoot, delta);
 }
 
 void sceneAddGeometry(Scene* scene, AssetPtr geometry)

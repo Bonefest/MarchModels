@@ -66,6 +66,8 @@ struct AABB
 
   float3 getDimensions() const;
 
+  float32 getVolume() const;
+
   bool8 intersects(const AABB&& aabb) const;
   bool8 isUnbounded() const;
   

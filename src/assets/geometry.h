@@ -30,6 +30,8 @@ static const AssetType ASSET_TYPE_GEOMETRY = 0xe6593c2d;
 // Geometry common interface
 // ----------------------------------------------------------------------------
 ENGINE_API bool8 createGeometry(const std::string& name, Asset** outGeometry);
+
+// WARNING: Assumes that given geometry is a root
 ENGINE_API void geometryUpdate(Asset* geometry, float64 delta);
 
 ENGINE_API void geometrySetScale(Asset* geometry, float32 scale);

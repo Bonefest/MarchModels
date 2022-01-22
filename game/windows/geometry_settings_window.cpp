@@ -199,7 +199,8 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
     bool automatic = geometryAABBIsAutomaticallyCalculated(data->geometry);
     bool bounded = geometryIsBounded(data->geometry);
     AABB nativeAABB = geometryGetNativeAABB(data->geometry);
-    AABB dynamicAABB = geometryGetDynamicAABB(data->geometry);    
+    AABB dynamicAABB = geometryGetDynamicAABB(data->geometry);
+    AABB finalAABB = geometryGetFinalAABB(data->geometry);        
     
     if(ImGui::Checkbox("Automatic", &automatic))
     {
@@ -238,6 +239,10 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
     ImGui::SliderFloat3("Minimal", &dynamicAABB.min[0], -20.0, 20.0);
     ImGui::SliderFloat3("Maximal", &dynamicAABB.max[0], -20.0, 20.0);
 
+    ImGui::Text("Final AABB");
+    ImGui::SliderFloat3("Minimal", &finalAABB.min[0], -20.0, 20.0);
+    ImGui::SliderFloat3("Maximal", &finalAABB.max[0], -20.0, 20.0);
+    
     ImGui::EndDisabled();
     
     ImGui::TreePop();

@@ -172,6 +172,11 @@ float3 AABB::getDimensions() const
   return max - min;
 }
 
+float32 AABB::getVolume() const
+{
+  return (max.x - min.x) * (max.y - min.y) * (max.z - min.z);
+}
+
 bool8 AABB::intersects(const AABB&& aabb) const
 {
   return AABBIntersect(*this, aabb);

@@ -589,6 +589,9 @@ bool8 createGeometry(const string& name, Asset** outGeometry)
   geometryData->needAABBRecalculation = TRUE;    
   geometryData->needRebuild = TRUE;
   geometryData->dirty = TRUE;
+  geometryData->nativeAABB = AABB::createUnbounded();
+  geometryData->dynamicAABB = AABB::createUnbounded();
+  geometryData->finalAABB = AABB::createUnbounded();  
   geometryData->drawProgram = nullptr;
   geometryData->aabbProgram = nullptr;  
   
@@ -622,7 +625,7 @@ void geometryDestroy(Asset* geometry)
   engineFreeObject(geometryData, MEMORY_TYPE_GENERAL);
 }
 
-void geometryUpdate(Asset* geometry, float64 delta)
+static void geometryUpdateChild(Asset* geometry, float64 delta)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
 
@@ -675,7 +678,108 @@ void geometryUpdate(Asset* geometry, float64 delta)
 
   for(auto child: geometryData->children)
   {
-    geometryUpdate(child, delta);
+    geometryUpdateChild(child, delta);
+  }
+}
+
+static void geometryCalculateBranchesFinalAABB(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  
+  if(geometryIsLeaf(geometry) == TRUE)
+  {
+    geometryData->finalAABB = geometryData->dynamicAABB;
+    return;
+  }
+
+  for(auto child: geometryData->children)
+  {
+    geometryCalculateBranchesFinalAABB(child);
+  }
+
+  AABB finalAABB = geometryGetFinalAABB(geometryData->children[0]);
+
+  // NOTE: For subtraction AABB of the first child is used
+  if(geometryData->combinationFunction != COMBINATION_SUBTRACTION)
+  {
+    for(uint32 i = 1; i < geometryData->children.size(); i++)
+    {
+      AABB childAABB = geometryGetFinalAABB(geometryData->children[i]);
+      
+      if(geometryData->combinationFunction == COMBINATION_UNION)
+      {
+        finalAABB = AABBUnion(finalAABB, childAABB);
+      }
+      else
+      {
+        finalAABB = AABBIntersection(finalAABB, childAABB);
+      }
+    }
+  }
+
+  geometryData->finalAABB = finalAABB;
+}
+
+static void geometryCalculateLeafsFinalAABB(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+
+  if(geometryIsLeaf(geometry) == TRUE)
+  {
+    // NOTE: If this geometry is subtracted from other geometry in the branch -
+    // calculate the intersection of AABB of those two first (because only that region of
+    // AABB matters)
+    if(geometryGetCombinationFunction(geometryData->parent) == COMBINATION_SUBTRACTION &&
+       geometryGetIndexInBranch(geometry) > 0)
+    {
+      // NOTE: We know that in case of subtraction, parent has an AABB of the first child, the one
+      // from which we subract the rest of children
+      geometryData->finalAABB = AABBIntersection(geometryGetFinalAABB(geometryData->parent),
+                                                 geometryData->finalAABB);
+    }
+
+    // NOTE: Traverse from the leaf to the parents, compare AABB of the parent to the leaf's AABB, pick
+    // the smallest (it's possible, for example, in case where two subsequent geometry levels have
+    // intersection combination function --> parent's AABB will be always smaller)
+    AssetPtr parent = geometryData->parent;
+    while(parent != nullptr)
+    {
+      Geometry* parentsGeometryData = (Geometry*)assetGetInternalData(parent);
+
+      if(geometryData->finalAABB.getVolume() > parentsGeometryData->finalAABB.getVolume())
+      {
+        geometryData->finalAABB = parentsGeometryData->finalAABB;
+      }
+      
+      parent = parentsGeometryData->parent;
+    }
+  }
+  else
+  {
+    for(auto child: geometryData->children)
+    {
+      geometryCalculateLeafsFinalAABB(child);
+    }
+  }
+}
+
+void geometryUpdate(Asset* geometry, float64 delta)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  
+  for(auto child: geometryData->children)
+  {
+    geometryUpdateChild(child, delta);
+  }
+
+  for(auto child: geometryData->children)
+  {
+    geometryCalculateBranchesFinalAABB(child);
+  }
+
+  for(auto child: geometryData->children)
+  {
+    geometryCalculateLeafsFinalAABB(child);
   }
 }
 

@@ -68,6 +68,7 @@ struct ScriptFunctionSettingsWindowData
   AssetPtr owner;
   AssetPtr function;
 
+  AssetPtr dummyRootGeometry;
   AssetPtr dummyGeometry;
 };
 
@@ -110,10 +111,17 @@ bool8 createScriptFunctionSettingsWindow(AssetPtr owner, AssetPtr function, Wind
   strcpy(data->codeBuf, scriptFunctionGetRawCode(function).c_str());
   windowSetInternalData(*outWindow, data);
 
+  Asset* dummyRootGeometry;
+  createGeometry("dummyRoot", &dummyRootGeometry);
+  data->dummyRootGeometry = AssetPtr(dummyRootGeometry);
+  
   Asset* dummyGeometry;
   createGeometry("dummy", &dummyGeometry);
+  geometrySetAABBAutomaticallyCalculated(dummyGeometry, FALSE);
   data->dummyGeometry = AssetPtr(dummyGeometry);
-
+  
+  geometryAddChild(data->dummyRootGeometry, data->dummyGeometry);
+  
   if(createLogger(32, FALSE, FALSE, TRUE, nullptr, &data->logger) == FALSE)
   {
     return FALSE;
@@ -280,7 +288,7 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
     std::string previousCode = scriptFunctionGetRawCode(data->function);
     scriptFunctionSetCode(data->function, data->codeBuf);
 
-    geometryUpdate(data->dummyGeometry, 0.0f);
+    geometryUpdate(data->dummyRootGeometry, 0.0f);
     bool8 compilationSucceeded = geometryGetDrawProgram(data->dummyGeometry) != nullptr ? TRUE : FALSE;
     
     if(compilationSucceeded == TRUE)
