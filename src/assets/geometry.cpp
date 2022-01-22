@@ -178,6 +178,13 @@ static void geometryRecalculateFullTransforms(Asset* geometry, bool8 parentWasDi
       // from local space to world is known and use that.
       geometryData->transformToWorld = mul(parentData->transformToWorld, transformFromLocal);
     }
+
+    // NOTE: Recalculate dynamic AABB, if it's a bounded leaf, based on the
+    // new transformations
+    if(geometryData->bounded == TRUE && geometryIsLeaf(geometry) == TRUE)
+    {
+      geometryData->dynamicAABB = geometryData->nativeAABB.genTransformed(geometryData->transformToWorld);
+    }
   }
 
   for(Asset* child: geometryData->children)
@@ -654,6 +661,15 @@ void geometryUpdate(Asset* geometry, float64 delta)
   if(geometryData->needAABBRecalculation == TRUE && geometryData->aabbAutomaticallyCalculated == TRUE)
   {
     geometryData->nativeAABB = AABBCalculationPassCalculateAABB(geometry);
+    if(geometryData->nativeAABB.getWidth() > 40.0 ||
+       geometryData->nativeAABB.getHeight() > 40.0 ||
+       geometryData->nativeAABB.getDepth() > 40.0)
+    {
+      geometryData->bounded = FALSE;
+    }
+
+    // NOTE: Mark as dirty, so that a new dynamic AABB will be calculated when requested
+    geometryData->dirty = TRUE;
     geometryData->needAABBRecalculation = FALSE;
   }
 
@@ -1063,6 +1079,11 @@ const AABB& geometryGetNativeAABB(Asset* geometry)
 const AABB& geometryGetDynamicAABB(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  if(geometryData->dirty == TRUE)
+  {
+    geometryRecalculateTransforms(geometry);
+  }
+  
   return geometryData->dynamicAABB;
 }
 

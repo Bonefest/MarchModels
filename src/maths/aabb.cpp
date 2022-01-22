@@ -73,7 +73,9 @@ AABB AABB::genTransformed(float4x4 transformation)
   AABB centered = genTranslated(-center);
 
   // NOTE: Transform each vertex, find the new most-bottom-near-left and most-top-right points
-  float3 cMin = float3(), cMax = float3();
+  float3 cMin = float3(posInf, posInf, posInf);
+  float3 cMax = float3(negInf, negInf, negInf);
+
   for(uint32 i = 0; i < 8; i++)
   {
     float3 vertex = mul(transformation, centered.getVertex(i));
@@ -81,9 +83,9 @@ AABB AABB::genTransformed(float4x4 transformation)
     cMin.y = std::min(cMin.y, vertex.y);
     cMin.z = std::min(cMin.z, vertex.z);
     
-    cMax.x = std::min(cMax.x, vertex.x);
-    cMax.y = std::min(cMax.y, vertex.y);
-    cMax.z = std::min(cMax.z, vertex.z);    
+    cMax.x = std::max(cMax.x, vertex.x);
+    cMax.y = std::max(cMax.y, vertex.y);
+    cMax.z = std::max(cMax.z, vertex.z);    
   }
 
   // NOTE: Generate new AABB, translate it to its initial position

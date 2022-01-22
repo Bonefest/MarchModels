@@ -80,7 +80,7 @@ ENGINE_API bool8 geometryAABBIsAutomaticallyCalculated(Asset* geometry);
 
 ENGINE_API void geometrySetNativeAABB(Asset* geometry, const AABB& nativeAABB);
 ENGINE_API const AABB& geometryGetNativeAABB(Asset* geometry);
-ENGINE_API const AABB& geometryGetDynamicABB(Asset* geometry);
+ENGINE_API const AABB& geometryGetDynamicAABB(Asset* geometry);
 ENGINE_API const AABB& geometryGetFinalAABB(Asset* geometry);
 
 ENGINE_API void geometryMarkAsNeedAABBRecalculation(Asset* geometry);

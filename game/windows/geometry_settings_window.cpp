@@ -172,27 +172,26 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
 
     if(ImGui::Button(ICON_KI_RELOAD_INVERSE"##ReloadOrientation"))
     {
-      geometryOrientation = rotation_quat(float3(0.0f, 0.0f, 1.0f), (float32)ONE_PI);
+      geometryOrientation = quat(0.0f, 0.0f, 0.0f, 1.0f);
     }
   popIconButtonStyle();
 
   ImGui::SameLine();
   
 
-  float4 orientation = geometryGetOrientation(data->geometry);
   const static float32 orientationMinRange[] = {-1.0, -1.0, -1.0, -1.0};
   const static float32 orientationMaxRange[] = { 1.0,  1.0,  1.0, 1.0};
   
   ImGui::SliderScalarN("Orientation",
                        ImGuiDataType_Float,
-                       &orientation,
+                       &geometryOrientation,
                        4,
                        orientationMinRange,
                        orientationMaxRange,
                        "%.2f",
                        ImGuiSliderFlags_MultiRange);
 
-  geometrySetOrientation(data->geometry, normalize(orientation));
+  geometrySetOrientation(data->geometry, normalize(geometryOrientation));
 
   // AABB Settings
   if(ImGui::TreeNode("AABB settings"))
@@ -200,6 +199,7 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
     bool automatic = geometryAABBIsAutomaticallyCalculated(data->geometry);
     bool bounded = geometryIsBounded(data->geometry);
     AABB nativeAABB = geometryGetNativeAABB(data->geometry);
+    AABB dynamicAABB = geometryGetDynamicAABB(data->geometry);    
     
     if(ImGui::Checkbox("Automatic", &automatic))
     {
@@ -226,10 +226,18 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
     
     ImGui::Text("Native AABB");
     ImGui::SliderFloat3("Minimal", &nativeAABB.min[0], -20.0, 20.0);
-    ImGui::SliderFloat3("Maximal", &nativeAABB.max[0], -20.0, 20.0);    
+    ImGui::SliderFloat3("Maximal", &nativeAABB.max[0], -20.0, 20.0);
 
     geometrySetNativeAABB(data->geometry, nativeAABB);
+
+    ImGui::EndDisabled();
+
+    ImGui::BeginDisabled(true);
     
+    ImGui::Text("Dynamic AABB");
+    ImGui::SliderFloat3("Minimal", &dynamicAABB.min[0], -20.0, 20.0);
+    ImGui::SliderFloat3("Maximal", &dynamicAABB.max[0], -20.0, 20.0);
+
     ImGui::EndDisabled();
     
     ImGui::TreePop();
