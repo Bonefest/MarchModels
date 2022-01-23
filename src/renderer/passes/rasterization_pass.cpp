@@ -123,16 +123,24 @@ static bool8 rasterizationPassRasterize(RasterizationPassData* data)
 
 static bool8 rasterizationPassExtractResults(RasterizationPassData* data)
 {
+  glDepthFunc(GL_ALWAYS);
+  glEnable(GL_DEPTH_TEST);
+  
   glBindFramebuffer(GL_FRAMEBUFFER, data->geometryAndDistancesFBO);
+  glClearDepth(1.0f);
+  
   shaderProgramUse(data->resultsExtractionProgram);
 
+  
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_RAYS_MAP_TEXTURE));  
   drawTriangleNoVAO();
-  
+
   shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+  glDisable(GL_DEPTH_TEST);
+  
   return TRUE;
 }
 
@@ -193,11 +201,12 @@ static GLuint createGeometryAndDistancesFramebuffer()
   glGenFramebuffers(1, &framebuffer);
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
   
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE), 0);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, rendererGetResourceHandle(RR_GEOIDS_MAP_TEXTURE), 0);  
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rendererGetResourceHandle(RR_GEOIDS_MAP_TEXTURE), 0);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE), 0);
+  //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE), 0);                                                                                      
 
-  GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-  glNamedFramebufferDrawBuffers(framebuffer, 2, drawBuffers);
+  GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
+  glNamedFramebufferDrawBuffers(framebuffer, 1, drawBuffers);
   
   if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
   {

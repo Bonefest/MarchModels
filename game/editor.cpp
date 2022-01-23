@@ -94,8 +94,8 @@ bool8 initEditor(Application* app)
   assert(createDebugRayIntegrator(DEBUG_RAY_INTEGRATOR_MODE_ONE_COLOR, &debugRayIntegrator));
 
   Camera* camera = nullptr;
-  assert(createPerspectiveCamera(1.0f, toRad(45.0f), 0.01f, 100.0f, &camera));
-  cameraLookAt(camera, float3(0.0f, 0.0f, -10.0f), float3(), float3(0.0f, 1.0f, 0.0f));
+  assert(createPerspectiveCamera(1.0f, toRad(45.0f), 0.1f, 30.0f, &camera));
+  cameraSetPosition(camera, float3(0.0f, 0.0f, -10.0f));
 
   Window* viewWindow = nullptr;
   assert(createViewWindow(viewWindowName, centerSampler, debugRayIntegrator, camera, &viewWindow));

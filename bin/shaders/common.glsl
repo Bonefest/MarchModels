@@ -10,7 +10,7 @@
 
   float2 fragCoordToUV(float2 fragCoord)
   {
-    return float2(fragCoord.x * params.invResolution.x, fragCoord.y * params.invResolution.y);
+    return float2(fragCoord.x * params.invGapResolution.x, fragCoord.y * params.invGapResolution.y);
   }
 
   float3 generateRayDir(float2 uv)
@@ -20,7 +20,7 @@
     float2 ndc = float2(1.0 - 2.0 * uv.x, uv.y * 2.0 - 1);
 
     // NDC point on near plane  
-    float4 fullNNDC = float4(ndc.x, ndc.y, 0.0f, 1.0f);
+    float4 fullNNDC = float4(ndc.x, ndc.y, -1.0f, 1.0f);
 
     // NDC point on far plane
     float4 fullFNDC = float4(ndc.x, ndc.y, 1.0f, 1.0f);
@@ -48,6 +48,32 @@
     return pow(color, params.gamma.rrr);
   }
 
+  // NOTE: The next four functions perform multiplication by <un>projection matrix explicitly
+  // (only z, w components are needed) and perform in place perspective division.
+  float32 worldDistanceToNDC(float32 distance)
+  {
+    float32 w = params.camWorldNDCMat[2][3] * distance + params.camWorldNDCMat[3][3];
+    return (distance * params.camWorldNDCMat[2][2] + params.camWorldNDCMat[3][2]) / w;
+  }
+
+  float32 cameraDistanceToNDC(float32 distance)
+  {
+    float32 w = params.camCameraNDCMat[2][3] * distance + params.camCameraNDCMat[3][3];
+    return (distance * params.camCameraNDCMat[2][2] + params.camCameraNDCMat[3][2]) / w;
+  }
+
+  float32 NDCDistanceToWorld(float32 distance)
+  {
+    float32 w = params.camNDCWorldMat[2][3] * distance + params.camNDCWorldMat[3][3];
+    return (distance * params.camNDCWorldMat[2][2] + params.camNDCWorldMat[3][2]) / w;
+  }
+
+  float32 NDCDistanceToCamera(float32 distance)
+  {
+    
+    float32 w = params.camNDCCameraMat[2][3] * distance + params.camNDCCameraMat[3][3];
+    return (distance * params.camNDCCameraMat[2][2] + params.camNDCCameraMat[3][2]) / w;
+  }
 
 
 #endif

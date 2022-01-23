@@ -1,6 +1,6 @@
 #version 450 core
 
-#include defines.glsl
+#include common.glsl
 
 layout(location = 0) out float3 outDistanceColor;
 
@@ -13,7 +13,8 @@ void main()
 {
     int2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);
 
-    float32 distance = clamp(texelFetch(distancesMap, ifragCoord, 0).r, distancesRange.x, distancesRange.y);
+    float32 distance = NDCDistanceToCamera(texelFetch(distancesMap, ifragCoord, 0).x) * 2.0 - 1.0;
+    distance = clamp(distance, distancesRange.x, distancesRange.y);
     float32 t = (distance - distancesRange.x) / (distancesRange.y - distancesRange.x);
 
     outDistanceColor = mix(closestColor, farthestColor, t);
