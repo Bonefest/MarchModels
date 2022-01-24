@@ -61,6 +61,7 @@ struct RenderingParameters
   
   bool8 enableNormals = TRUE;
   bool8 enableShadows = TRUE;
+  bool8 showAABB      = TRUE;
 
   // TODO: Coverage mask generator (pixel gap is an example of mask generator)
   // TODO: Postprocessing choices

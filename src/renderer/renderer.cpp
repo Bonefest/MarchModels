@@ -6,6 +6,7 @@
 #include "passes/rasterization_pass.h"
 #include "passes/ldr_to_film_copy_pass.h"
 #include "passes/ids_visualization_pass.h"
+#include "passes/aabb_visualization_pass.h"
 #include "passes/normals_calculation_pass.h"
 #include "passes/normals_visualization_pass.h"
 #include "passes/distances_visualization_pass.h"
@@ -27,6 +28,7 @@ struct Renderer
   RenderPass* idsVisualizationPass;
   RenderPass* normalsVisualizationPass;
   RenderPass* shadowsVisualizationPass;
+  RenderPass* aabbVisualizationPass;
 
   RenderPass* simpleShadingPass;
   RenderPass* pbrShadingPass;
@@ -238,6 +240,7 @@ static bool8 initializeRenderPasses()
        &data.distancesVisualizationPass);
   INIT(createIDsVisualizationPass, &data.idsVisualizationPass);
   INIT(createNormalsVisualizationPass, &data.normalsVisualizationPass);
+  INIT(createAABBVisualizationPass, &data.aabbVisualizationPass);
   INIT(createLDRToFilmCopyPass, &data.ldrToFilmPass);
   INIT(initializeAABBCalculationPass);
   
@@ -251,6 +254,7 @@ static void destroyRenderPasses()
   destroyRenderPass(data.distancesVisualizationPass);
   destroyRenderPass(data.idsVisualizationPass);
   destroyRenderPass(data.normalsVisualizationPass);
+  destroyRenderPass(data.aabbVisualizationPass);
   destroyRenderPass(data.ldrToFilmPass);
   destroyAABBCalculationPass();
 }
@@ -314,9 +318,14 @@ bool8 rendererRenderScene(Film* film,
   {
     assert(renderPassExecute(data.normalsVisualizationPass));
   }
+
+  if(params.showAABB == TRUE)
+  {
+    assert(renderPassExecute(data.aabbVisualizationPass));
+  }
   
   assert(popViewport() == TRUE);
-
+  
   pushViewport(0, 0, data.globalParameters.resolution.x, data.globalParameters.resolution.y);
   
   assert(renderPassExecute(data.ldrToFilmPass));
