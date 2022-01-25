@@ -47,11 +47,8 @@ static bool8 aabbVisualizationPassExecute(RenderPass* pass)
   glBindFramebuffer(GL_FRAMEBUFFER, data->ldrFBO);
   shaderProgramUse(data->visualizationProgram);
 
-  float4x4 proj = cameraGetCameraNDCMat(rendererGetPassedCamera());
-  proj[2][3] = -1.0f;
-  float4x4 view = cameraGetWorldCameraMat(rendererGetPassedCamera());
+  float4x4 viewProj = cameraGetWorldNDCMat(rendererGetPassedCamera());
   
-  float4x4 viewProj = mul(proj, view);
   glUniformMatrix4fv(0, 1, GL_FALSE, &viewProj[0][0]);
   
   glBindVertexArray(data->visualizationVAO);
@@ -108,16 +105,16 @@ static void createCubeBuffers(GLuint* outVBO, GLuint* outEBO)
 {
   const static float32 vertexData[] =
   {
-     // Coordinates are provided in OpenGL's RHS
-    -0.5f, -0.5f,  0.5f, // Left, bottom, near
-     0.5f, -0.5f,  0.5f, // Right, bottom, near
-    -0.5f, -0.5f, -0.5f, // Left, bottom, far
-     0.5f, -0.5f, -0.5f, // Right, bottom, far
+     // Coordinates are provided in our RHS system (x - left, y - up, z - forward)
+     0.5f, -0.5f, -0.5f, // Left, bottom, near
+    -0.5f, -0.5f, -0.5f, // Right, bottom, near
+     0.5f, -0.5f,  0.5f, // Left, bottom, far
+    -0.5f, -0.5f,  0.5f, // Right, bottom, far
 
-    -0.5f,  0.5f,  0.5f, // Left, top, near
-     0.5f,  0.5f,  0.5f, // Right, top, near
-    -0.5f,  0.5f, -0.5f, // Left, top, far
-     0.5f,  0.5f, -0.5f, // Right, top, far
+     0.5f,  0.5f, -0.5f, // Left, top, near
+    -0.5f,  0.5f, -0.5f, // Right, top, near
+     0.5f,  0.5f,  0.5f, // Left, top, far
+    -0.5f,  0.5f,  0.5f, // Right, top, far
   };
 
   const static uint32 indexData[] =

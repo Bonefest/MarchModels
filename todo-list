@@ -23,3 +23,4 @@
 23. ODFs of the leaf additionally may get access to the float3 point value.
 24. ability to swtich to "smooth" combination functions
 25. ability to incorporate custom combination function (final AABB calculation should be adapted in this case, since we have a risk of losing conservativeness of the AABB)
+26. We incorrectly calculate values in z buffer, what we should really store is z value, not distance (hence, we should find a point in world space, project it in the NDC and store that value instead)
