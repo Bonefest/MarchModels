@@ -24,3 +24,5 @@
 24. ability to swtich to "smooth" combination functions
 25. ability to incorporate custom combination function (final AABB calculation should be adapted in this case, since we have a risk of losing conservativeness of the AABB)
 26. We incorrectly calculate values in z buffer, what we should really store is z value, not distance (hence, we should find a point in world space, project it in the NDC and store that value instead)
+27. add rendererGetPass(name) function - bools like "enable normals" may be obsolete, because we can control the passes directly. Gives us more flexibilty: allows to add parameters to the passes and control them from the editor.
+28. add renderPassDrawInputView() - allows to incapsulate input view

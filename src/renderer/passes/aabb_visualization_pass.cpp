@@ -32,17 +32,33 @@ static void destroyAABBVisualizationPass(RenderPass* pass)
   engineFreeObject(data, MEMORY_TYPE_GENERAL);
 }
 
+static void gatherAABBs(Asset* geometry, std::vector<float3>& aabbData)
+{
+  std::vector<AssetPtr>& children = geometryGetChildren(geometry);
+  for(auto child: children)
+  {
+    gatherAABBs(child, aabbData);
+  }
+
+  AABB aabb = geometryGetFinalAABB(geometry);
+  aabbData.push_back(aabb.getCenter());
+  aabbData.push_back(aabb.getDimensions());
+}
+
 static bool8 aabbVisualizationPassExecute(RenderPass* pass)
 {
   AABBVisualizationPassData* data = (AABBVisualizationPassData*)renderPassGetInternalData(pass);
 
-  float32 tdata[] = { 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
+  std::vector<float3> aabbData;
+  gatherAABBs(sceneGetGeometryRoot(rendererGetPassedScene()), aabbData);
+  
   glBindBuffer(GL_ARRAY_BUFFER, data->instancesVBO);
-  glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float32) * 6, tdata);
+  glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float32) * 3 * aabbData.size(), &aabbData[0]);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   glDepthFunc(GL_LESS);
   glEnable(GL_DEPTH_TEST);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   
   glBindFramebuffer(GL_FRAMEBUFFER, data->ldrFBO);
   shaderProgramUse(data->visualizationProgram);
@@ -52,11 +68,12 @@ static bool8 aabbVisualizationPassExecute(RenderPass* pass)
   glUniformMatrix4fv(0, 1, GL_FALSE, &viewProj[0][0]);
   
   glBindVertexArray(data->visualizationVAO);
-  glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0, 1);
+  glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0, aabbData.size() >> 1);
   
   shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);  
   glDisable(GL_DEPTH_TEST);
   
   return TRUE;
