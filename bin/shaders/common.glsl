@@ -50,29 +50,29 @@
 
   // NOTE: The next four functions perform multiplication by <un>projection matrix explicitly
   // (only z, w components are needed) and perform in place perspective division.
-  float32 worldDistanceToNDC(float32 distance)
+  float32 worldZToNDC(float32 z)
   {
-    float32 w = params.camWorldNDCMat[2][3] * distance + params.camWorldNDCMat[3][3];
-    return (distance * params.camWorldNDCMat[2][2] + params.camWorldNDCMat[3][2]) / w;
+    float32 w = params.camWorldNDCMat[2][3] * z + params.camWorldNDCMat[3][3];
+    return (z * params.camWorldNDCMat[2][2] + params.camWorldNDCMat[3][2]) / w;
   }
 
-  float32 cameraDistanceToNDC(float32 distance)
+  float32 cameraZToNDC(float32 z)
   {
-    float32 w = params.camCameraNDCMat[2][3] * distance + params.camCameraNDCMat[3][3];
-    return (distance * params.camCameraNDCMat[2][2] + params.camCameraNDCMat[3][2]) / w;
+    float32 w = params.camCameraNDCMat[2][3] * z + params.camCameraNDCMat[3][3];
+    return (z * params.camCameraNDCMat[2][2] + params.camCameraNDCMat[3][2]) / w;
   }
 
-  float32 NDCDistanceToWorld(float32 distance)
+  float32 NDCZToWorld(float32 z)
   {
-    float32 w = params.camNDCWorldMat[2][3] * distance + params.camNDCWorldMat[3][3];
-    return (distance * params.camNDCWorldMat[2][2] + params.camNDCWorldMat[3][2]) / w;
+    float32 w = params.camNDCWorldMat[2][3] * z + params.camNDCWorldMat[3][3];
+    return (z * params.camNDCWorldMat[2][2] + params.camNDCWorldMat[3][2]) / w;
   }
 
-  float32 NDCDistanceToCamera(float32 distance)
+  float32 NDCZToCamera(float32 z)
   {
     
-    float32 w = params.camNDCCameraMat[2][3] * distance + params.camNDCCameraMat[3][3];
-    return (distance * params.camNDCCameraMat[2][2] + params.camNDCCameraMat[3][2]) / w;
+    float32 w = params.camNDCCameraMat[2][3] * z + params.camNDCCameraMat[3][3];
+    return (z * params.camNDCCameraMat[2][2] + params.camNDCCameraMat[3][2]) / w;
   }
 
 

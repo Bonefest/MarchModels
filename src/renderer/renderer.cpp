@@ -96,7 +96,10 @@ static void rendererSetupGlobalParameters(Film* film,
   parameters.camWorldNDCMat = cameraGetWorldNDCMat(camera);
   parameters.camCameraWorldMat = cameraGetCameraWorldMat(camera);
   parameters.camWorldCameraMat = cameraGetWorldCameraMat(camera);
-
+  parameters.camFwdAxis = parameters.camCameraWorldMat[2];
+  parameters.camSideAxis = parameters.camCameraWorldMat[0];
+  parameters.camUpAxis = parameters.camCameraWorldMat[1];    
+  
   glBindBuffer(GL_UNIFORM_BUFFER, rendererGetResourceHandle(RR_GLOBAL_PARAMS_UBO));
   glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(GlobalParameters), &parameters);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);                    

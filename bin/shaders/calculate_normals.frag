@@ -7,14 +7,13 @@ layout(location = 0) out float3 outNormal;
 layout(location = 0) uniform sampler2D distancesMap;
 layout(location = 1) uniform usampler2D idsMap;
 
-// NOTE: Convert fragCoord into ray in world space, multiply ray by
-// distance, traversed along that ray - the result is a point on a surface in world space
 float3 convertFragCoordToWorldSpace(float2 fragCoord)
 {
-  float3 worldRay = generateRayDir(fragCoordToUV(fragCoord));
-  float32 distance = NDCDistanceToCamera(texelFetch(distancesMap, int2(fragCoord.xy), 0).x * 2.0 - 1.0);
+  float3 ndcPos = float3(fragCoordToUV(fragCoord) * float2(-2.0, 2.0) + float2(1.0, -1.0),
+                         texelFetch(distancesMap, int2(fragCoord.xy), 0) * 2.0 - 1.0);
+  float4 worldPos = params.camNDCWorldMat * float4(ndcPos, 1.0);
 
-  return normalize(worldRay) * distance + params.camPosition.xyz;
+  return worldPos.xyz / worldPos.w;
 }
 
 void main()

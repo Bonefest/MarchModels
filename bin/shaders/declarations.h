@@ -72,6 +72,9 @@
     
     float4   camPosition;
     quat     camOrientation;
+    float4   camFwdAxis;
+    float4   camSideAxis;
+    float4   camUpAxis;
     float4x4 camNDCCameraMat;
     float4x4 camCameraNDCMat;  
     float4x4 camNDCWorldMat;

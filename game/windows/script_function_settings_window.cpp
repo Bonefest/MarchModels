@@ -44,6 +44,9 @@ static const vector<ArgumentDesc> builtinArgsDescs =
   
   {"params.camPosition", "camera position in world space"},
   {"params.camOrientation", "camera orientation in world space expressed as a quaternion"},
+  {"params.camFwdAxis", "camera forward z axis in world space"},
+  {"params.camSideAxis", "camera side x axis in world space"},
+  {"params.camUpAxis", "camera up y axis in world space"},    
   {"params.camNDCCameraMat", "NDC->Camera space transformation matrix"},
   {"params.camCameraNDCMat", "Camera->NDC space transformation matrix"},
   {"params.camNDCWorldMat", "NDC->World space transformation matrix"},
