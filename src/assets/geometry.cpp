@@ -1171,6 +1171,7 @@ void geometrySetNativeAABB(Asset* geometry, const AABB& nativeAABB)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   geometryData->nativeAABB = nativeAABB;
+  geometryData->dirty = TRUE;
 }
 
 const AABB& geometryGetNativeAABB(Asset* geometry)

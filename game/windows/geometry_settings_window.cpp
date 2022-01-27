@@ -10,7 +10,7 @@ struct GeometrySettingsWindowData
 {
   Scene* scene;
   AssetPtr geometry;
-  bool8 positionRelativeToParent;
+  bool8 positionRelativeToParent = TRUE;
   bool8 orientationRelativeToParent;
 };
 
@@ -131,6 +131,10 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
   
   // Position input
   float3 geometryPosition = geometryGetPosition(data->geometry);
+  if(data->positionRelativeToParent == FALSE)
+  {
+    geometryPosition = geometryTransformToWorld(data->geometry, geometryPosition);
+  }
   
   const char* relModePositionIcon = data->positionRelativeToParent == TRUE ?
     ICON_KI_USER"##PositionRelMode" : ICON_KI_USERS"##PositionRelMode";
@@ -153,6 +157,10 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
   
 
   ImGui::SliderFloat3("Position##Geometry", &geometryPosition.x, -10.0, 10.0);
+  if(data->positionRelativeToParent == FALSE)
+  {
+    geometryPosition = geometryTransformToLocal(data->geometry, geometryPosition);
+  }
   geometrySetPosition(data->geometry, geometryPosition);
 
   // Orientation input
@@ -226,8 +234,8 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
     ImGui::BeginDisabled(automatic);
     
     ImGui::Text("Native AABB");
-    ImGui::SliderFloat3("Minimal", &nativeAABB.min[0], -20.0, 20.0);
-    ImGui::SliderFloat3("Maximal", &nativeAABB.max[0], -20.0, 20.0);
+    ImGui::SliderFloat3("Minimal##Native", &nativeAABB.min[0], -20.0, 20.0);
+    ImGui::SliderFloat3("Maximal##Native", &nativeAABB.max[0], -20.0, 20.0);
 
     geometrySetNativeAABB(data->geometry, nativeAABB);
 
@@ -236,12 +244,12 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
     ImGui::BeginDisabled(true);
     
     ImGui::Text("Dynamic AABB");
-    ImGui::SliderFloat3("Minimal", &dynamicAABB.min[0], -20.0, 20.0);
-    ImGui::SliderFloat3("Maximal", &dynamicAABB.max[0], -20.0, 20.0);
+    ImGui::SliderFloat3("Minimal##Dynamic", &dynamicAABB.min[0], -20.0, 20.0);
+    ImGui::SliderFloat3("Maximal##Dynamic", &dynamicAABB.max[0], -20.0, 20.0);
 
     ImGui::Text("Final AABB");
-    ImGui::SliderFloat3("Minimal", &finalAABB.min[0], -20.0, 20.0);
-    ImGui::SliderFloat3("Maximal", &finalAABB.max[0], -20.0, 20.0);
+    ImGui::SliderFloat3("Minimal##Final", &finalAABB.min[0], -20.0, 20.0);
+    ImGui::SliderFloat3("Maximal##Final", &finalAABB.max[0], -20.0, 20.0);
     
     ImGui::EndDisabled();
     

@@ -10,6 +10,7 @@
 #include <ray_integrators/debug_ray_integrator.h>
 
 #include "editor.h"
+#include "ui_utils.h"
 #include "view_window.h"
 
 using namespace march;
@@ -458,8 +459,31 @@ static void drawViewSettingsWindow(Window* window, float64 delta)
     float32 yaw = ori.x;
     float32 pitch = ori.y;
 
+    pushIconSmallButtonStyle();
+    if(ImGui::Button(ICON_KI_RELOAD_INVERSE"##ReloadPosition"))
+    {
+      pos = float3(0.0f, 0.0f, -10.0f);
+    }
+    popIconSmallButtonStyle();
+    ImGui::SameLine();
     ImGui::SliderFloat3("Position##Camera", &pos.x, -10.0f, 10.0f);
+
+    pushIconSmallButtonStyle();
+    if(ImGui::Button(ICON_KI_RELOAD_INVERSE"##ReloadYaw"))
+    {
+      yaw = 0.0f;
+    }
+    popIconSmallButtonStyle();
+    ImGui::SameLine();    
     ImGui::SliderAngle("Yaw##Camera", &yaw, -180.0f, 180.0f);
+
+    pushIconSmallButtonStyle();
+    if(ImGui::Button(ICON_KI_RELOAD_INVERSE"##ReloadPitch"))
+    {
+      pitch = 0.0f;
+    }
+    popIconSmallButtonStyle();
+    ImGui::SameLine();    
     ImGui::SliderAngle("Pitch##Camera", &pitch, -90.0f, 90.0f);
 
     cameraSetPosition(camera, pos);

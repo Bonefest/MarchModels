@@ -108,6 +108,8 @@ static void aabbVisualizationPassDrawInputView(RenderPass* pass)
   };
 
   ImGui::Checkbox("Show parents", (bool*)&data->showParents);
+  ImGui::SameLine();
+  ImGui::PushItemWidth(200.0);
   ImGui::Combo("AABB Visualization mode",
                (int32*)&data->visualizationMode,
                visualizationModesLabels,

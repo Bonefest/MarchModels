@@ -64,10 +64,10 @@ ENGINE_API bool8 geometryIsRoot(Asset* geometry);
 ENGINE_API bool8 geometryIsBranch(Asset* geometry);
 ENGINE_API bool8 geometryIsLeaf(Asset* geometry);
 
-ENGINE_API float3 geometryTransformToParent(Asset* geometry, float3 p);
-ENGINE_API float3 geometryTransformFromParent(Asset* geometry, float3 p);
-ENGINE_API float3 geometryTransformToLocal(Asset* geometry, float3 p);
-ENGINE_API float3 geometryTransformToWorld(Asset* geometry, float3 p);
+ENGINE_API float3 geometryTransformToParent(Asset* geometry, float3 localPos);
+ENGINE_API float3 geometryTransformFromParent(Asset* geometry, float3 parentPos);
+ENGINE_API float3 geometryTransformToLocal(Asset* geometry, float3 worldPos);
+ENGINE_API float3 geometryTransformToWorld(Asset* geometry, float3 localPos);
 
 ENGINE_API float4x4 geometryGetWorldGeoMat(Asset* geometry);
 ENGINE_API float4x4 geometryGetGeoWorldMat(Asset* geometry);
