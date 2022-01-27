@@ -11,7 +11,8 @@ struct RenderPassInterface
 {
   void (*destroy)(RenderPass*);
   
-  bool8 (*execute)(RenderPass* pass);  
+  bool8 (*execute)(RenderPass* pass);
+  void (*drawInputView)(RenderPass* pass);
   const char*(*getName)(RenderPass* pass);
   
   RenderPassType type = RENDER_PASS_TYPE_UNKNOWN;
@@ -21,6 +22,9 @@ ENGINE_API bool8 allocateRenderPass(RenderPassInterface interface, RenderPass** 
 ENGINE_API void destroyRenderPass(RenderPass* pass);
 
 ENGINE_API bool8 renderPassExecute(RenderPass* pass);
+
+ENGINE_API void renderPassDrawInputView(RenderPass* pass);
+ENGINE_API bool8 renderPassHasInputView(RenderPass* pass);
 
 ENGINE_API const char* renderPassGetName(RenderPass* pass);
 ENGINE_API RenderPassType renderPassGetType(RenderPass* pass);

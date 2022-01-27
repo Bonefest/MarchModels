@@ -33,6 +33,8 @@ struct Renderer
   RenderPass* simpleShadingPass;
   RenderPass* pbrShadingPass;
 
+  std::vector<RenderPass*> passes;
+  
   // std::vector<RenderPass*> tonemapperPasses;
   // std::vector<RenderPass*> postprocessPasses;
 
@@ -246,6 +248,13 @@ static bool8 initializeRenderPasses()
   INIT(createAABBVisualizationPass, &data.aabbVisualizationPass);
   INIT(createLDRToFilmCopyPass, &data.ldrToFilmPass);
   INIT(initializeAABBCalculationPass);
+
+  data.passes.push_back(data.rasterizationPass);
+  data.passes.push_back(data.normalsCalculationPass);
+  data.passes.push_back(data.distancesVisualizationPass);
+  data.passes.push_back(data.idsVisualizationPass);
+  data.passes.push_back(data.normalsVisualizationPass);
+  data.passes.push_back(data.aabbVisualizationPass);    
   
   return TRUE;
 }
@@ -341,6 +350,11 @@ bool8 rendererRenderScene(Film* film,
 GLuint rendererGetResourceHandle(RendererResourceType type)
 {
   return data.handles[type];
+}
+
+const std::vector<RenderPass*>& rendererGetPasses()
+{
+  return data.passes;
 }
 
 Film* rendererGetPassedFilm()

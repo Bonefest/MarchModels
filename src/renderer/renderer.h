@@ -4,6 +4,7 @@
 #include "scene.h"
 #include "camera.h"
 #include "defines.h"
+#include "passes/render_pass.h"
 
 enum RendererShadingMode
 {
@@ -81,6 +82,7 @@ ENGINE_API bool8 rendererRenderScene(Film* film,
 
 
 ENGINE_API GLuint rendererGetResourceHandle(RendererResourceType type);
+ENGINE_API const std::vector<RenderPass*>& rendererGetPasses();
 
 /**
  * @note Useful for passes, which need additional data (e.g for rasterization pass, which needs to have an access

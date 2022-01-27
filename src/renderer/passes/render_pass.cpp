@@ -31,6 +31,19 @@ bool8 renderPassExecute(RenderPass* pass)
   return pass->interface.execute(pass);
 }
 
+void renderPassDrawInputView(RenderPass* pass)
+{
+  if(renderPassHasInputView(pass) == TRUE)
+  {
+    pass->interface.drawInputView(pass);
+  }
+}
+
+bool8 renderPassHasInputView(RenderPass* pass)
+{
+  return pass->interface.drawInputView != nullptr ? TRUE : FALSE;
+}
+
 const char* renderPassGetName(RenderPass* pass)
 {
   return pass->interface.getName(pass);

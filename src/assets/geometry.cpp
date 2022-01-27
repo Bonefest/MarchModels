@@ -179,9 +179,8 @@ static void geometryRecalculateFullTransforms(Asset* geometry, bool8 parentWasDi
       geometryData->transformToWorld = mul(parentData->transformToWorld, transformFromLocal);
     }
 
-    // NOTE: Recalculate dynamic AABB, if it's a bounded leaf, based on the
-    // new transformations
-    if(geometryData->bounded == TRUE && geometryIsLeaf(geometry) == TRUE)
+    // NOTE: Recalculate dynamic AABB, if it's a leaf, based on the new transformations
+    if(geometryIsLeaf(geometry) == TRUE)
     {
       geometryData->dynamicAABB = geometryData->nativeAABB.genTransformed(geometryData->transformToWorld);
     }

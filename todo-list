@@ -26,3 +26,5 @@
 26. We incorrectly calculate values in z buffer, what we should really store is z value, not distance (hence, we should find a point in world space, project it in the NDC and store that value instead)
 27. add rendererGetPass(name) function - bools like "enable normals" may be obsolete, because we can control the passes directly. Gives us more flexibilty: allows to add parameters to the passes and control them from the editor.
 28. add renderPassDrawInputView() - allows to incapsulate input view
+29. double click on a geometry, will change camera's position to center view on the geometry
+30. wind function / parameter

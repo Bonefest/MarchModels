@@ -46,7 +46,7 @@ static bool8 normalsCalculationPassExecute(RenderPass* pass)
 
 static const char* normalsCalculationPassGetName(RenderPass* pass)
 {
-  return "DistancesVisualizationPass";
+  return "NormalsCalculationPass";
 }
 
 static ShaderProgram* createNormalsCalculationProgram()

@@ -1,3 +1,6 @@
+#include <imgui/imgui.h>
+
+#include "utils.h"
 #include "program.h"
 #include "memory_manager.h"
 #include "shader_manager.h"
@@ -16,6 +19,9 @@ struct AABBVisualizationPassData
   GLuint ldrFBO;
   
   ShaderProgram* visualizationProgram;
+
+  AABBVisualizationMode visualizationMode;
+  bool8 showParents = TRUE;
 };
 
 static void destroyAABBVisualizationPass(RenderPass* pass)
@@ -32,17 +38,29 @@ static void destroyAABBVisualizationPass(RenderPass* pass)
   engineFreeObject(data, MEMORY_TYPE_GENERAL);
 }
 
-static void gatherAABBs(Asset* geometry, std::vector<float3>& aabbData)
+static void gatherAABBs(AABBVisualizationPassData* data, Asset* geometry, std::vector<float3>& outAABBData)
 {
   std::vector<AssetPtr>& children = geometryGetChildren(geometry);
   for(auto child: children)
   {
-    gatherAABBs(child, aabbData);
+    gatherAABBs(data, child, outAABBData);
   }
 
-  AABB aabb = geometryGetFinalAABB(geometry);
-  aabbData.push_back(aabb.getCenter());
-  aabbData.push_back(aabb.getDimensions());
+  if(data->showParents == TRUE || geometryIsLeaf(geometry) == TRUE)
+  {
+    AABB aabb;
+    if(data->visualizationMode == AABB_VISUALIZATION_MODE_DYNAMIC)
+    {
+      aabb = geometryGetDynamicAABB(geometry);
+    }
+    else if(data->visualizationMode == AABB_VISUALIZATION_MODE_FINAL)
+    {
+      aabb = geometryGetFinalAABB(geometry);
+    }
+
+    outAABBData.push_back(aabb.getCenter());
+    outAABBData.push_back(aabb.getDimensions());    
+  }
 }
 
 static bool8 aabbVisualizationPassExecute(RenderPass* pass)
@@ -50,7 +68,7 @@ static bool8 aabbVisualizationPassExecute(RenderPass* pass)
   AABBVisualizationPassData* data = (AABBVisualizationPassData*)renderPassGetInternalData(pass);
 
   std::vector<float3> aabbData;
-  gatherAABBs(sceneGetGeometryRoot(rendererGetPassedScene()), aabbData);
+  gatherAABBs(data, sceneGetGeometryRoot(rendererGetPassedScene()), aabbData);
   
   glBindBuffer(GL_ARRAY_BUFFER, data->instancesVBO);
   glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float32) * 3 * aabbData.size(), &aabbData[0]);
@@ -77,6 +95,23 @@ static bool8 aabbVisualizationPassExecute(RenderPass* pass)
   glDisable(GL_DEPTH_TEST);
   
   return TRUE;
+}
+
+static void aabbVisualizationPassDrawInputView(RenderPass* pass)
+{
+  AABBVisualizationPassData* data = (AABBVisualizationPassData*)renderPassGetInternalData(pass);
+
+  const static char* visualizationModesLabels[] =
+  {
+    "Show dynamic AABB",
+    "Show final AABB"
+  };
+
+  ImGui::Checkbox("Show parents", (bool*)&data->showParents);
+  ImGui::Combo("AABB Visualization mode",
+               (int32*)&data->visualizationMode,
+               visualizationModesLabels,
+               ARRAY_SIZE(visualizationModesLabels));
 }
 
 static const char* aabbVisualizationPassGetName(RenderPass* pass)
@@ -209,6 +244,7 @@ bool8 createAABBVisualizationPass(RenderPass** outPass)
   RenderPassInterface interface = {};
   interface.destroy = destroyAABBVisualizationPass;
   interface.execute = aabbVisualizationPassExecute;
+  interface.drawInputView = aabbVisualizationPassDrawInputView;
   interface.getName = aabbVisualizationPassGetName;
   interface.type = RENDER_PASS_TYPE_AABB_VISUALIZATION;
 

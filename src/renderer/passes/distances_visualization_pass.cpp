@@ -1,3 +1,5 @@
+#include <imgui/imgui.h>
+
 #include "program.h"
 #include "memory_manager.h"
 #include "shader_manager.h"
@@ -49,6 +51,15 @@ static bool8 distancesVisualizationPassExecute(RenderPass* pass)
   return TRUE;
 }
 
+static void distancesVisualizationPassDrawInputView(RenderPass* pass)
+{
+  DistancesVisualizationPassData* data = (DistancesVisualizationPassData*)renderPassGetInternalData(pass);
+
+  ImGui::SliderFloat("Max distance", &data->distancesRange.y, 0.1, 100.0);
+  ImGui::ColorEdit3("Closest color", &data->closestColor[0]);
+  ImGui::ColorEdit3("Farthest color", &data->farthestColor[0]);  
+}
+
 static const char* distancesVisualizationPassGetName(RenderPass* pass)
 {
   return "DistancesVisualizationPass";
@@ -94,6 +105,7 @@ bool8 createDistancesVisualizationPass(float2 distancesRange,
   RenderPassInterface interface = {};
   interface.destroy = destroyDistancesVisualizationPass;
   interface.execute = distancesVisualizationPassExecute;
+  interface.drawInputView = distancesVisualizationPassDrawInputView;
   interface.getName = distancesVisualizationPassGetName;
   interface.type = RENDER_PASS_TYPE_DISTANCES_VISUALIZATION;
 

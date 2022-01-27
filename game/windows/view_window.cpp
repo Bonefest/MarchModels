@@ -426,24 +426,28 @@ static void drawViewSettingsWindow(Window* window, float64 delta)
     
     ImGui::TreePop();
   }
-  
-  // --- Image integrator settings --------------------------------------------
-  if(ImGui::TreeNode("Image integrator settings"))
-  {
-    uint2 pixelGap = imageIntegratorGetPixelGap(integrator);
-    uint2 pixelOffset = imageIntegratorGetInitialOffset(integrator);
 
-    uint minValue = 0, maxValue = windowGetSize(viewWindow).x;
-              
-    ImGui::SliderScalarN("Pixel gap##ViewSettings", ImGuiDataType_U32, &pixelGap, 2, &minValue, &maxValue);
-    ImGui::SliderScalarN("Pixel offset##ViewSettings", ImGuiDataType_U32, &pixelOffset, 2, &minValue, &maxValue);
-  
-    imageIntegratorSetPixelGap(integrator, pixelGap);
-    imageIntegratorSetInitialOffset(integrator, pixelOffset);
+  // --- Render passes settings -----------------------------------------------
+  if(ImGui::TreeNode("Render passes"))
+  {
+    const std::vector<RenderPass*>& passes = rendererGetPasses();
+
+    for(RenderPass* pass: passes)
+    {
+      if(renderPassHasInputView(pass) == TRUE)
+      {
+        if(ImGui::TreeNode(renderPassGetName(pass)))
+        {
+          renderPassDrawInputView(pass);
+
+          ImGui::TreePop();
+        }
+      }
+    }
 
     ImGui::TreePop();
   }
-
+  
   // --- Camera settings ------------------------------------------------------
   if(ImGui::TreeNode("Camera settings"))
   {
@@ -464,76 +468,6 @@ static void drawViewSettingsWindow(Window* window, float64 delta)
     ImGui::TreePop();
   }
 
-  // --- Sampler settings -----------------------------------------------------
-  if(ImGui::TreeNode("Sampler settings"))
-  {
-
-    const static SamplerType samplerTypes[] =
-    {
-      SAMPLER_TYPE_CENTER_SAMPLER
-    };
-
-    const static char* samplerTypeLabels[] =
-    {
-      "Center sampler"
-    };
-
-    Sampler* sampler = imageIntegratorGetSampler(integrator);
-    SamplerType samplerType = samplerGetType(sampler);
-
-    int samplerItemIdx = std::distance(std::find(samplerTypes,
-                                                 samplerTypes + ARRAY_SIZE(samplerTypes),
-                                                 samplerType), samplerTypes);
-
-    if(ImGui::Combo("Sampler type", &samplerItemIdx, samplerTypeLabels, ARRAY_SIZE(samplerTypeLabels)))
-    {
-      samplerType = samplerTypes[samplerItemIdx];
-
-      uint2 sampleAreaSize = samplerGetSampleAreaSize(sampler);
-      destroySampler(sampler);
-      assert(samplerCreate(samplerType, sampleAreaSize, &sampler));
-
-      imageIntegratorSetSampler(integrator, sampler);
-    }
-
-    samplerDrawInputView(sampler);
-    ImGui::TreePop();
-  }
-
-  // --- Ray integrator settings ----------------------------------------------
-  if(ImGui::TreeNode("Ray integrator settings"))
-  {
-    const static RayIntegratorType rayIntgTypes[] =
-    {
-      RAY_INTEGRATOR_TYPE_DEBUG
-    };
-
-    const static char* rayIntgTypesLabels[] =
-    {
-      "Debug integrator"
-    };
-
-    RayIntegrator* rayIntegrator = imageIntegratorGetRayIntegrator(integrator);
-    RayIntegratorType rayIntgType = rayIntegratorGetType(rayIntegrator);
-
-    int rayIntgItemIdx = std::distance(std::find(rayIntgTypes,
-                                                 rayIntgTypes + ARRAY_SIZE(rayIntgTypes),
-                                                 rayIntgType), rayIntgTypes);
-
-    if(ImGui::Combo("Ray integrator type", &rayIntgItemIdx, rayIntgTypesLabels, ARRAY_SIZE(rayIntgTypes)))
-    {
-      rayIntgType = rayIntgTypes[rayIntgItemIdx];
-
-      destroyRayIntegrator(rayIntegrator);
-      assert(rayIntegratorCreate(rayIntgType, &rayIntegrator));
-
-      imageIntegratorSetRayIntegrator(integrator, rayIntegrator);
-    }
-
-    rayIntegratorDrawInputView(rayIntegrator);
-
-    ImGui::TreePop();
-  }
 }
 
 static void processInputViewSettingsWindow(Window* window, const EventData& eventData, void* sender)
