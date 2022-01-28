@@ -565,6 +565,9 @@ namespace linalg
     template<class T> constexpr mat<T,2,2> adjugate(const mat<T,2,2> & a) { return {{a.y.y, -a.x.y}, {-a.y.x, a.x.x}}; }
     template<class T> constexpr mat<T,3,3> adjugate(const mat<T,3,3> & a);
     template<class T> constexpr mat<T,4,4> adjugate(const mat<T,4,4> & a);
+    // CUSTOM_PATCH: Convert mat4x4 into mat3x3
+    template<class T> constexpr mat<T,3,3> rotor(const mat<T,4,4> & a) { return {a.x.xyz(), a.y.xyz(), a.z.xyz()}; }
+    // END CUSTOM_PATCH
     template<class T, int N> constexpr mat<T,N,N> comatrix(const mat<T,N,N> & a) { return transpose(adjugate(a)); }
     template<class T> constexpr T determinant(const mat<T,1,1> & a) { return a.x.x; }
     template<class T> constexpr T determinant(const mat<T,2,2> & a) { return a.x.x*a.y.y - a.x.y*a.y.x; }

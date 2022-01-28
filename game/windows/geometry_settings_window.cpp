@@ -10,8 +10,9 @@ struct GeometrySettingsWindowData
 {
   Scene* scene;
   AssetPtr geometry;
+  
   bool8 positionRelativeToParent = TRUE;
-  bool8 orientationRelativeToParent;
+  bool8 orientationRelativeToParent = TRUE;
 };
 
 static bool8 geometrySettingsWindowInitialize(Window*);
@@ -131,10 +132,6 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
   
   // Position input
   float3 geometryPosition = geometryGetPosition(data->geometry);
-  if(data->positionRelativeToParent == FALSE)
-  {
-    geometryPosition = geometryTransformToWorld(data->geometry, geometryPosition);
-  }
   
   const char* relModePositionIcon = data->positionRelativeToParent == TRUE ?
     ICON_KI_USER"##PositionRelMode" : ICON_KI_USERS"##PositionRelMode";
@@ -154,12 +151,18 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
   popIconButtonStyle();
     
   ImGui::SameLine();
-  
 
-  ImGui::SliderFloat3("Position##Geometry", &geometryPosition.x, -10.0, 10.0);
+
   if(data->positionRelativeToParent == FALSE)
   {
-    geometryPosition = geometryTransformToLocal(data->geometry, geometryPosition);
+    geometryPosition = geometryTransformToWorld(geometryGetParent(data->geometry), geometryPosition);
+  }
+
+  ImGui::SliderFloat3("Position##Geometry", &geometryPosition.x, -10.0, 10.0);
+
+  if(data->positionRelativeToParent == FALSE)
+  {
+    geometryPosition = geometryTransformToLocal(geometryGetParent(data->geometry), geometryPosition);
   }
   geometrySetPosition(data->geometry, geometryPosition);
 
@@ -189,6 +192,14 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
 
   const static float32 orientationMinRange[] = {-1.0, -1.0, -1.0, -1.0};
   const static float32 orientationMaxRange[] = { 1.0,  1.0,  1.0, 1.0};
+
+  if(data->orientationRelativeToParent == FALSE)
+  {
+    float3x3 qAsMat = qmat(geometryOrientation);
+    float3x3 worldMat = rotor(geometryGetGeoWorldMat(geometryGetParent(data->geometry)));
+    
+    geometryOrientation = rotation_quat(mul(worldMat, qAsMat));
+  }
   
   ImGui::SliderScalarN("Orientation",
                        ImGuiDataType_Float,
@@ -199,6 +210,14 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
                        "%.2f",
                        ImGuiSliderFlags_MultiRange);
 
+  if(data->orientationRelativeToParent == FALSE)
+  {
+    float3x3 qAsMat = qmat(geometryOrientation);
+    float3x3 localMat = rotor(geometryGetWorldGeoMat(geometryGetParent(data->geometry)));
+    
+    geometryOrientation = rotation_quat(mul(localMat, qAsMat));
+  }
+  
   geometrySetOrientation(data->geometry, normalize(geometryOrientation));
 
   // AABB Settings

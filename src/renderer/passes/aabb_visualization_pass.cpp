@@ -114,6 +114,7 @@ static void aabbVisualizationPassDrawInputView(RenderPass* pass)
                (int32*)&data->visualizationMode,
                visualizationModesLabels,
                ARRAY_SIZE(visualizationModesLabels));
+  ImGui::PopItemWidth();
 }
 
 static const char* aabbVisualizationPassGetName(RenderPass* pass)
