@@ -4,7 +4,6 @@ using std::string;
 using std::vector;
 
 #include "logging.h"
-#include "maths/aabb.h"
 #include "shader_build.h"
 #include "shader_manager.h"
 #include "memory_manager.h"

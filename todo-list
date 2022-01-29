@@ -28,3 +28,7 @@
 28. add renderPassDrawInputView() - allows to incapsulate input view
 29. double click on a geometry, will change camera's position to center view on the geometry
 30. wind function / parameter
+31. add additional check if traversed distance > some threshold
+32. instead of discarding rays that haven't intersected a surface, consider them as intersected, in case if minimal distance to the surface was smaller than some threshold2
+33. chance to fix camera's frustum (disable recalculations)
+34. visualization of a frustum
