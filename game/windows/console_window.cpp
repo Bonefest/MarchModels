@@ -13,6 +13,7 @@
 
 const static uint32 MAX_BUF_SIZE = 255;
 
+const static LogMessageType LOG_MESSAGE_TYPE_INTERNAL = (LogMessageType)0;
 
 struct LogMessageData
 {
@@ -32,7 +33,7 @@ struct ConsoleWindowData
   uint8 filterTypes = 0xFF;
 };
 
-bool8 logMessageCallback(EventData data, void* sender, void* listener)
+static bool8 logMessageCallback(EventData data, void* sender, void* listener)
 {
   assert(data.type == EVENT_TYPE_LOG_MESSAGE);
 
@@ -87,6 +88,7 @@ int inputTextCallback(ImGuiInputTextCallbackData* data)
       std::string closestMatch = "";
       
       std::vector<std::string> cvarNames = CVarSystemGetRegisteredVars();
+      std::vector<std::string> candidates;
 
       for(std::string name: cvarNames)
       {
@@ -107,9 +109,11 @@ int inputTextCallback(ImGuiInputTextCallbackData* data)
                 break;
               }
             }
-
+            
             closestMatch = closestMatch.substr(0, diffPos);
           }
+
+          candidates.push_back(name);
         }
       }
       
@@ -118,9 +122,22 @@ int inputTextCallback(ImGuiInputTextCallbackData* data)
         sprintf(data->Buf, "/%s", closestMatch.c_str());
         data->BufTextLen = strlen(data->Buf);
         data->CursorPos = data->BufTextLen;
-        data->BufDirty = true;        
+        data->BufDirty = true;
       }
-       
+
+      if(candidates.size() > 1)
+      {
+        for(const std::string& name : candidates)
+        {
+          windowData->messages.push_front(LogMessageData{LOG_MESSAGE_TYPE_INTERNAL,
+                                                         "    " + name,
+                                                         ImColor(255, 255, 255, 255)});
+        }
+
+        windowData->messages.push_front(LogMessageData{LOG_MESSAGE_TYPE_INTERNAL,
+                                                      "Candidates: ",
+                                                      ImColor(255, 255, 255, 255)});        
+      }
     }
 
   }
@@ -271,7 +288,7 @@ static void consoleWindowDraw(Window* window, float64 delta)
     uint32 messageIdx = 1;
     for(const LogMessageData& message: data->messages)
     {
-      if( (data->filterTypes & (1 << (uint8)message.type)) != (1 << (uint8)message.type) )
+      if( (data->filterTypes & (1 << (uint8)message.type)) != (1 << (uint8)message.type) && message.type != LOG_MESSAGE_TYPE_INTERNAL)
       {
         continue;
       }
