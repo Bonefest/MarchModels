@@ -32,3 +32,4 @@
 32. instead of discarding rays that haven't intersected a surface, consider them as intersected, in case if minimal distance to the surface was smaller than some threshold2
 33. chance to fix camera's frustum (disable recalculations)
 34. visualization of a frustum
+35. statistics of culled objects

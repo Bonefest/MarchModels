@@ -139,17 +139,27 @@ ENGINE_API bool8 AABBIntersect(const AABB& lop, const AABB& rop);
 // ----------------------------------------------------------------------------
 
 /**
- * Is defined as a set of 6 planes: right, left, top, bottom, far, near;
- * each plane is directed inside of the frustum.
+ * Is defined as:
+ *   1) a set of 6 planes: right, left, top, bottom, far, near;
+ *      each plane is directed inside of the frustum.
+ *   2) a set of 8 corners: nbl, nbr, fbl, fbr, ntl, ntr, ftl, ftr
  */
 struct Frustum
 {
+  Frustum(const float3& nbl, const float3& nbr,
+          const float3& fbl, const float3& fbr,
+          
+          const float3& ntl, const float3& ntr,
+          const float3& ftl, const float3& ftr);
+  
   Frustum(const Plane& right, const Plane& left,
           const Plane& top, const Plane& bottom,
           const Plane& far, const Plane& near);
 
-  bool8 operator&(const AABB& aabb) const;
-  
+  bool8 containsPoint(float3 p) const;
+  bool8 intersects(const AABB& aabb) const;
+
+  float3 corners[8];
   Plane planes[6];
 };
 

@@ -294,16 +294,74 @@ bool8 AABBIntersect(const AABB& aabb1, const AABB& aabb2)
 // Frustum
 // ----------------------------------------------------------------------------
 
-Frustum::Frustum(const Plane& right, const Plane& left,
-                 const Plane& top, const Plane& bottom,
-                 const Plane& far, const Plane& near)
+Frustum::Frustum(const float3& nbl, /* p1 */ const float3& nbr, /* p2 */
+                 const float3& fbl, /* p3 */ const float3& fbr, /* p4 */
+                 const float3& ntl, /* p5 */ const float3& ntr, /* p6 */
+                 const float3& ftl, /* p7 */ const float3& ftr  /* p8 */)
 {
-  planes[0] = right;
-  planes[1] = left;
-  planes[2] = top;
-  planes[3] = bottom;
-  planes[4] = far;
-  planes[5] = near;
+  corners[0] = nbl;
+  corners[1] = nbr;
+  corners[2] = fbl;
+  corners[3] = fbr;
+  corners[4] = ntl;
+  corners[5] = ntr;
+  corners[6] = ftl;
+  corners[7] = ftr;
+  
+  planes[0] = createPlane(nbl, ntl, fbl); // right
+  planes[1] = createPlane(ntr, nbr, ftr); // left
+  planes[2] = createPlane(ntr, ftr, ntl); // top
+  planes[3] = createPlane(nbl, fbl, nbr); // bottom
+  planes[4] = createPlane(ftl, ftr, fbl); // far
+  planes[5] = createPlane(ntl, nbl, ntr); // near
+}
+
+bool8 Frustum::containsPoint(float3 p) const
+{
+  for(uint32 pi = 0; pi < 6; pi++)
+  {
+    if(planes[pi].getDistanceToPoint(p) < 0.0)
+    {
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+bool8 Frustum::intersects(const AABB& aabb) const
+{
+  // Source: https://iquilezles.org/www/articles/frustumcorrect/frustumcorrect.htm
+  // NOTE: It's not 100% correct, see https://stackoverflow.com/questions/31788925/correct-frustum-aabb-intersection
+  uint32 outsideCount = 0;  
+  for(uint32 pi = 0; pi < 6; pi++)
+  {
+    outsideCount = 0;
+    for(uint32 ai = 0; ai < 8; ai++)
+    {
+      if(planes[pi].getDistanceToPoint(aabb.getVertex(ai)) < 0.0)
+      {
+        outsideCount++;
+      }
+    }
+
+    // NOTE: If all 8 vertices of an AABB outside of the plane - AABB is outside of the
+    // frustum
+    if(outsideCount == 8)
+    {
+      return FALSE;
+    }
+  }
+
+  // NOTE: Reversed test: if all corners of a frustum are outside of any AABB plane - return false
+  outsideCount = 0; for(uint32 ci = 0; ci < 8; ci++) corners[ci].x < aabb.min.x ? outsideCount++ : 0; if(outsideCount == 8) return FALSE;
+  outsideCount = 0; for(uint32 ci = 0; ci < 8; ci++) corners[ci].x > aabb.max.x ? outsideCount++ : 0; if(outsideCount == 8) return FALSE;
+  outsideCount = 0; for(uint32 ci = 0; ci < 8; ci++) corners[ci].y < aabb.min.y ? outsideCount++ : 0; if(outsideCount == 8) return FALSE;
+  outsideCount = 0; for(uint32 ci = 0; ci < 8; ci++) corners[ci].y > aabb.max.y ? outsideCount++ : 0; if(outsideCount == 8) return FALSE;
+  outsideCount = 0; for(uint32 ci = 0; ci < 8; ci++) corners[ci].z < aabb.min.z ? outsideCount++ : 0; if(outsideCount == 8) return FALSE;
+  outsideCount = 0; for(uint32 ci = 0; ci < 8; ci++) corners[ci].z > aabb.max.z ? outsideCount++ : 0; if(outsideCount == 8) return FALSE;
+
+  return TRUE;
 }
 
 Frustum createFrustum(const float3& nbl, /* p1 */ const float3& nbr, /* p2 */
@@ -311,14 +369,8 @@ Frustum createFrustum(const float3& nbl, /* p1 */ const float3& nbr, /* p2 */
                       const float3& ntl, /* p5 */ const float3& ntr, /* p6 */
                       const float3& ftl, /* p7 */ const float3& ftr  /* p8 */)
 {
-  Plane right = createPlane(nbl, ntl, fbl);
-  Plane left = createPlane(ntr, nbr, ftr);
-  Plane top = createPlane(ntr, ftr, ntl);
-  Plane bottom = createPlane(nbl, fbl, nbr);
-  Plane far = createPlane(ftl, ftr, fbl);
-  Plane near = createPlane(ntl, nbl, ntr);
 
-  return Frustum(right, left, top, bottom, far, near);
+  return Frustum(nbl, nbr, fbl, fbr, ntl, ntr, ftl, ftr);
 }
 
 Frustum createFrustum(const float4x4& convertFromNDCMat)
@@ -333,5 +385,10 @@ Frustum createFrustum(const float4x4& convertFromNDCMat)
   float3 ftl = mul(convertFromNDCMat, float4(-1.0f,  1.0f,  1.0f, 1.0f)).xyz();
   float3 ftr = mul(convertFromNDCMat, float4( 1.0f,  1.0f,  1.0f, 1.0f)).xyz();
 
-  return createFrustum(nbl, nbr, fbl, fbr, ntl, ntr, ftl, ftr);
+  return Frustum(nbl, nbr, fbl, fbr, ntl, ntr, ftl, ftr);
+}
+
+bool8 frustumIntersectsAABB(const Frustum& frustum, const AABB& aabb)
+{
+  return frustum.intersects(aabb);
 }
