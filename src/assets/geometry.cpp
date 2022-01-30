@@ -19,6 +19,7 @@ struct Geometry
 {
   // Common data
   uint32 ID;
+  uint32 totalChildrenCount = 0;
   
   std::vector<AssetPtr> idfs;
   std::vector<AssetPtr> odfs;
@@ -553,6 +554,8 @@ static void geometryRecalculateIDs(Asset* geometry, uint32& idCounter)
   {
     geometryRecalculateIDs(child, idCounter);
   }
+
+  geometryData->totalChildrenCount = idCounter - geometryData->ID;
 }
 
 static void geometryRecalculateIDs(Asset* geometry)
@@ -1283,6 +1286,13 @@ std::vector<AssetPtr>& geometryGetChildren(Asset* geometry)
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);  
   
   return geometryData->children;
+}
+
+uint32 geometryGetTotalChildrenCount(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+
+  return geometryData->totalChildrenCount;
 }
 
 void geometrySetCombinationFunction(Asset* geometry, CombinationFunction function)

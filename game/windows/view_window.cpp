@@ -103,6 +103,8 @@ static void updateViewWindowSize(Window* window, uint2 size)
 
 static void drawViewWindow(Window* window, float64 delta)
 {
+  const static uint32& culledObjectsCounter = CVarSystemReadUint("engine_RasterizationStatistics_LastFrameCulledObjects");  
+  
   ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);
   ImGuiStyle& style = ImGui::GetStyle();
   
@@ -133,6 +135,7 @@ static void drawViewWindow(Window* window, float64 delta)
   if(currentScene != nullptr)
   {
     float2 initialCursorPos = ImGui::GetCursorPos();
+    float2 avalReg = ImGui::GetContentRegionAvail();
 
     ImGui::Image((void*)filmGetGLHandle(film),
                  float2(filmSize.x, filmSize.y), float2(0.0, 1.0), float2(1.0, 0.0));
@@ -217,6 +220,9 @@ static void drawViewWindow(Window* window, float64 delta)
 
     ImGui::SameLine(windowSize.x - textWidth - cogButtonWidth - 2.0 * style.FramePadding.x);
     ImGui::Text("%s", shortInfoBuf);
+
+    ImGui::SetCursorPos(initialCursorPos + float2(0.0f, avalReg.y - ImGui::GetFontSize()));
+    ImGui::Text("Culled objects: %d", culledObjectsCounter);
   }
   else
   {

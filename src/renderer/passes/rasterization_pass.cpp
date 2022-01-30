@@ -7,6 +7,8 @@
 
 #include "rasterization_pass.h"
 
+DECLARE_CVAR(engine_RasterizationStatistics_LastFrameCulledObjects, 0u);
+
 struct RasterizationPassData
 {
   GLuint raysMapFBO;
@@ -43,18 +45,20 @@ static bool8 rasterizationPassPrepareToRasterize(RasterizationPassData* data)
   return TRUE;
 }
 
-static void drawGeometryInorder(Camera* camera, AssetPtr geometry)
+static void drawGeometryInorder(Camera* camera, AssetPtr geometry, uint32& culledObjCounter)
 {
+  const AABB& geometryAABB = geometryGetFinalAABB(geometry);
+  if(cameraGetFrustum(camera).intersects(geometryAABB) == FALSE)
+  {
+    // NOTE: We've culled the object + its children
+    culledObjCounter += geometryGetTotalChildrenCount(geometry) + 1;
+    return;
+  }
+  
   std::vector<AssetPtr>& children = geometryGetChildren(geometry);
   for(AssetPtr child: children)
   {
-    const AABB& childAABB = geometryGetFinalAABB(child);
-    if(cameraGetFrustum(camera).intersects(childAABB) == FALSE)
-    {
-      continue;
-    }
-    
-    drawGeometryInorder(camera, child);
+    drawGeometryInorder(camera, child, culledObjCounter);
 
     // NOTE: Read https://gamedev.stackexchange.com/questions/151563/synchronization-between-several-gldispatchcompute-with-same-ssbos;
     // The idea is that we need to tell OpenGL explicitly that we want to synchronize several draw calls, which are
@@ -95,16 +99,18 @@ static void drawGeometryInorder(Camera* camera, AssetPtr geometry)
 static bool8 rasterizationPassRasterize(RasterizationPassData* data)
 {
   const RenderingParameters& renderingParams = rendererGetPassedRenderingParameters();
+  static uint32& culledObjectsCounter = CVarSystemGetUint("engine_RasterizationStatistics_LastFrameCulledObjects");
   
   Scene* sceneToRasterize = rendererGetPassedScene();
   std::vector<AssetPtr>& sceneGeometry = sceneGetChildren(sceneToRasterize);
 
   for(uint32 i = 0; i < renderingParams.rasterItersMaxCount; i++)
   {
+    culledObjectsCounter = 0;    
     // Calculate distances
     for(AssetPtr geometry: sceneGeometry)
     {
-      drawGeometryInorder(rendererGetPassedCamera(), geometry);
+      drawGeometryInorder(rendererGetPassedCamera(), geometry, culledObjectsCounter);
     }
 
     // Move per-pixel rays based on calculated distances

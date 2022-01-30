@@ -375,15 +375,15 @@ Frustum createFrustum(const float3& nbl, /* p1 */ const float3& nbr, /* p2 */
 
 Frustum createFrustum(const float4x4& convertFromNDCMat)
 {
-  float4 nbl = mul(convertFromNDCMat, float4(-1.0f, -1.0f, -1.0f, 1.0f));
-  float4 nbr = mul(convertFromNDCMat, float4( 1.0f, -1.0f, -1.0f, 1.0f));
-  float4 fbl = mul(convertFromNDCMat, float4(-1.0f, -1.0f,  1.0f, 1.0f));
-  float4 fbr = mul(convertFromNDCMat, float4( 1.0f, -1.0f,  1.0f, 1.0f));
+  float4 nbl = mul(convertFromNDCMat, float4( 1.0f, -1.0f, -1.0f, 1.0f));
+  float4 nbr = mul(convertFromNDCMat, float4(-1.0f, -1.0f, -1.0f, 1.0f));
+  float4 fbl = mul(convertFromNDCMat, float4( 1.0f, -1.0f,  1.0f, 1.0f));
+  float4 fbr = mul(convertFromNDCMat, float4(-1.0f, -1.0f,  1.0f, 1.0f));
 
-  float4 ntl = mul(convertFromNDCMat, float4(-1.0f,  1.0f, -1.0f, 1.0f));
-  float4 ntr = mul(convertFromNDCMat, float4( 1.0f,  1.0f, -1.0f, 1.0f));
-  float4 ftl = mul(convertFromNDCMat, float4(-1.0f,  1.0f,  1.0f, 1.0f));
-  float4 ftr = mul(convertFromNDCMat, float4( 1.0f,  1.0f,  1.0f, 1.0f));
+  float4 ntl = mul(convertFromNDCMat, float4( 1.0f,  1.0f, -1.0f, 1.0f));
+  float4 ntr = mul(convertFromNDCMat, float4(-1.0f,  1.0f, -1.0f, 1.0f));
+  float4 ftl = mul(convertFromNDCMat, float4( 1.0f,  1.0f,  1.0f, 1.0f));
+  float4 ftr = mul(convertFromNDCMat, float4(-1.0f,  1.0f,  1.0f, 1.0f));
 
   return Frustum(nbl.xyz() / nbl.w,
                  nbr.xyz() / nbr.w,

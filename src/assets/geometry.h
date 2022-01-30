@@ -106,6 +106,7 @@ ENGINE_API bool8 geometryTraversePostorder(Asset* geometry,
 ENGINE_API void geometryAddChild(AssetPtr geometry, AssetPtr child);
 ENGINE_API bool8 geometryRemoveChild(Asset* geometry, Asset* child);
 ENGINE_API std::vector<AssetPtr>& geometryGetChildren(Asset* geometry);
+ENGINE_API uint32 geometryGetTotalChildrenCount(Asset* geometry);
 
 ENGINE_API void geometrySetCombinationFunction(Asset* geometry, CombinationFunction function);
 ENGINE_API CombinationFunction geometryGetCombinationFunction(Asset* geometry);

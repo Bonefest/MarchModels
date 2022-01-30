@@ -34,3 +34,4 @@
 34. visualization of a frustum
 35. statistics of culled objects
 36. We can easily render plane as two triangles (in case if we don't need ray marching features and simply need render sort of a ground)
+37. before rasterizing a leaf, project its AABB on the screen (in case it's bounded or based on some heuristic, e.g volume size < some value)
