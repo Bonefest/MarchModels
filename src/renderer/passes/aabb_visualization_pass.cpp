@@ -22,6 +22,7 @@ struct AABBVisualizationPassData
 
   AABBVisualizationMode visualizationMode;
   bool8 showParents = TRUE;
+  bool8 showFrustum = TRUE;
 };
 
 static void destroyAABBVisualizationPass(RenderPass* pass)

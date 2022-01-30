@@ -146,6 +146,8 @@ ENGINE_API bool8 AABBIntersect(const AABB& lop, const AABB& rop);
  */
 struct Frustum
 {
+  Frustum() = default;
+  
   Frustum(const float3& nbl, const float3& nbr,
           const float3& fbl, const float3& fbr,
           

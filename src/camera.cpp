@@ -11,6 +11,8 @@ struct Camera
   float3 position;
   quat orientation;
 
+  Frustum frustum;
+
   float4x4 transformCameraToNDC;
   float4x4 transformNDCToCamera;
   
@@ -43,6 +45,8 @@ static void cameraRecalculateTransforms(Camera* camera)
   camera->transformNDCToWorld = mul(camera->transformCameraToWorld, invProjTransform);
   camera->transformWorldToNDC = inverse(camera->transformNDCToWorld);
 
+  camera->frustum = createFrustum(camera->transformNDCToWorld);
+  
   camera->dirty = FALSE;
 }
 
@@ -276,6 +280,13 @@ Ray cameraGenerateWorldRay(Camera* camera, float2 ndc)
   float3 normalizedDir = normalize((frustumFPoint).xyz() - (frustumNPoint).xyz());
 
   return Ray(camera->position, normalizedDir);
+}
+
+ENGINE_API const Frustum& cameraGetFrustum(Camera* camera)
+{
+  cameraRecalculateTransforms(camera);
+  
+  return camera->frustum;
 }
 
 void cameraSetAspectRatio(Camera* camera, float32 aspectRatio)

@@ -375,17 +375,24 @@ Frustum createFrustum(const float3& nbl, /* p1 */ const float3& nbr, /* p2 */
 
 Frustum createFrustum(const float4x4& convertFromNDCMat)
 {
-  float3 nbl = mul(convertFromNDCMat, float4(-1.0f, -1.0f, -1.0f, 1.0f)).xyz();
-  float3 nbr = mul(convertFromNDCMat, float4( 1.0f, -1.0f, -1.0f, 1.0f)).xyz();
-  float3 fbl = mul(convertFromNDCMat, float4(-1.0f, -1.0f,  1.0f, 1.0f)).xyz();
-  float3 fbr = mul(convertFromNDCMat, float4( 1.0f, -1.0f,  1.0f, 1.0f)).xyz();
+  float4 nbl = mul(convertFromNDCMat, float4(-1.0f, -1.0f, -1.0f, 1.0f));
+  float4 nbr = mul(convertFromNDCMat, float4( 1.0f, -1.0f, -1.0f, 1.0f));
+  float4 fbl = mul(convertFromNDCMat, float4(-1.0f, -1.0f,  1.0f, 1.0f));
+  float4 fbr = mul(convertFromNDCMat, float4( 1.0f, -1.0f,  1.0f, 1.0f));
 
-  float3 ntl = mul(convertFromNDCMat, float4(-1.0f,  1.0f, -1.0f, 1.0f)).xyz();
-  float3 ntr = mul(convertFromNDCMat, float4( 1.0f,  1.0f, -1.0f, 1.0f)).xyz();
-  float3 ftl = mul(convertFromNDCMat, float4(-1.0f,  1.0f,  1.0f, 1.0f)).xyz();
-  float3 ftr = mul(convertFromNDCMat, float4( 1.0f,  1.0f,  1.0f, 1.0f)).xyz();
+  float4 ntl = mul(convertFromNDCMat, float4(-1.0f,  1.0f, -1.0f, 1.0f));
+  float4 ntr = mul(convertFromNDCMat, float4( 1.0f,  1.0f, -1.0f, 1.0f));
+  float4 ftl = mul(convertFromNDCMat, float4(-1.0f,  1.0f,  1.0f, 1.0f));
+  float4 ftr = mul(convertFromNDCMat, float4( 1.0f,  1.0f,  1.0f, 1.0f));
 
-  return Frustum(nbl, nbr, fbl, fbr, ntl, ntr, ftl, ftr);
+  return Frustum(nbl.xyz() / nbl.w,
+                 nbr.xyz() / nbr.w,
+                 fbl.xyz() / fbl.w,
+                 fbr.xyz() / fbr.w,
+                 ntl.xyz() / ntl.w,
+                 ntr.xyz() / ntr.w,
+                 ftl.xyz() / ftl.w,
+                 ftr.xyz() / ftr.w);
 }
 
 bool8 frustumIntersectsAABB(const Frustum& frustum, const AABB& aabb)

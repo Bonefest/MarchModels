@@ -43,12 +43,18 @@ static bool8 rasterizationPassPrepareToRasterize(RasterizationPassData* data)
   return TRUE;
 }
 
-static void drawGeometryInorder(AssetPtr geometry)
+static void drawGeometryInorder(Camera* camera, AssetPtr geometry)
 {
   std::vector<AssetPtr>& children = geometryGetChildren(geometry);
   for(AssetPtr child: children)
   {
-    drawGeometryInorder(child);
+    const AABB& childAABB = geometryGetFinalAABB(child);
+    if(cameraGetFrustum(camera).intersects(childAABB) == FALSE)
+    {
+      continue;
+    }
+    
+    drawGeometryInorder(camera, child);
 
     // NOTE: Read https://gamedev.stackexchange.com/questions/151563/synchronization-between-several-gldispatchcompute-with-same-ssbos;
     // The idea is that we need to tell OpenGL explicitly that we want to synchronize several draw calls, which are
@@ -98,7 +104,7 @@ static bool8 rasterizationPassRasterize(RasterizationPassData* data)
     // Calculate distances
     for(AssetPtr geometry: sceneGeometry)
     {
-      drawGeometryInorder(geometry);
+      drawGeometryInorder(rendererGetPassedCamera(), geometry);
     }
 
     // Move per-pixel rays based on calculated distances

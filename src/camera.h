@@ -1,6 +1,7 @@
 #pragma once
 
 #include "maths/common.h"
+#include "maths/primitives.h"
 
 #include "defines.h"
 
@@ -53,6 +54,8 @@ ENGINE_API float4x4 cameraGetWorldNDCMat(Camera* camera);
 
 ENGINE_API Ray cameraGenerateCameraRay(Camera* camera, float2 ndc);
 ENGINE_API Ray cameraGenerateWorldRay(Camera* camera, float2 ndc);
+
+ENGINE_API const Frustum& cameraGetFrustum(Camera* camera);
 
 ENGINE_API void cameraSetAspectRatio(Camera* camera, float32 aspectRatio);
 ENGINE_API float32 cameraGetAspectRatio(Camera* camera);
