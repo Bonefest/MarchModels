@@ -4,17 +4,19 @@
 #include "program.h"
 #include "memory_manager.h"
 #include "shader_manager.h"
+#include "renderer/model3d.h"
 #include "renderer/renderer.h"
 #include "renderer/renderer_utils.h"
 
 #include "aabb_visualization_pass.h"
 
+const static uint32 MAX_INSTANCES = 1024;
+const static uint32 CUBE_VRT_BUFFER_SLOT = 0;
+const static uint32 CUBE_INST_BUFFER_SLOT = 1;  
+
 struct AABBVisualizationPassData
 {
-  GLuint cubeVBO;
-  GLuint cubeEBO;
-  GLuint instancesVBO;
-  GLuint visualizationVAO;
+  Model3DPtr cubesModel;
   
   GLuint ldrFBO;
   
@@ -28,10 +30,7 @@ struct AABBVisualizationPassData
 static void destroyAABBVisualizationPass(RenderPass* pass)
 {
   AABBVisualizationPassData* data = (AABBVisualizationPassData*)renderPassGetInternalData(pass);
-  glDeleteBuffers(1, &data->cubeVBO);
-  glDeleteBuffers(1, &data->cubeEBO);
-  glDeleteBuffers(1, &data->instancesVBO);
-  glDeleteBuffers(1, &data->visualizationVAO);
+  data->cubesModel = Model3DPtr(nullptr);
   glDeleteFramebuffers(1, &data->ldrFBO);
   
   destroyShaderProgram(data->visualizationProgram);
@@ -70,10 +69,9 @@ static bool8 aabbVisualizationPassExecute(RenderPass* pass)
 
   std::vector<float3> aabbData;
   gatherAABBs(data, sceneGetGeometryRoot(rendererGetPassedScene()), aabbData);
-  
-  glBindBuffer(GL_ARRAY_BUFFER, data->instancesVBO);
-  glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float32) * 3 * aabbData.size(), &aabbData[0]);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+  model3DUpdateBuffer(data->cubesModel, CUBE_INST_BUFFER_SLOT,
+                      0, &aabbData[0], sizeof(float32) * 3 * aabbData.size());
 
   glDepthFunc(GL_LESS);
   glEnable(GL_DEPTH_TEST);
@@ -86,7 +84,7 @@ static bool8 aabbVisualizationPassExecute(RenderPass* pass)
   
   glUniformMatrix4fv(0, 1, GL_FALSE, &viewProj[0][0]);
   
-  glBindVertexArray(data->visualizationVAO);
+  glBindVertexArray(model3DGetVAOHandle(data->cubesModel));
   glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0, aabbData.size() >> 1);
   
   shaderProgramUse(nullptr);
@@ -157,7 +155,7 @@ static GLuint createLDRFramebuffer()
   return framebuffer;
 }
 
-static void createCubeBuffers(GLuint* outVBO, GLuint* outEBO)
+static Model3DPtr createCubesModel()
 {
   const static float32 vertexData[] =
   {
@@ -181,66 +179,21 @@ static void createCubeBuffers(GLuint* outVBO, GLuint* outEBO)
     1, 3, 7, 1, 7, 5, // right face
     2, 3, 1, 2, 1, 0, // bottom face
     4, 5, 7, 4, 7, 6, // top face
-    
   };
+
   
-  GLuint vbo = 0;
-  glGenBuffers(1, &vbo);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData, GL_STATIC_DRAW);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  Model3D* model = nullptr;
+  assert(createModel3DEmpty(&model));
 
-  GLuint ebo = 0;
-  glGenBuffers(1, &ebo);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indexData), indexData, GL_STATIC_DRAW);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  model3DAttachIndexBuffer(model, indexData, sizeof(indexData), GL_STATIC_DRAW);  
+  model3DAttachBuffer(model, CUBE_VRT_BUFFER_SLOT, vertexData, sizeof(vertexData), GL_STATIC_DRAW);
+  model3DAttachBuffer(model, CUBE_INST_BUFFER_SLOT, NULL, sizeof(float32) * 6 * MAX_INSTANCES, GL_DYNAMIC_DRAW);
 
-  *outVBO = vbo;
-  *outEBO = ebo;
-}
+  model3DDescribeInput(model, 0, CUBE_VRT_BUFFER_SLOT, 3, GL_FLOAT, 3 * sizeof(float32), 0);
+  model3DDescribeInput(model, 1, CUBE_INST_BUFFER_SLOT, 3, GL_FLOAT, 6 * sizeof(float32), 0, FALSE);
+  model3DDescribeInput(model, 2, CUBE_INST_BUFFER_SLOT, 3, GL_FLOAT, 6 * sizeof(float32), 3 * sizeof(float32), FALSE);
 
-GLuint createInstancesBuffer()
-{
-  const static uint32 maxInstances = 1024;
-  
-  GLuint vbo;
-  glGenBuffers(1, &vbo);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(float3) * 2 * maxInstances, NULL, GL_DYNAMIC_DRAW);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-  return vbo;
-}
-
-GLuint createVAO(GLuint cubeVBO, GLuint cubeEBO, GLuint instancesVBO)
-{
-  GLuint vao;
-  glGenVertexArrays(1, &vao);
-  glBindVertexArray(vao);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cubeEBO);
-  
-  glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float32), NULL);
-
-  glBindBuffer(GL_ARRAY_BUFFER, instancesVBO);
-
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float32), NULL);
-  glVertexAttribDivisor(1, 1);
-
-  glEnableVertexAttribArray(2);
-  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float32), (void*)(sizeof(float32) * 3));
-  glVertexAttribDivisor(2, 1);  
-
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  
-  glBindVertexArray(0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-  return vao;
+  return Model3DPtr(model);
 }
 
 bool8 createAABBVisualizationPass(RenderPass** outPass)
@@ -262,13 +215,7 @@ bool8 createAABBVisualizationPass(RenderPass** outPass)
   data->ldrFBO = createLDRFramebuffer();
   assert(data->ldrFBO != 0);
 
-  createCubeBuffers(&data->cubeVBO, &data->cubeEBO);
-  
-  data->instancesVBO = createInstancesBuffer();
-  assert(data->instancesVBO != 0);
-  
-  data->visualizationVAO = createVAO(data->cubeVBO, data->cubeEBO, data->instancesVBO);
-  assert(data->visualizationVAO != 0);
+  data->cubesModel = createCubesModel();
   
   data->visualizationProgram = createVisualizationProgram();
   assert(data->visualizationProgram != nullptr);

@@ -9,15 +9,17 @@ ENGINE_API bool8 createModel3DFromFile(const char* filename, Model3D** outModel)
 ENGINE_API bool8 createModel3DEmpty(Model3D** outModel);
 ENGINE_API void destroyModel3D(Model3D* model);
 
+ENGINE_API void model3DAttachIndexBuffer(Model3D* model, const void* data, uint32 dataSize, GLenum usage);
+
 ENGINE_API void model3DAttachBuffer(Model3D* model,
                                     uint32 bufferSlot,
-                                    const char* data,
+                                    const void* data,
                                     uint32 dataSize,
                                     GLenum usage);
 
 ENGINE_API bool8 model3DUpdateBuffer(Model3D* model,
                                      uint32 bufferSlot,
-                                     uint32 offset, const char* data, uint32 dataSize);
+                                     uint32 offset, const void* data, uint32 dataSize);
 
 ENGINE_API bool8 model3DRemoveBuffer(Model3D* model, uint32 bufferSlot);
 

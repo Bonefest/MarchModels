@@ -55,17 +55,38 @@ bool8 model3DUsesIndices(Model3D* model)
   return model->eboHandle != 0 ? TRUE : FALSE;
 }
 
+void model3DAttachIndexBuffer(Model3D* model, const void* data, uint32 dataSize, GLenum usage)
+{
+  GLuint eboHandle = 0;
+  glGenBuffers(1, &eboHandle);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboHandle);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, dataSize, data, usage);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  
+  if(model->eboHandle != 0)
+  {
+    glDeleteBuffers(1, &model->eboHandle);
+  }
+
+  model->eboHandle = eboHandle;
+
+  glBindVertexArray(model->vaoHandle);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, eboHandle);
+  glBindVertexArray(0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
 void model3DAttachBuffer(Model3D* model,
                          uint32 bufferSlot,
-                         const char* data,
+                         const void* data,
                          uint32 dataSize,
                          GLenum usage)
 {
   assert(bufferSlot < MODEL3D_MAX_BUFFERS);
 
-  GLuint vboHandles = 0;
-  glGenBuffers(1, &vboHandles);
-  glBindBuffer(GL_ARRAY_BUFFER, vboHandles);
+  GLuint vboHandle = 0;
+  glGenBuffers(1, &vboHandle);
+  glBindBuffer(GL_ARRAY_BUFFER, vboHandle);
   glBufferData(GL_ARRAY_BUFFER, dataSize, data, usage);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -74,15 +95,19 @@ void model3DAttachBuffer(Model3D* model,
     glDeleteBuffers(1, &model->vboHandles[bufferSlot]);
   }
 
-  model->vboHandles[bufferSlot] = vboHandles;
+  model->vboHandles[bufferSlot] = vboHandle;
 }
 
 bool8 model3DUpdateBuffer(Model3D* model,
                           uint32 bufferSlot,
-                          uint32 offset, const char* data, uint32 dataSize)
+                          uint32 offset, const void* data, uint32 dataSize)
 {
   assert(bufferSlot < MODEL3D_MAX_BUFFERS);
-
+  if(model->vboHandles[bufferSlot] == 0)
+  {
+    return FALSE;
+  }
+  
   glBindBuffer(GL_ARRAY_BUFFER, model->vboHandles[bufferSlot]);
   glBufferSubData(GL_ARRAY_BUFFER, offset, dataSize, data);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
