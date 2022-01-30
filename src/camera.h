@@ -56,6 +56,8 @@ ENGINE_API Ray cameraGenerateCameraRay(Camera* camera, float2 ndc);
 ENGINE_API Ray cameraGenerateWorldRay(Camera* camera, float2 ndc);
 
 ENGINE_API const Frustum& cameraGetFrustum(Camera* camera);
+ENGINE_API void cameraSetUpdateFrustum(Camera* camera, bool8 update);
+ENGINE_API bool8 cameraUpdatesFrustum(Camera* camera);
 
 ENGINE_API void cameraSetAspectRatio(Camera* camera, float32 aspectRatio);
 ENGINE_API float32 cameraGetAspectRatio(Camera* camera);

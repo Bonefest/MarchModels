@@ -12,6 +12,7 @@ struct Camera
   quat orientation;
 
   Frustum frustum;
+  bool8 updateFrustum = TRUE;
 
   float4x4 transformCameraToNDC;
   float4x4 transformNDCToCamera;
@@ -45,7 +46,10 @@ static void cameraRecalculateTransforms(Camera* camera)
   camera->transformNDCToWorld = mul(camera->transformCameraToWorld, invProjTransform);
   camera->transformWorldToNDC = inverse(camera->transformNDCToWorld);
 
-  camera->frustum = createFrustum(camera->transformNDCToWorld);
+  if(camera->updateFrustum == TRUE)
+  {
+    camera->frustum = createFrustum(camera->transformNDCToWorld);
+  }
   
   camera->dirty = FALSE;
 }
@@ -282,11 +286,22 @@ Ray cameraGenerateWorldRay(Camera* camera, float2 ndc)
   return Ray(camera->position, normalizedDir);
 }
 
-ENGINE_API const Frustum& cameraGetFrustum(Camera* camera)
+const Frustum& cameraGetFrustum(Camera* camera)
 {
   cameraRecalculateTransforms(camera);
   
   return camera->frustum;
+}
+
+void cameraSetUpdateFrustum(Camera* camera, bool8 update)
+{
+  camera->updateFrustum = update;
+  camera->dirty |= (update == TRUE ? TRUE : FALSE);
+}
+
+bool8 cameraUpdatesFrustum(Camera* camera)
+{
+  return camera->updateFrustum;
 }
 
 void cameraSetAspectRatio(Camera* camera, float32 aspectRatio)

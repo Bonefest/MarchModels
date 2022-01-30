@@ -459,6 +459,13 @@ static void drawViewSettingsWindow(Window* window, float64 delta)
     float32 yaw = ori.x;
     float32 pitch = ori.y;
 
+    bool updateFrustum = (cameraUpdatesFrustum(camera) == TRUE ? true : false);
+    
+    if(ImGui::Checkbox("Update frustum", &updateFrustum))
+    {
+      cameraSetUpdateFrustum(camera, updateFrustum);
+    }
+    
     pushIconSmallButtonStyle();
     if(ImGui::Button(ICON_KI_RELOAD_INVERSE"##ReloadPosition"))
     {

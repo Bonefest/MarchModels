@@ -12,15 +12,43 @@
 
 const static uint32 MAX_INSTANCES = 1024;
 const static uint32 CUBE_VRT_BUFFER_SLOT = 0;
-const static uint32 CUBE_INST_BUFFER_SLOT = 1;  
+const static uint32 CUBE_INST_BUFFER_SLOT = 1;
+const static uint32 FRUSTUM_VRT_BUFFER_SLOT = 0;
+
+const static float32 cubeVertexData[] =
+{
+   // Coordinates are provided in our RHS system (x - left, y - up, z - forward)
+   0.5f, -0.5f, -0.5f, // Left, bottom, near
+  -0.5f, -0.5f, -0.5f, // Right, bottom, near
+   0.5f, -0.5f,  0.5f, // Left, bottom, far
+  -0.5f, -0.5f,  0.5f, // Right, bottom, far
+
+   0.5f,  0.5f, -0.5f, // Left, top, near
+  -0.5f,  0.5f, -0.5f, // Right, top, near
+   0.5f,  0.5f,  0.5f, // Left, top, far
+  -0.5f,  0.5f,  0.5f, // Right, top, far
+};
+
+const static uint32 cubeIndexData[] =
+{
+  0, 1, 4, 1, 5, 4, // front face
+  3, 2, 7, 2, 6, 7, // back face
+  2, 0, 4, 2, 4, 6, // left face
+  1, 3, 7, 1, 7, 5, // right face
+  2, 3, 1, 2, 1, 0, // bottom face
+  4, 5, 7, 4, 7, 6, // top face
+};
+
 
 struct AABBVisualizationPassData
 {
   Model3DPtr cubesModel;
+  Model3DPtr frustumModel;
   
   GLuint ldrFBO;
   
-  ShaderProgram* visualizationProgram;
+  ShaderProgram* aabbVisualizationProgram;
+  ShaderProgram* frustumVisualizationProgram;
 
   AABBVisualizationMode visualizationMode;
   bool8 showParents = TRUE;
@@ -31,9 +59,11 @@ static void destroyAABBVisualizationPass(RenderPass* pass)
 {
   AABBVisualizationPassData* data = (AABBVisualizationPassData*)renderPassGetInternalData(pass);
   data->cubesModel = Model3DPtr(nullptr);
+  data->frustumModel = Model3DPtr(nullptr);
   glDeleteFramebuffers(1, &data->ldrFBO);
   
-  destroyShaderProgram(data->visualizationProgram);
+  destroyShaderProgram(data->aabbVisualizationProgram);
+  destroyShaderProgram(data->frustumVisualizationProgram);
   
   engineFreeObject(data, MEMORY_TYPE_GENERAL);
 }
@@ -63,10 +93,8 @@ static void gatherAABBs(AABBVisualizationPassData* data, Asset* geometry, std::v
   }
 }
 
-static bool8 aabbVisualizationPassExecute(RenderPass* pass)
+static void drawAABBs(AABBVisualizationPassData* data)
 {
-  AABBVisualizationPassData* data = (AABBVisualizationPassData*)renderPassGetInternalData(pass);
-
   std::vector<float3> aabbData;
   gatherAABBs(data, sceneGetGeometryRoot(rendererGetPassedScene()), aabbData);
 
@@ -78,7 +106,7 @@ static bool8 aabbVisualizationPassExecute(RenderPass* pass)
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   
   glBindFramebuffer(GL_FRAMEBUFFER, data->ldrFBO);
-  shaderProgramUse(data->visualizationProgram);
+  shaderProgramUse(data->aabbVisualizationProgram);
 
   float4x4 viewProj = cameraGetWorldNDCMat(rendererGetPassedCamera());
   
@@ -92,6 +120,45 @@ static bool8 aabbVisualizationPassExecute(RenderPass* pass)
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);  
   glDisable(GL_DEPTH_TEST);
+}
+
+static void drawFrustum(AABBVisualizationPassData* data)
+{
+  Camera* camera = rendererGetPassedCamera();
+  const Frustum& cameraFrustum = cameraGetFrustum(camera);
+
+  model3DUpdateBuffer(data->frustumModel, FRUSTUM_VRT_BUFFER_SLOT,
+                      0, &cameraFrustum.corners[0], sizeof(float3) * 8);
+
+  glDepthFunc(GL_LESS);
+  glEnable(GL_DEPTH_TEST);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, data->ldrFBO);
+  shaderProgramUse(data->frustumVisualizationProgram);
+
+  float4x4 viewProj = cameraGetWorldNDCMat(camera);
+  glUniformMatrix4fv(0, 1, GL_FALSE, &viewProj[0][0]);
+  
+  glBindVertexArray(model3DGetVAOHandle(data->frustumModel));
+  glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+  
+  shaderProgramUse(nullptr);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);  
+  glDisable(GL_DEPTH_TEST);  
+}
+
+static bool8 aabbVisualizationPassExecute(RenderPass* pass)
+{
+  AABBVisualizationPassData* data = (AABBVisualizationPassData*)renderPassGetInternalData(pass);
+
+  drawAABBs(data);
+  if(data->showFrustum == TRUE)
+  {
+    drawFrustum(data);
+  }
   
   return TRUE;
 }
@@ -108,6 +175,8 @@ static void aabbVisualizationPassDrawInputView(RenderPass* pass)
 
   ImGui::Checkbox("Show parents", (bool*)&data->showParents);
   ImGui::SameLine();
+  ImGui::Checkbox("Show frustum", (bool*)&data->showFrustum);
+  ImGui::SameLine();
   ImGui::PushItemWidth(200.0);
   ImGui::Combo("AABB Visualization mode",
                (int32*)&data->visualizationMode,
@@ -121,7 +190,7 @@ static const char* aabbVisualizationPassGetName(RenderPass* pass)
   return "AABBVisualizationPass";
 }
 
-static ShaderProgram* createVisualizationProgram()
+static ShaderProgram* createAABBVisualizationProgram()
 {
   ShaderProgram* program = nullptr;
   
@@ -137,6 +206,24 @@ static ShaderProgram* createVisualizationProgram()
   
   return program;
 }
+
+static ShaderProgram* createFrustumVisualizationProgram()
+{
+  ShaderProgram* program = nullptr;
+  
+  createShaderProgram(&program);
+  shaderProgramAttachShader(program, shaderManagerLoadShader(GL_VERTEX_SHADER, "shaders/visualize_frustum.vert"));
+  shaderProgramAttachShader(program, shaderManagerLoadShader(GL_FRAGMENT_SHADER, "shaders/visualize_frustum.frag"));
+
+  if(linkShaderProgram(program) == FALSE)
+  {
+    destroyShaderProgram(program);
+    return nullptr;
+  }
+  
+  return program;
+}
+
 
 static GLuint createLDRFramebuffer()
 {
@@ -157,41 +244,31 @@ static GLuint createLDRFramebuffer()
 
 static Model3DPtr createCubesModel()
 {
-  const static float32 vertexData[] =
-  {
-     // Coordinates are provided in our RHS system (x - left, y - up, z - forward)
-     0.5f, -0.5f, -0.5f, // Left, bottom, near
-    -0.5f, -0.5f, -0.5f, // Right, bottom, near
-     0.5f, -0.5f,  0.5f, // Left, bottom, far
-    -0.5f, -0.5f,  0.5f, // Right, bottom, far
-
-     0.5f,  0.5f, -0.5f, // Left, top, near
-    -0.5f,  0.5f, -0.5f, // Right, top, near
-     0.5f,  0.5f,  0.5f, // Left, top, far
-    -0.5f,  0.5f,  0.5f, // Right, top, far
-  };
-
-  const static uint32 indexData[] =
-  {
-    0, 1, 4, 1, 5, 4, // front face
-    3, 2, 7, 2, 6, 7, // back face
-    2, 0, 4, 2, 4, 6, // left face
-    1, 3, 7, 1, 7, 5, // right face
-    2, 3, 1, 2, 1, 0, // bottom face
-    4, 5, 7, 4, 7, 6, // top face
-  };
-
-  
   Model3D* model = nullptr;
   assert(createModel3DEmpty(&model));
 
-  model3DAttachIndexBuffer(model, indexData, sizeof(indexData), GL_STATIC_DRAW);  
-  model3DAttachBuffer(model, CUBE_VRT_BUFFER_SLOT, vertexData, sizeof(vertexData), GL_STATIC_DRAW);
+  model3DAttachIndexBuffer(model, cubeIndexData, sizeof(cubeIndexData), GL_STATIC_DRAW);  
+  model3DAttachBuffer(model, CUBE_VRT_BUFFER_SLOT, cubeVertexData, sizeof(cubeVertexData), GL_STATIC_DRAW);
   model3DAttachBuffer(model, CUBE_INST_BUFFER_SLOT, NULL, sizeof(float32) * 6 * MAX_INSTANCES, GL_DYNAMIC_DRAW);
 
   model3DDescribeInput(model, 0, CUBE_VRT_BUFFER_SLOT, 3, GL_FLOAT, 3 * sizeof(float32), 0);
   model3DDescribeInput(model, 1, CUBE_INST_BUFFER_SLOT, 3, GL_FLOAT, 6 * sizeof(float32), 0, FALSE);
   model3DDescribeInput(model, 2, CUBE_INST_BUFFER_SLOT, 3, GL_FLOAT, 6 * sizeof(float32), 3 * sizeof(float32), FALSE);
+
+  return Model3DPtr(model);
+}
+
+static Model3DPtr createFrustumModel()
+{
+  Model3D* model = nullptr;
+  assert(createModel3DEmpty(&model));
+
+  // NOTE: We model frustum as a skewed cube
+  model3DAttachIndexBuffer(model, cubeIndexData, sizeof(cubeIndexData), GL_STATIC_DRAW);
+  // NOTE: Vertices of the frustum will be updated each frame (extracted from the camera)  
+  model3DAttachBuffer(model, FRUSTUM_VRT_BUFFER_SLOT, cubeVertexData, sizeof(cubeVertexData), GL_STREAM_DRAW);
+
+  model3DDescribeInput(model, 0, FRUSTUM_VRT_BUFFER_SLOT, 3, GL_FLOAT, 3 * sizeof(float32), 0);
 
   return Model3DPtr(model);
 }
@@ -216,10 +293,14 @@ bool8 createAABBVisualizationPass(RenderPass** outPass)
   assert(data->ldrFBO != 0);
 
   data->cubesModel = createCubesModel();
+  data->frustumModel = createFrustumModel();
   
-  data->visualizationProgram = createVisualizationProgram();
-  assert(data->visualizationProgram != nullptr);
+  data->aabbVisualizationProgram = createAABBVisualizationProgram();
+  assert(data->aabbVisualizationProgram != nullptr);
 
+  data->frustumVisualizationProgram = createFrustumVisualizationProgram();
+  assert(data->frustumVisualizationProgram != nullptr);
+  
   renderPassSetInternalData(*outPass, data);
   
   return TRUE;
