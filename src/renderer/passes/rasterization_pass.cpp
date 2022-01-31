@@ -36,7 +36,8 @@ static bool8 rasterizationPassPrepareToRasterize(RasterizationPassData* data)
 {
   shaderProgramUse(data->preparingProgram);
   glBindFramebuffer(GL_FRAMEBUFFER, data->raysMapFBO);
-
+  glClearColor(0, 0, 0, 0);
+  
   drawTriangleNoVAO();
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -103,7 +104,7 @@ static bool8 rasterizationPassRasterize(RasterizationPassData* data)
   
   Scene* sceneToRasterize = rendererGetPassedScene();
   std::vector<AssetPtr>& sceneGeometry = sceneGetChildren(sceneToRasterize);
-
+  
   for(uint32 i = 0; i < renderingParams.rasterItersMaxCount; i++)
   {
     culledObjectsCounter = 0;    
@@ -112,24 +113,25 @@ static bool8 rasterizationPassRasterize(RasterizationPassData* data)
     {
       drawGeometryInorder(rendererGetPassedCamera(), geometry, culledObjectsCounter);
     }
-
+    
     // Move per-pixel rays based on calculated distances
-    glEnable(GL_BLEND);
-    pushBlend(GL_FUNC_ADD, GL_FUNC_ADD, GL_ZERO, GL_ONE, GL_ONE, GL_ONE);
     glBindFramebuffer(GL_FRAMEBUFFER, data->raysMapFBO);
     
+    glEnable(GL_BLEND);
+    pushBlend(GL_FUNC_ADD, GL_FUNC_ADD, GL_ZERO, GL_ONE, GL_ONE, GL_ONE);
+
     shaderProgramUse(data->raysMoverProgram);
 
-    glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(data->raysMoverProgram), "curItemIdx"), i);
+    glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(data->raysMoverProgram), "curIterIdx"), i);
     drawTriangleNoVAO();
     shaderProgramUse(nullptr);
     
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     assert(popBlend() == TRUE);
     glDisable(GL_BLEND);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
   }
   
-
   return TRUE;
 }
 
@@ -142,7 +144,6 @@ static bool8 rasterizationPassExtractResults(RasterizationPassData* data)
   glClearDepth(1.0f);
   
   shaderProgramUse(data->resultsExtractionProgram);
-
   
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_RAYS_MAP_TEXTURE));  

@@ -49,6 +49,12 @@ uint32 getStackSize(uint2 pixelCoord)
   return uint32(_stacks[byteOffset]);
 }
 
+bool stackEmpty(uint2 pixelCoord)
+{
+  uint32 byteOffset = getStackIndex(pixelCoord);
+  return uint32(_stacks[byteOffset]) == 0;
+}
+
 void stackPushGeometry(uint2 pixelCoord, GeometryData geometry)
 {
   uint32 byteOffset = getStackIndex(pixelCoord);
