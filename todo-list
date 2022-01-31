@@ -35,3 +35,7 @@
 35. statistics of culled objects
 36. We can easily render plane as two triangles (in case if we don't need ray marching features and simply need render sort of a ground)
 37. before rasterizing a leaf, project its AABB on the screen (in case it's bounded or based on some heuristic, e.g volume size < some value)
+38. split rasterization pass up: rasterization preparation and extraction steps are decorators. Rasterization pass can also be applied to the shadowing pass (shadowing pass only prepares rays and extracts results in some other way and provides some other point of view)
+39. store all geotransforms in a single UBO
+40. set blending settings only at the beginning of the rasterization, set framebuffer only at the beginning of the rasterization
+41. add some clue to the view, to understand what's camera orientation

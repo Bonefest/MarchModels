@@ -260,14 +260,25 @@ static void geometryGenerateDistancesCombinationCode(Asset* geometry, ShaderBuil
   {
     shaderBuildAddCode(build, "\tstackPushGeometry(ifragCoord, geometry);");
   }
-  // This is not the first leaf/branch in group - pop previous geometry from stack, combine, push new geometry back
+  // This is not the first leaf/branch in group
   else
   {
-    shaderBuildAddCode(build, "\tGeometryData prevGeometry = stackPopGeometry(ifragCoord);");
 
-    // Order of combination is important      
-    shaderBuildAddCodefln(build, "\tstackPushGeometry(ifragCoord, %s(prevGeometry, geometry));",
-                          getCombinationFunctionShaderName(parentCombFunction));
+    // In case at least one previous sibling weren't culled - pop previous geometry from stack,
+    // combine, push new geometry back
+    shaderBuildAddCode(build, "\tif(prevCulledSiblingsCount < indexInBranch)");
+    shaderBuildAddCode(build, "\t{");
+      shaderBuildAddCode(build, "\t\tGeometryData prevGeometry = stackPopGeometry(ifragCoord);");
+      // Order of combination is important      
+      shaderBuildAddCodefln(build, "\t\tstackPushGeometry(ifragCoord, %s(prevGeometry, geometry));",
+                            getCombinationFunctionShaderName(parentCombFunction));    
+    shaderBuildAddCode(build, "\t}");    
+
+    // Else - simply push geometry to the stack
+    shaderBuildAddCode(build, "\telse");
+    shaderBuildAddCode(build, "\t{");
+      shaderBuildAddCode(build, "\t\tstackPushGeometry(ifragCoord, geometry);");
+    shaderBuildAddCode(build, "\t}");    
   }
 
 
@@ -369,7 +380,6 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   // -------------------------
   shaderBuildAddCode(build, "void main() {");
   shaderBuildAddCode(build, "\tint2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);");
-  shaderBuildAddCode(build, "\tif(!all(lessThan(ifragCoord, params.gapResolution))) discard;");
   
   // 1. Extract point p from ray map
   shaderBuildAddCode(build, "\tfloat4 ray = texelFetch(raysMap, ifragCoord, 0);");
@@ -402,7 +412,6 @@ static void geometryGenerateBranchCode(Asset* geometry, ShaderBuild* build)
   shaderBuildAddCode(build, "void main() {");
 
   shaderBuildAddCode(build, "\tint2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);");
-  shaderBuildAddCode(build, "\tif(!all(lessThan(ifragCoord, params.gapResolution))) discard;");
   
   // 1. Extract distance from the stack
   shaderBuildAddCode(build, "\tGeometryData geometry = stackPopGeometry(ifragCoord);");
@@ -434,6 +443,8 @@ static bool8 geometryRebuildDrawProgram(Asset* geometry)
   assert(shaderBuildIncludeFile(build, "shaders/geometry_common.glsl") == TRUE);
 
   shaderBuildAddCode(build, "uniform uint32 geometryID;");
+  shaderBuildAddCode(build, "uniform uint32 indexInBranch;");
+  shaderBuildAddCode(build, "uniform uint32 prevCulledSiblingsCount;");  
 
   shaderBuildAddCode(build, "layout(location = 0) out float4 outColor;");
   
@@ -555,7 +566,7 @@ static void geometryRecalculateIDs(Asset* geometry, uint32& idCounter)
     geometryRecalculateIDs(child, idCounter);
   }
 
-  geometryData->totalChildrenCount = idCounter - geometryData->ID;
+  geometryData->totalChildrenCount = idCounter - geometryData->ID - 1;
 }
 
 static void geometryRecalculateIDs(Asset* geometry)

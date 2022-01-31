@@ -46,31 +46,53 @@ static bool8 rasterizationPassPrepareToRasterize(RasterizationPassData* data)
   return TRUE;
 }
 
-static void drawGeometryInorder(Camera* camera, AssetPtr geometry, uint32& culledObjCounter)
+/**
+ * @return boolean value which indicates whether it was rendered or not
+ */
+static bool8 drawGeometryInorder(Camera* camera,
+                                 AssetPtr geometry,
+                                 uint32 indexInBranch,
+                                 uint32 culledSiblingsCount,
+                                 uint32& culledObjCounter)
 {
   const AABB& geometryAABB = geometryGetFinalAABB(geometry);
   if(cameraGetFrustum(camera).intersects(geometryAABB) == FALSE)
   {
     // NOTE: We've culled the object + its children
     culledObjCounter += geometryGetTotalChildrenCount(geometry) + 1;
-    return;
+    return FALSE;
   }
-  
-  std::vector<AssetPtr>& children = geometryGetChildren(geometry);
-  for(AssetPtr child: children)
-  {
-    drawGeometryInorder(camera, child, culledObjCounter);
 
+  std::vector<AssetPtr>& children = geometryGetChildren(geometry);
+
+  // NOTE: This counter stores number of culled objects on the current level, this number is crucial for
+  // some optimizations (e.g knowing that all previous siblings were culled, we know
+  // that we don't need to read the stack)
+  uint32 culledChildrenCount = 0;
+  for(uint32 i = 0; i < children.size(); i++)
+  {
+    if(drawGeometryInorder(camera, children[i], i, culledChildrenCount, culledObjCounter) == FALSE)
+    {
+      culledChildrenCount++;
+    }
+    
     // NOTE: Read https://gamedev.stackexchange.com/questions/151563/synchronization-between-several-gldispatchcompute-with-same-ssbos;
     // The idea is that we need to tell OpenGL explicitly that we want to synchronize several draw calls, which are
     // reading/writing from the SSBO. Otherwise some strange artifacts may occur.
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
   }
+
+  // NOTE: If it's a root - omit further actions, because it's treated in a special way
+  // (it's not a real geometry object)
+  if(geometryIsRoot(geometry) == TRUE)
+  {
+    return TRUE;
+  }
   
   ShaderProgram* geometryProgram = geometryGetDrawProgram(geometry);
   if(geometryProgram == nullptr)
   {
-    return;
+    return FALSE;
   }
 
   GeometryTransformParameters geoTransforms = {};
@@ -88,6 +110,10 @@ static void drawGeometryInorder(Camera* camera, AssetPtr geometry, uint32& culle
 
   glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(geometryProgram), "geometryID"),
                geometryGetID(geometry));
+  glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(geometryProgram), "indexInBranch"),
+               indexInBranch);
+  glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(geometryProgram), "prevCulledSiblingsCount"),
+               culledSiblingsCount);
   
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_RAYS_MAP_TEXTURE));
@@ -95,6 +121,8 @@ static void drawGeometryInorder(Camera* camera, AssetPtr geometry, uint32& culle
   drawTriangleNoVAO();
   
   shaderProgramUse(nullptr);
+
+  return TRUE;
 }
 
 static bool8 rasterizationPassRasterize(RasterizationPassData* data)
@@ -103,16 +131,15 @@ static bool8 rasterizationPassRasterize(RasterizationPassData* data)
   static uint32& culledObjectsCounter = CVarSystemGetUint("engine_RasterizationStatistics_LastFrameCulledObjects");
   
   Scene* sceneToRasterize = rendererGetPassedScene();
-  std::vector<AssetPtr>& sceneGeometry = sceneGetChildren(sceneToRasterize);
   
   for(uint32 i = 0; i < renderingParams.rasterItersMaxCount; i++)
   {
     culledObjectsCounter = 0;    
     // Calculate distances
-    for(AssetPtr geometry: sceneGeometry)
-    {
-      drawGeometryInorder(rendererGetPassedCamera(), geometry, culledObjectsCounter);
-    }
+    drawGeometryInorder(rendererGetPassedCamera(),
+                        sceneGetGeometryRoot(sceneToRasterize),
+                        0, 0,
+                        culledObjectsCounter);
     
     // Move per-pixel rays based on calculated distances
     glBindFramebuffer(GL_FRAMEBUFFER, data->raysMapFBO);

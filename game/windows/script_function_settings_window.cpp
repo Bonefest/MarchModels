@@ -53,7 +53,8 @@ static const vector<ArgumentDesc> builtinArgsDescs =
   {"params.camWorldNDCMat", "World->NDC space transformation matrix"},
   {"params.camCameraWorldMat", "Camera->World space transformation matrix"},
   {"params.camWorldCameraMat", "World->Camera space transformation matrix"},
-  
+
+  {"geometryID", "Geometry ID"},
   {"geo.position", "Geometry position"},
   {"geo.geoWorldMat", "Geometry->World space transformation matrix"},
   {"geo.worldGeoMat", "World->Geometry space transformation matrix"},
