@@ -206,7 +206,9 @@ void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function)
 
   // NOTE: We do not want to disable removing button, so we end disabling here
   ImGui::EndDisabled();
-  
+
+  // NOTE: PCF function cannot be removed
+  ImGui::BeginDisabled(type == SCRIPT_FUNCTION_TYPE_PCF);
     // NOTE: Script function removing button
     ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
       if(ImGui::SmallButton(ICON_KI_TRASH))
@@ -221,7 +223,7 @@ void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function)
         geometryRemoveFunction(geometry, function);
       }
     ImGui::PopStyleColor();
-
+  ImGui::EndDisabled();
 
   ImGui::PopID();
   popIconSmallButtonStyle();

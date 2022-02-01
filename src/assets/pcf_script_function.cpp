@@ -20,7 +20,7 @@ static void copyPCF(Asset* dst, Asset* src)
   *dstData = *srcData;
 }
 
-bool8 createPCF(const std::string& name, Asset** outAsset)
+bool8 createPCF(const std::string& name, PCFNativeType nativeType, Asset** outAsset)
 {
   ScriptFunctionInterface interface = {};
   interface.destroy = destroyPCF;

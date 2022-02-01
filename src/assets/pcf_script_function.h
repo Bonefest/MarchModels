@@ -14,7 +14,7 @@ enum PCFNativeType
   PCF_NATIVE_TYPE_SUBTRACTION
 };
 
-ENGINE_API bool8 createPCF(const std::string& name, Asset** outAsset);
+ENGINE_API bool8 createPCF(const std::string& name, PCFNativeType nativeType, Asset** outAsset);
 
 ENGINE_API void pcfSetNativeType(Asset* pcf, PCFNativeType type);
 ENGINE_API PCFNativeType pcfGetnativeType(Asset* pcf);

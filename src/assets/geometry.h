@@ -51,6 +51,7 @@ ENGINE_API uint32 geometryGetID(Asset* geometry);
 
 ENGINE_API std::vector<AssetPtr>& geometryGetIDFs(Asset* geometry);
 ENGINE_API std::vector<AssetPtr>& geometryGetODFs(Asset* geometry);
+ENGINE_API AssetPtr geometryGetPCF(Asset* geometry);
 // Get SDF, IDFs and ODFs as a single array
 ENGINE_API std::vector<AssetPtr> geometryGetScriptFunctions(Asset* geometry);
 ENGINE_API bool8 geometryHasFunction(Asset* geometry, Asset* function);

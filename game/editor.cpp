@@ -14,6 +14,7 @@
 #include <game_framework.h>
 #include <assets/assets_manager.h>
 #include <assets/script_function.h>
+#include <assets/pcf_script_function.h>
 #include <ray_integrators/debug_ray_integrator.h>
 #include <samplers/center_sampler.h>
 
@@ -52,7 +53,10 @@ static void declareDefaultScriptFunctions()
 {
   Asset *sphereSDFPrototype = nullptr,
     *emptyIDFPrototype = nullptr,
-    *emptyODFPrototype = nullptr;
+    *emptyODFPrototype = nullptr,
+    *intersectionPCFPrototype = nullptr,
+    *unionPCFPrototype = nullptr,
+    *subtractionPCFPrototype = nullptr;
 
   createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF,
                        "sphereSDF",
@@ -70,9 +74,22 @@ static void declareDefaultScriptFunctions()
                        &emptyODFPrototype);
   scriptFunctionSetCode(emptyODFPrototype, "return 0;");
 
+  createPCF("intersectionPCF", PCF_NATIVE_TYPE_INTERSECTION, &intersectionPCFPrototype);
+  scriptFunctionSetCode(intersectionPCFPrototype, "return (d1 > d2 ? float2(d2, 1.0) : float2(d1, 0.0));");
+
+  createPCF("unionPCF", PCF_NATIVE_TYPE_UNION, &unionPCFPrototype);
+  scriptFunctionSetCode(unionPCFPrototype, "return (d1 < d2 ? float2(d1, 0.0) : float2(d2, 1.0));");  
+
+  createPCF("subtractionPCF", PCF_NATIVE_TYPE_SUBTRACTION, &subtractionPCFPrototype);
+  scriptFunctionSetCode(subtractionPCFPrototype, "return (d1 > -d2 ? float2(d1, 0.0) : float2(-d2, 1.0));");  
+  
   assetsManagerAddAsset(AssetPtr(sphereSDFPrototype));
   assetsManagerAddAsset(AssetPtr(emptyIDFPrototype));
   assetsManagerAddAsset(AssetPtr(emptyODFPrototype));
+  
+  assetsManagerAddAsset(AssetPtr(intersectionPCFPrototype));
+  assetsManagerAddAsset(AssetPtr(unionPCFPrototype));
+  assetsManagerAddAsset(AssetPtr(subtractionPCFPrototype));    
 }
 
 bool8 initEditor(Application* app)

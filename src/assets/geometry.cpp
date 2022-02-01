@@ -23,6 +23,7 @@ struct Geometry
   
   std::vector<AssetPtr> idfs;
   std::vector<AssetPtr> odfs;
+  AssetPtr pcf;
 
   AssetPtr parent;
   
@@ -863,7 +864,12 @@ void geometryAddFunction(Asset* geometry, AssetPtr function)
     geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);
     geometryMarkAsNeedAABBRecalculation(geometry);    
   }
-
+  else if(type == SCRIPT_FUNCTION_TYPE_PCF)
+  {
+    geometryData->pcf = function;
+    geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);    
+    geometryMarkAsNeedAABBRecalculation(geometry);
+  }
 }
 
 bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
@@ -873,15 +879,13 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
   ScriptFunctionType type = scriptFunctionGetType(function);
   if(type == SCRIPT_FUNCTION_TYPE_SDF)
   {
-    if(geometryData->sdf != nullptr)
+    if(geometryData->sdf != nullptr && geometryData->sdf == function)
     {
       geometryData->sdf = AssetPtr(nullptr);
       geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);
       geometryMarkAsNeedAABBRecalculation(geometry);      
       return TRUE;
     }
-
-    return FALSE;
   }
   else if(type == SCRIPT_FUNCTION_TYPE_IDF)
   {
@@ -893,8 +897,6 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
       geometryMarkAsNeedAABBRecalculation(geometry);      
       return TRUE;
     }
-
-    return FALSE;
   }
   else if(type == SCRIPT_FUNCTION_TYPE_ODF)
   {
@@ -906,10 +908,18 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
       geometryMarkAsNeedAABBRecalculation(geometry);      
       return TRUE;
     }
-
-    return FALSE;
   }
-
+  else if(type == SCRIPT_FUNCTION_TYPE_PCF)
+  {
+    if(geometryData->pcf != nullptr && geometryData->pcf == function)
+    {
+      geometryData->pcf = AssetPtr(nullptr);
+      geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);
+      geometryMarkAsNeedAABBRecalculation(geometry);      
+      return TRUE;      
+    }
+  }
+  
   return FALSE;
 }
 
@@ -958,6 +968,11 @@ std::vector<AssetPtr> geometryGetScriptFunctions(Asset* geometry)
   std::vector<AssetPtr> functions;
   functions.reserve(1 + geometryData->idfs.size() + geometryData->odfs.size());
 
+  if(geometryData->pcf != nullptr)
+  {
+    functions.push_back(geometryData->pcf);
+  }
+  
   if(geometryData->sdf != nullptr)
   {
     functions.push_back(geometryData->sdf);

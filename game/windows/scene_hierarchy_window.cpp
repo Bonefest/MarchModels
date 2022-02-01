@@ -19,6 +19,7 @@ struct SceneHierarchyData
   bool listGeometrySDF = true;
   bool listGeometryIDF = true;
   bool listGeometryODF = true;
+  bool listGeometryPCF = true;
   bool listGeometryMaterial = true;
   
   bool listLights = true;
@@ -125,7 +126,11 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
           {
             continue;
           }
-
+          else if(type == SCRIPT_FUNCTION_TYPE_PCF && !data->listGeometryPCF)
+          {
+            continue;
+          }
+          
           drawScriptFunctionItem(geometry, function);
         }
 
@@ -174,6 +179,7 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
       ImGui::Checkbox("List SDFs", &data->listGeometrySDF);
       ImGui::Checkbox("List IDFs", &data->listGeometryIDF);
       ImGui::Checkbox("List ODFs", &data->listGeometryODF);
+      ImGui::Checkbox("List PCFs", &data->listGeometryPCF);      
       ImGui::Checkbox("List materials", &data->listGeometryMaterial);
 
       ImGui::Unindent();

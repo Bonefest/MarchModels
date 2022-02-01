@@ -34,6 +34,7 @@ AssetPtr createNewGeometry()
   Asset* newGeometry;
   assert(createGeometry("sphere", &newGeometry));
   geometryAddFunction(newGeometry, createDefaultSDF());
+  geometryAddFunction(newGeometry, createScriptFunction("unionPCF"));
 
   return AssetPtr(newGeometry);
 }
