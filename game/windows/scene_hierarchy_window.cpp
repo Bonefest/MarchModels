@@ -239,17 +239,24 @@ void sceneHierarchyProcessGeometryArray(Window* window,
                                         SceneHierarchyData* data,
                                         Scene* currentScene)
 {
-  for(auto geometryIt = array.begin(); geometryIt != array.end();)
+  std::vector<AssetPtr> geometryToRemove;
+  
+  for(auto geometryIt = array.begin(); geometryIt != array.end(); geometryIt++)
   {
     // If after processing a geometry it has returned false, then a removing command was requested -
     // destroy the geometry and remove it from the array
     if(sceneHierarchyDrawGeometryData(window, *geometryIt, data, currentScene) == FALSE)
     {
-      geometryIt = array.erase(geometryIt);
+      geometryToRemove.push_back(*geometryIt);
     }
-    else
+  }
+
+  if(!geometryToRemove.empty())
+  {
+    AssetPtr parent = geometryGetParent(geometryToRemove.front());
+    for(AssetPtr geometry: geometryToRemove)
     {
-      geometryIt++;
+      geometryRemoveChild(parent, geometry);
     }
-  }  
+  }
 }

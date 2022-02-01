@@ -75,13 +75,20 @@ static bool8 drawGeometryInorder(Camera* camera,
     {
       culledChildrenCount++;
     }
-    
-    // NOTE: Read https://gamedev.stackexchange.com/questions/151563/synchronization-between-several-gldispatchcompute-with-same-ssbos;
-    // The idea is that we need to tell OpenGL explicitly that we want to synchronize several draw calls, which are
-    // reading/writing from the SSBO. Otherwise some strange artifacts may occur.
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    else
+    {
+      // NOTE: Read https://gamedev.stackexchange.com/questions/151563/synchronization-between-several-gldispatchcompute-with-same-ssbos;
+      // The idea is that we need to tell OpenGL explicitly that we want to synchronize several draw calls, which are
+      // reading/writing from the SSBO. Otherwise some strange artifacts may occur.
+      glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    }
   }
 
+  if(!children.empty() && culledChildrenCount == children.size())
+  {
+    return FALSE;
+  }
+  
   // NOTE: If it's a root - omit further actions, because it's treated in a special way
   // (it's not a real geometry object)
   if(geometryIsRoot(geometry) == TRUE)

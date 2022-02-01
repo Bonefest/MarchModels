@@ -39,3 +39,4 @@
 39. store all geotransforms in a single UBO
 40. set blending settings only at the beginning of the rasterization, set framebuffer only at the beginning of the rasterization
 41. add some clue to the view, to understand what's camera orientation
+42. selected objects's AABB should have blue color
