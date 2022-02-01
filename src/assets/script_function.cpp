@@ -11,6 +11,9 @@ struct ScriptFunction
   string code;
   ScriptFunctionArgs args;
   ScriptFunctionType type;
+
+  ScriptFunctionInterface interface;
+  void* internalData;
 };
 
 static void scriptFunctionDestroy(Asset* asset);
@@ -25,7 +28,8 @@ const char* scriptFunctionTypeLabel(ScriptFunctionType type)
   {
     "SDF",
     "IDF",
-    "ODF"
+    "ODF",
+    "PCF"
   };
 
   return typeToLabel[type];
@@ -52,6 +56,22 @@ bool8 createScriptFunction(ScriptFunctionType type, const string& name, Asset** 
   return TRUE;
 }
 
+bool8 createScriptFunctionExt(ScriptFunctionType type,
+                              const string& name,
+                              const ScriptFunctionInterface& interface,
+                              Asset** outAsset)
+{
+  if(createScriptFunction(type, name, outAsset) == FALSE)
+  {
+    return FALSE;
+  }
+
+  ScriptFunction* data = (ScriptFunction*)assetGetInternalData(*outAsset);
+  data->interface = interface;
+
+  return TRUE;
+}
+
 Asset* scriptFunctionClone(Asset* assetCloneFrom)
 {
   Asset* copy;
@@ -67,12 +87,27 @@ void scriptFunctionCopy(Asset* dst, Asset* src)
   ScriptFunction* dstData = (ScriptFunction*)assetGetInternalData(dst);        
   *dstData = *srcData;
 
+  if(dstData->interface.destroy != nullptr)
+  {
+    dstData->interface.destroy(dst);
+  }
+  
+  if(srcData->interface.copy != nullptr)
+  {
+    srcData->interface.copy(dst, src);
+  }
+  
   assetSetName(dst, assetGetName(src));  
 }
 
 void scriptFunctionDestroy(Asset* asset)
 {
   ScriptFunction* data = (ScriptFunction*)assetGetInternalData(asset);
+
+  if(data->interface.destroy != nullptr)
+  {
+    data->interface.destroy(asset);
+  }
   
   engineFreeObject<ScriptFunction>(data, MEMORY_TYPE_GENERAL);
 }
@@ -219,4 +254,16 @@ void scriptFunctionOnNameChanged(Asset* asset, const std::string& prevName, cons
 {
   // NOTE: Re-register code: it will save the same code in lua but with a new name
   scriptFunctionSetCode(asset, scriptFunctionGetRawCode(asset));
+}
+
+void scriptFunctionSetInternalData(Asset* function, void* data)
+{
+  ScriptFunction* functionData = (ScriptFunction*)assetGetInternalData(function);
+  functionData->internalData = data;
+}
+
+void* scriptFunctionGetInternalData(Asset* function)
+{
+  ScriptFunction* functionData = (ScriptFunction*)assetGetInternalData(function);
+  return functionData->internalData;
 }

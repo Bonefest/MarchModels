@@ -26,11 +26,18 @@ using ScriptFunctionArgs = std::unordered_map<std::string, float32>;
 
 enum ScriptFunctionType
 {
-  SCRIPT_FUNCTION_TYPE_SDF,
-  SCRIPT_FUNCTION_TYPE_IDF,
-  SCRIPT_FUNCTION_TYPE_ODF,
+  SCRIPT_FUNCTION_TYPE_SDF, // Signed distance function
+  SCRIPT_FUNCTION_TYPE_IDF, // Input deformation function
+  SCRIPT_FUNCTION_TYPE_ODF, // Output deformation function
+  SCRIPT_FUNCTION_TYPE_PCF, // Primitives combination function
 
   SCRIPT_FUNCTION_TYPE_COUNT
+};
+
+struct ScriptFunctionInterface
+{
+  void(*destroy)(Asset* scriptFunction);
+  void(*copy)(Asset* dst, Asset* src);
 };
 
 ENGINE_API const char* scriptFunctionTypeLabel(ScriptFunctionType type);
@@ -38,6 +45,11 @@ ENGINE_API const char* scriptFunctionTypeLabel(ScriptFunctionType type);
 ENGINE_API bool8 createScriptFunction(ScriptFunctionType type,
                                       const std::string& name,
                                       Asset** outAsset);
+
+bool8 createScriptFunctionExt(ScriptFunctionType type,
+                              const std::string& name,
+                              const ScriptFunctionInterface& interface,
+                              Asset** outAsset);
 
 ENGINE_API void scriptFunctionCopy(Asset* dst, Asset* src);
 ENGINE_API Asset* scriptFunctionClone(Asset* assetCloneFrom);
@@ -71,3 +83,5 @@ ENGINE_API float3 executeIDF(Asset* idf, float3 p);
 ENGINE_API float32 executeSDF(Asset* sdf, float3 p);
 ENGINE_API float32 executeODF(Asset* odf, float32 distance);
 
+void scriptFunctionSetInternalData(Asset* function, void* data);
+void* scriptFunctionGetInternalData(Asset* function);
