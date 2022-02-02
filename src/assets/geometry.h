@@ -10,6 +10,7 @@
 #include "maths/common.h"
 #include "maths/primitives.h"
 #include "assets/script_function.h"
+#include "assets/pcf_script_function.h"
 
 struct Material;
 
@@ -70,10 +71,10 @@ ENGINE_API float3 geometryTransformFromParent(Asset* geometry, float3 parentPos)
 ENGINE_API float3 geometryTransformToLocal(Asset* geometry, float3 worldPos);
 ENGINE_API float3 geometryTransformToWorld(Asset* geometry, float3 localPos);
 
-ENGINE_API float4x4 geometryGetWorldGeoMat(Asset* geometry);
-ENGINE_API float4x4 geometryGetGeoWorldMat(Asset* geometry);
-ENGINE_API float4x4 geometryGetParentGeoMat(Asset* geometry);
-ENGINE_API float4x4 geometryGetGeoParentMat(Asset* geometry);
+ENGINE_API const float4x4& geometryGetWorldGeoMat(Asset* geometry);
+ENGINE_API const float4x4& geometryGetGeoWorldMat(Asset* geometry);
+ENGINE_API const float4x4& geometryGetParentGeoMat(Asset* geometry);
+ENGINE_API const float4x4& geometryGetGeoParentMat(Asset* geometry);
 
 ENGINE_API void geometrySetBounded(Asset* geometry, bool8 bounded);
 ENGINE_API bool8 geometryIsBounded(Asset* geometry);
@@ -92,6 +93,8 @@ ENGINE_API bool8 geometryNeedRebuild(Asset* geometry);
 
 ENGINE_API ShaderProgram* geometryGetDrawProgram(Asset* geometry);
 ENGINE_API ShaderProgram* geometryGetAABBProgram(Asset* geometry);
+
+ENGINE_API PCFNativeType geometryGetPCFNativeType(Asset* geometry);
 
 typedef bool8(*fpTraverseFunction)(Asset* geometry, void* userData);
 ENGINE_API bool8 geometryTraversePostorder(Asset* geometry,

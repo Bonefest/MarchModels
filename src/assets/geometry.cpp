@@ -265,14 +265,14 @@ static void geometryGenerateDistancesCombinationCode(Asset* geometry, ShaderBuil
   else
   {
 
-    // In case at least one previous sibling weren't culled - pop previous geometry from stack,
+    // If at least one previous sibling weren't culled - pop previous geometry from stack,
     // combine, push new geometry back
     shaderBuildAddCode(build, "\tif(prevCulledSiblingsCount < indexInBranch)");
     shaderBuildAddCode(build, "\t{");
       shaderBuildAddCode(build, "\t\tGeometryData prevGeometry = stackPopGeometry(ifragCoord);");
-      // Order of combination is important      
-      shaderBuildAddCodefln(build, "\t\tstackPushGeometry(ifragCoord, %s(prevGeometry, geometry));",
-                            getCombinationFunctionShaderName(parentCombFunction));    
+      // Order of combination is important
+      shaderBuildAddCode(build, "\t\tfloat2 pcfResult = PCF(prevGeometry.distance, geometry.distance);");
+      shaderBuildAddCode(build, "\t\tstackPushGeometry(ifragCoord, createGeometryData(pcfResult.x, int32(mix(prevGeometry.id, geometry.id, int32(pcfResult.y)))));");
     shaderBuildAddCode(build, "\t}");    
 
     // Else - simply push geometry to the stack
@@ -313,7 +313,7 @@ static void geometryGenerateTransformCode(Asset* geometry, ShaderBuild* build, b
                            "float32",
                            "SDF",
                            "float3 p",
-                           scriptFunctionGetGLSLCode(geometryGetSDF(geometry)).c_str());
+                           scriptFunctionGetGLSLCode(sdf).c_str());
   }
   else
   {
@@ -333,6 +333,25 @@ static void geometryGenerateTransformCode(Asset* geometry, ShaderBuild* build, b
     shaderBuildAddFunction(build, "float32", functionName.c_str(), "float32 d", functionBody.c_str());
   }
 
+  // register PCF
+  AssetPtr pcf = geometryGetPCF(geometryGetParent(geometry));
+  if(pcf != AssetPtr(nullptr))
+  {
+    shaderBuildAddFunction(build,
+                           "float2",
+                           "PCF",
+                           "float32 d1, float32 d2",
+                           scriptFunctionGetGLSLCode(pcf).c_str());
+  }
+  else
+  {
+    shaderBuildAddFunction(build,
+                           "float2",
+                           "PCF",
+                           "float32 d1, float32 d2",
+                           "return (d1 < d2 ? float2(d1, 0.0) : float2(d2, 1.0));");
+
+  }
   
   // generate a transform function:
   // ------------------------------
@@ -712,20 +731,25 @@ static void geometryCalculateBranchesFinalAABB(Asset* geometry)
 
   AABB finalAABB = geometryGetFinalAABB(geometryData->children[0]);
 
+  PCFNativeType combinationType = geometryGetPCFNativeType(geometry);
   // NOTE: For subtraction AABB of the first child is used
-  if(geometryData->combinationFunction != COMBINATION_SUBTRACTION)
+  if(combinationType != PCF_NATIVE_TYPE_SUBTRACTION)
   {
     for(uint32 i = 1; i < geometryData->children.size(); i++)
     {
       AABB childAABB = geometryGetFinalAABB(geometryData->children[i]);
       
-      if(geometryData->combinationFunction == COMBINATION_UNION)
+      if(combinationType == PCF_NATIVE_TYPE_UNION)
       {
         finalAABB = AABBUnion(finalAABB, childAABB);
       }
-      else
+      else if(combinationType == PCF_NATIVE_TYPE_INTERSECTION)
       {
         finalAABB = AABBIntersection(finalAABB, childAABB);
+      }
+      else
+      {
+        assert(false);
       }
     }
   }
@@ -736,13 +760,13 @@ static void geometryCalculateBranchesFinalAABB(Asset* geometry)
 static void geometryCalculateLeafsFinalAABB(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
-
+  
   if(geometryIsLeaf(geometry) == TRUE)
   {
     // NOTE: If this geometry is subtracted from other geometry in the branch -
     // calculate the intersection of AABB of those two first (because only that region of
     // AABB matters)
-    if(geometryGetCombinationFunction(geometryData->parent) == COMBINATION_SUBTRACTION &&
+    if(geometryGetPCFNativeType(geometryData->parent) == PCF_NATIVE_TYPE_SUBTRACTION &&
        geometryGetIndexInBranch(geometry) > 0)
     {
       // NOTE: We know that in case of subtraction, parent has an AABB of the first child, the one
@@ -867,7 +891,7 @@ void geometryAddFunction(Asset* geometry, AssetPtr function)
   else if(type == SCRIPT_FUNCTION_TYPE_PCF)
   {
     geometryData->pcf = function;
-    geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);    
+    geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);    
     geometryMarkAsNeedAABBRecalculation(geometry);
   }
 }
@@ -914,7 +938,7 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
     if(geometryData->pcf != nullptr && geometryData->pcf == function)
     {
       geometryData->pcf = AssetPtr(nullptr);
-      geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);
+      geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);
       geometryMarkAsNeedAABBRecalculation(geometry);      
       return TRUE;      
     }
@@ -926,7 +950,8 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
 void geometryNotifyFunctionHasChanged(Asset* geometry, Asset* function)
 {
   ScriptFunctionType type = scriptFunctionGetType(function);
-  geometryMarkNeedRebuild(geometry, /** Mark children */ type == SCRIPT_FUNCTION_TYPE_IDF ? TRUE : FALSE);
+  bool8 markChildren = type == (SCRIPT_FUNCTION_TYPE_IDF || type == SCRIPT_FUNCTION_TYPE_PCF) ? TRUE : FALSE;
+  geometryMarkNeedRebuild(geometry, markChildren);
   geometryMarkAsNeedAABBRecalculation(geometry);  
 }
 
@@ -959,6 +984,13 @@ std::vector<AssetPtr>& geometryGetODFs(Asset* geometry)
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   
   return geometryData->odfs;
+}
+
+AssetPtr geometryGetPCF(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  
+  return geometryData->pcf;
 }
 
 std::vector<AssetPtr> geometryGetScriptFunctions(Asset* geometry)
@@ -1119,7 +1151,7 @@ float3 geometryTransformToWorld(Asset* geometry, float3 p)
   return transformedP.xyz();
 }
 
-float4x4 geometryGetWorldGeoMat(Asset* geometry)
+const float4x4& geometryGetWorldGeoMat(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   
@@ -1130,7 +1162,8 @@ float4x4 geometryGetWorldGeoMat(Asset* geometry)
 
   return geometryData->transformToLocal;
 }
-float4x4 geometryGetGeoWorldMat(Asset* geometry)
+
+const float4x4& geometryGetGeoWorldMat(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   
@@ -1143,7 +1176,7 @@ float4x4 geometryGetGeoWorldMat(Asset* geometry)
 }
 
   
-float4x4 geometryGetParentGeoMat(Asset* geometry)
+const float4x4& geometryGetParentGeoMat(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   
@@ -1154,7 +1187,8 @@ float4x4 geometryGetParentGeoMat(Asset* geometry)
 
   return geometryData->transformToLocalFromParent;
 }
-float4x4 geometryGetGeoParentMat(Asset* geometry)
+
+const float4x4& geometryGetGeoParentMat(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   
@@ -1255,6 +1289,22 @@ ShaderProgram* geometryGetAABBProgram(Asset* geometry)
   return geometryData->aabbProgram;
 }
 
+PCFNativeType geometryGetPCFNativeType(Asset* geometry)
+{
+  if(geometryIsRoot(geometry) == TRUE)
+  {
+    return PCF_NATIVE_TYPE_UNION;
+  }
+  
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  if(geometryData->pcf == nullptr)
+  {
+    return PCF_NATIVE_TYPE_UNKNOWN;
+  }
+
+  return pcfGetNativeType(geometryData->pcf);
+}
+
 bool8 geometryTraversePostorder(Asset* geometry, fpTraverseFunction traverseFunction, void* userData)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
@@ -1343,7 +1393,7 @@ CombinationFunction geometryGetCombinationFunction(Asset* geometry)
 }
 
 // ----------------------------------------------------------------------------
-// Leaft geometry-related interface
+// Leaf geometry-related interface
 // ----------------------------------------------------------------------------
 
 void geometrySetSDF(Asset* geometry, AssetPtr sdf)

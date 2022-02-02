@@ -41,3 +41,5 @@
 41. add some clue to the view, to understand what's camera orientation
 42. selected objects's AABB should have blue color
 43. when geometry is selected, input operations in a view window are applied to the selected geometry.
+44. PCF compilation check is not full; PCF's script function type cannot be changed
+45. extend assets manager

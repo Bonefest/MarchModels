@@ -250,9 +250,16 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
   
   char typeButton[32];
   sprintf(typeButton, "[%s]", scriptFunctionTypeLabel(sfType));
-  if(ImGui::SmallButton(typeButton) && isPrototype == TRUE)
+  if(ImGui::SmallButton(typeButton) && isPrototype == TRUE && sfType != SCRIPT_FUNCTION_TYPE_PCF)
   {
-    sfType = (ScriptFunctionType)(((int)sfType + 1) % (int)SCRIPT_FUNCTION_TYPE_COUNT);
+    sfType = (ScriptFunctionType)(((int32)sfType + 1) % (int32)SCRIPT_FUNCTION_TYPE_COUNT);
+
+    // NOTE: PCF cannot be selected
+    if(sfType == SCRIPT_FUNCTION_TYPE_PCF)
+    {
+      sfType = (ScriptFunctionType)(((int32)sfType + 1) % (int32)SCRIPT_FUNCTION_TYPE_COUNT);      
+    }
+    
     scriptFunctionSetType(data->function, sfType);
 
     logMsg(data->logger,

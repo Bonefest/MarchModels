@@ -35,6 +35,7 @@ bool8 createPCF(const std::string& name, PCFNativeType nativeType, Asset** outAs
   }
 
   PCFData* data = engineAllocObject<PCFData>(MEMORY_TYPE_GENERAL);
+  data->nativeType = nativeType;
   scriptFunctionSetInternalData(*outAsset, data);
 
   return TRUE;
@@ -46,7 +47,7 @@ void pcfSetNativeType(Asset* pcf, PCFNativeType type)
   data->nativeType = type;
 }
 
-PCFNativeType pcfGetnativeType(Asset* pcf)
+PCFNativeType pcfGetNativeType(Asset* pcf)
 {
   PCFData* data = (PCFData*)scriptFunctionGetInternalData(pcf);
   return data->nativeType;

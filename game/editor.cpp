@@ -75,7 +75,7 @@ static void declareDefaultScriptFunctions()
   scriptFunctionSetCode(emptyODFPrototype, "return 0;");
 
   createPCF("intersectionPCF", PCF_NATIVE_TYPE_INTERSECTION, &intersectionPCFPrototype);
-  scriptFunctionSetCode(intersectionPCFPrototype, "return (d1 > d2 ? float2(d2, 1.0) : float2(d1, 0.0));");
+  scriptFunctionSetCode(intersectionPCFPrototype, "return (d1 > d2 ? float2(d1, 0.0) : float2(d2, 1.0));");
 
   createPCF("unionPCF", PCF_NATIVE_TYPE_UNION, &unionPCFPrototype);
   scriptFunctionSetCode(unionPCFPrototype, "return (d1 < d2 ? float2(d1, 0.0) : float2(d2, 1.0));");  
