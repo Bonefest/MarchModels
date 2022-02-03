@@ -84,8 +84,10 @@ Asset* scriptFunctionClone(Asset* assetCloneFrom)
 void scriptFunctionCopy(Asset* dst, Asset* src)
 {
   ScriptFunction* srcData = (ScriptFunction*)assetGetInternalData(src);
-  ScriptFunction* dstData = (ScriptFunction*)assetGetInternalData(dst);        
+  ScriptFunction* dstData = (ScriptFunction*)assetGetInternalData(dst);
+  void* dstInternalData = dstData->internalData;
   *dstData = *srcData;
+  dstData->internalData = dstInternalData;
 
   if(srcData->interface.copy != nullptr)
   {

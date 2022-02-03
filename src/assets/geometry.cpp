@@ -394,7 +394,7 @@ static void geometryGenerateTransformCode(Asset* geometry, ShaderBuild* build, b
 // NOTE: Leaf geometry uses IDFs, SDF and ODFs (only related to the geometry)
 static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
 {
-  geometryGenerateTransformCode(geometry, build, /** Use transformation of geometry */ TRUE);
+
   
   // generate a main function:
   // -------------------------
@@ -467,6 +467,8 @@ static bool8 geometryRebuildDrawProgram(Asset* geometry)
   shaderBuildAddCode(build, "uniform uint32 prevCulledSiblingsCount;");  
 
   shaderBuildAddCode(build, "layout(location = 0) out float4 outColor;");
+
+  geometryGenerateTransformCode(geometry, build, /** Use transformation of geometry */ TRUE);
   
   if(geometryIsLeaf(geometry))
   {
@@ -950,7 +952,7 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
 void geometryNotifyFunctionHasChanged(Asset* geometry, Asset* function)
 {
   ScriptFunctionType type = scriptFunctionGetType(function);
-  bool8 markChildren = type == (SCRIPT_FUNCTION_TYPE_IDF || type == SCRIPT_FUNCTION_TYPE_PCF) ? TRUE : FALSE;
+  bool8 markChildren = (type == SCRIPT_FUNCTION_TYPE_IDF || type == SCRIPT_FUNCTION_TYPE_PCF) ? TRUE : FALSE;
   geometryMarkNeedRebuild(geometry, markChildren);
   geometryMarkAsNeedAABBRecalculation(geometry);  
 }
@@ -1019,6 +1021,11 @@ std::vector<AssetPtr> geometryGetScriptFunctions(Asset* geometry)
 bool8 geometryHasFunction(Asset* geometry, Asset* function)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+
+  if(function == geometryData->pcf)
+  {
+    return TRUE;
+  }
   
   if(function == geometryData->sdf)
   {

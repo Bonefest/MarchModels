@@ -31,6 +31,7 @@ static const vector<ArgumentDesc> builtinArgsDescs =
 {
   {"p", "(IDF/SDF only) incoming point in world space"},
   {"d", "(ODF only) outcoming distance"},
+  {"d1, d2", "(PCF only) outcoming distances to combine"},
   
   {"params.time", "current time"},
   {"params.gamma", "power used for gamma-correction decoding"},
@@ -120,7 +121,11 @@ bool8 createScriptFunctionSettingsWindow(AssetPtr owner, AssetPtr function, Wind
   data->dummyRootGeometry = AssetPtr(dummyRootGeometry);
   
   Asset* dummyGeometry;
-  createGeometry("dummy", &dummyGeometry);
+  createGeometry("dummy1", &dummyGeometry);
+  geometrySetAABBAutomaticallyCalculated(dummyGeometry, FALSE);
+  geometryAddChild(data->dummyRootGeometry, AssetPtr(dummyGeometry));
+  
+  createGeometry("dummy2", &dummyGeometry);
   geometrySetAABBAutomaticallyCalculated(dummyGeometry, FALSE);
   data->dummyGeometry = AssetPtr(dummyGeometry);
   
@@ -291,16 +296,18 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
   ImGui::SameLine(avalReg.x * 0.5 - 80);
 
   pushIconSmallButtonStyle();
-  if(ImGui::SmallButton(ICON_KI_WRENCH " Compile"))
+  if(ImGui::SmallButton(ICON_KI_WRENCH " Compile "))
   {
-    geometryRemoveFunction(data->dummyGeometry, data->function);
-    geometryAddFunction(data->dummyGeometry, data->function);
+    AssetPtr targetGeometry = (sfType == SCRIPT_FUNCTION_TYPE_PCF ? data->dummyRootGeometry : data->dummyGeometry);
 
     std::string previousCode = scriptFunctionGetRawCode(data->function);
     scriptFunctionSetCode(data->function, data->codeBuf);
+    
+    geometryRemoveFunction(targetGeometry, data->function);
+    geometryAddFunction(targetGeometry, data->function);
 
     geometryUpdate(data->dummyRootGeometry, 0.0f);
-    bool8 compilationSucceeded = geometryGetDrawProgram(data->dummyGeometry) != nullptr ? TRUE : FALSE;
+    bool8 compilationSucceeded = geometryGetDrawProgram(targetGeometry) != nullptr ? TRUE : FALSE;
     
     if(compilationSucceeded == TRUE)
     {

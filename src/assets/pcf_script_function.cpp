@@ -16,7 +16,15 @@ static void destroyPCF(Asset* pcf)
 static void copyPCF(Asset* dst, Asset* src)
 {
   PCFData* dstData = (PCFData*)scriptFunctionGetInternalData(dst);
+  if(dstData == nullptr)
+  {
+    dstData = engineAllocObject<PCFData>(MEMORY_TYPE_GENERAL);
+    scriptFunctionSetInternalData(dst, dstData);
+  }
+  
   PCFData* srcData = (PCFData*)scriptFunctionGetInternalData(src);
+  assert(srcData != nullptr);
+  
   *dstData = *srcData;
 }
 
