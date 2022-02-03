@@ -6,4 +6,5 @@
 AssetPtr createDefaultSDF();
 AssetPtr createDefaultIDF();
 AssetPtr createDefaultODF();
+AssetPtr createDefaultPCF();
 AssetPtr createNewGeometry();

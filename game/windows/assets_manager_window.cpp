@@ -31,11 +31,16 @@ struct AssetsListWindowData
 
 struct AssetsCategoryData
 {
-  AssetType categoryAssetType;
   const char* categoryName;
   const char* dataName;
   AssetPtr(*create)();
   void(*edit)(AssetPtr asset);
+};
+
+struct AssetCreationData
+{
+  const char* dataName;
+  AssetPtr(*create)();
 };
 
 static bool8 assetsManagerWindowInitialize(Window* window);
@@ -47,49 +52,77 @@ static void assetsManagerWindowProcessInput(Window* window, const EventData& eve
 static AssetPtr createGeometryAsset() { /** TODO */ }
 static void editGeometryAsset(AssetPtr asset) { /** TODO */ }
 
-static AssetPtr createScriptFunctionAsset();
+static AssetPtr createSDFAsset();
+static AssetPtr createIDFAsset();
+static AssetPtr createODFAsset();
+static AssetPtr createPCFAsset();
 static void editScriptFunctionAsset(AssetPtr asset);
 
 static AssetPtr createMaterialAsset() { /** TODO */ }
 static void editMaterialAsset(AssetPtr asset) { /** TODO */ }
 
-static unordered_map<AssetType, AssetsCategoryData> categoryData =
+enum CategoryType
+{
+  CATEGORY_TYPE_GEOMETRY,
+  CATEGORY_TYPE_MATERIAL,  
+  CATEGORY_TYPE_SDF,
+  CATEGORY_TYPE_IDF,
+  CATEGORY_TYPE_ODF,
+  CATEGORY_TYPE_PDF,
+
+  CATEGORY_TYPE_COUNT
+};
+
+static vector<AssetsCategoryData> categoriesData =
 {
   // Geometry category data
   {
-    ASSET_TYPE_GEOMETRY,
-    {
-      ASSET_TYPE_GEOMETRY,      
-      "Geometry",
-      "geometry",
-      createGeometryAsset,
-      editGeometryAsset,
-    }
-  },
-  
-  // Script function category data
-  {
-    ASSET_TYPE_SCRIPT_FUNCTION,
-    {
-      ASSET_TYPE_SCRIPT_FUNCTION,    
-      "Script function",
-      "script_function",
-      createScriptFunctionAsset,
-      editScriptFunctionAsset
-    }
+    "Geometry",
+    "geometry",
+    createGeometryAsset,
+    editGeometryAsset,
   },
 
   // Material category data
   {
-    ASSET_TYPE_MATERIAL,
-    {
-      ASSET_TYPE_MATERIAL,    
-      "Material",
-      "material",
-      createMaterialAsset,
-      editMaterialAsset
-    }
+    "Material",
+    "material",
+    createMaterialAsset,
+    editMaterialAsset
+  },
+
+  // SDF category data
+  {
+    "SDF",
+    "SDF",
+    createSDFAsset,
+    editScriptFunctionAsset
+  },
+  
+  // IDF category data
+  {
+    "IDF",
+    "IDF",
+    createIDFAsset,
+    editScriptFunctionAsset
+  },
+    
+  // ODF category data
+  {
+    "ODF",
+    "ODF",
+    createODFAsset,
+    editScriptFunctionAsset
+  },
+
+  // PCF category data
+  {
+    "PCF",
+    "PCF",
+    createPCFAsset,
+    editScriptFunctionAsset
   }
+
 };
 
 bool8 createAssetsManagerWindow(Window** outWindow)
@@ -228,28 +261,28 @@ void assetsManagerWindowDraw(Window* window, float64 delta)
 {
   // TODO: Recalculate arrays only when assets list has changed
   vector<AssetPtr> assetsToList = assetsManagerGetAssets();  
-  vector<AssetPtr> geometryAssets;
-  vector<AssetPtr> scriptFunctionAssets;
-  vector<AssetPtr> materialAssets;
+  vector<AssetPtr> categoriesAssets[CATEGORY_TYPE_COUNT];
   
   for(AssetPtr asset: assetsToList)
   {
     AssetType type = assetGetType(asset);
-    if(type == ASSET_TYPE_GEOMETRY)
+    switch(type)
     {
-      geometryAssets.push_back(asset);
-    }
-    else if(type == ASSET_TYPE_SCRIPT_FUNCTION)
-    {
-      scriptFunctionAssets.push_back(asset);
-    }
-    else if(type == ASSET_TYPE_MATERIAL)
-    {
-      materialAssets.push_back(asset);
-    }
-    else
-    {
-      LOG_ERROR("Asset %p has unknown type %d", asset, (int)type);
+      case ASSET_TYPE_GEOMETRY: categoriesAssets[CATEGORY_TYPE_GEOMETRY].push_back(asset); break;
+      case ASSET_TYPE_MATERIAL: categoriesAssets[CATEGORY_TYPE_MATERIAL].push_back(asset); break;
+      case ASSET_TYPE_SCRIPT_FUNCTION:
+      {
+        ScriptFunctionType sfType = scriptFunctionGetType(asset);
+        switch(sfType)
+        {
+          case SCRIPT_FUNCTION_TYPE_SDF: categoriesAssets[CATEGORY_TYPE_SDF].push_back(asset); break;
+          case SCRIPT_FUNCTION_TYPE_IDF: categoriesAssets[CATEGORY_TYPE_IDF].push_back(asset); break;
+          case SCRIPT_FUNCTION_TYPE_ODF: categoriesAssets[CATEGORY_TYPE_ODF].push_back(asset); break;
+          case SCRIPT_FUNCTION_TYPE_PCF: categoriesAssets[CATEGORY_TYPE_PDF].push_back(asset); break;
+          default: assert(false);
+        }
+      } break;
+      default: LOG_ERROR("Asset %p has unknown type %d", asset, (int)type); assert(false); break;
     }
   }
   
@@ -274,10 +307,12 @@ void assetsManagerWindowDraw(Window* window, float64 delta)
   {
     ImGui::OpenPopup("Filter popup##AssetsManager");
   }
-  
-  drawAssetsCategory(window, categoryData[ASSET_TYPE_GEOMETRY], geometryAssets);
-  drawAssetsCategory(window, categoryData[ASSET_TYPE_SCRIPT_FUNCTION], scriptFunctionAssets);
-  drawAssetsCategory(window, categoryData[ASSET_TYPE_MATERIAL], materialAssets);
+
+  for(uint32 cType = CATEGORY_TYPE_GEOMETRY; cType < CATEGORY_TYPE_COUNT; cType++)
+  {
+    drawAssetsCategory(window, categoriesData[cType], categoriesAssets[cType]);
+  }
+
 }
 
 void assetsManagerWindowProcessInput(Window* window, const EventData& eventData, void* sender)
@@ -285,9 +320,24 @@ void assetsManagerWindowProcessInput(Window* window, const EventData& eventData,
   
 }
 
-AssetPtr createScriptFunctionAsset()
+AssetPtr createSDFAsset()
 {
   return AssetPtr(scriptFunctionClone(createDefaultSDF()));
+}
+
+AssetPtr createIDFAsset()
+{
+  return AssetPtr(scriptFunctionClone(createDefaultIDF()));
+}
+
+AssetPtr createODFAsset()
+{
+  return AssetPtr(scriptFunctionClone(createDefaultODF()));
+}
+
+AssetPtr createPCFAsset()
+{
+  return AssetPtr(scriptFunctionClone(createDefaultPCF()));
 }
 
 void editScriptFunctionAsset(AssetPtr asset)

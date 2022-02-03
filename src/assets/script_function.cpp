@@ -87,11 +87,6 @@ void scriptFunctionCopy(Asset* dst, Asset* src)
   ScriptFunction* dstData = (ScriptFunction*)assetGetInternalData(dst);        
   *dstData = *srcData;
 
-  if(dstData->interface.destroy != nullptr)
-  {
-    dstData->interface.destroy(dst);
-  }
-  
   if(srcData->interface.copy != nullptr)
   {
     srcData->interface.copy(dst, src);

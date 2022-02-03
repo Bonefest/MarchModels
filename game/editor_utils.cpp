@@ -29,6 +29,11 @@ AssetPtr createDefaultODF()
   return createScriptFunction("emptyODF");
 }
 
+AssetPtr createDefaultPCF()
+{
+  return createScriptFunction("unionPCF");
+}
+
 AssetPtr createNewGeometry()
 {
   Asset* newGeometry;
