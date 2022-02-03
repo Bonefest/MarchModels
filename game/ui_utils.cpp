@@ -112,6 +112,22 @@ ImGuiUtilsButtonsFlags textInputPopupCustom(const char* name,
   return pressedButton;
 }
 
+void openScriptFunctionSettingsWindow(AssetPtr geometryOwner, AssetPtr function)
+{
+  WindowPtr scriptFunctionSettingsWindow = windowManagerGetWindow(scriptFunctionWindowIdentifier(function));
+  if(scriptFunctionSettingsWindow == nullptr)
+  {
+    Window* newSettingsWindow = nullptr;
+    assert(createScriptFunctionSettingsWindow(geometryOwner, function, &newSettingsWindow));
+    windowSetSize(newSettingsWindow, float2(640.0f, 360.0f));
+    windowManagerAddWindow(WindowPtr(newSettingsWindow));
+  }
+  else
+  {
+    windowSetFocused(scriptFunctionSettingsWindow, TRUE);
+  }
+}
+
 void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function)
 {
   ScriptFunctionType type = scriptFunctionGetType(function);  
@@ -188,18 +204,7 @@ void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function)
     // NOTE: Script function settings button
     if(ImGui::SmallButton(ICON_KI_COG))
     {
-      WindowPtr scriptFunctionSettingsWindow = windowManagerGetWindow(scriptFunctionWindowIdentifier(function));
-      if(scriptFunctionSettingsWindow == nullptr)
-      {
-        Window* newSettingsWindow = nullptr;
-        assert(createScriptFunctionSettingsWindow(geometry, function, &newSettingsWindow));
-        windowSetSize(newSettingsWindow, float2(640.0f, 360.0f));
-        windowManagerAddWindow(WindowPtr(newSettingsWindow));
-      }
-      else
-      {
-        windowSetFocused(scriptFunctionSettingsWindow, TRUE);
-      }
+      openScriptFunctionSettingsWindow(geometry, function);
     }
 
     ImGui::SameLine();

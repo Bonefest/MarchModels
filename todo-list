@@ -43,3 +43,4 @@
 43. when geometry is selected, input operations in a view window are applied to the selected geometry.
 44. PCF compilation check is not full; PCF's script function type cannot be changed
 45. extend assets manager
+46. compilation of pcf always fails

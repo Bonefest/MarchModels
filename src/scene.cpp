@@ -25,7 +25,6 @@ bool8 createScene(Scene** outScene)
   }
 
   (*outScene)->geometryRoot = AssetPtr(sceneRootGeometry);
-  geometrySetCombinationFunction((*outScene)->geometryRoot, COMBINATION_UNION);
 
   return TRUE;
 }

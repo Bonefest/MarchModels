@@ -1,3 +1,5 @@
+#include <imgui/imgui.h>
+
 #include "memory_manager.h"
 #include "pcf_script_function.h"
 
@@ -6,6 +8,32 @@ struct PCFData
   PCFNativeType nativeType = PCF_NATIVE_TYPE_UNION;
   float32 multiplier = 1.0f;
 };
+
+const char* pcfNativeTypeGetLabel(PCFNativeType type)
+{
+  switch(type)
+  {
+    case PCF_NATIVE_TYPE_INTERSECTION: return "intersection";
+    case PCF_NATIVE_TYPE_UNION: return "union";
+    case PCF_NATIVE_TYPE_SUBTRACTION: return "subtraction";
+    default: assert(false);
+  }
+
+  return nullptr;
+}
+
+const char* pcfNativeTypeGetIcon(PCFNativeType type)
+{
+  switch(type)
+  {
+    case PCF_NATIVE_TYPE_INTERSECTION: return ICON_KI_STAR_HALF;
+    case PCF_NATIVE_TYPE_UNION: return ICON_KI_STAR;
+    case PCF_NATIVE_TYPE_SUBTRACTION: return ICON_KI_STAR_O;
+    default: assert(false);
+  }
+
+  return nullptr;  
+}
 
 static void destroyPCF(Asset* pcf)
 {

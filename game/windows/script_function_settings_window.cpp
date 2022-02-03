@@ -253,16 +253,16 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
   // --------------------------------------------------------------------------
   ImGui::PushStyleColor(ImGuiCol_Text, (float4)WarningClr);  
   
-  char typeButton[32];
-  sprintf(typeButton, "[%s]", scriptFunctionTypeLabel(sfType));
-  if(ImGui::SmallButton(typeButton) && isPrototype == TRUE && sfType != SCRIPT_FUNCTION_TYPE_PCF)
+  char typeButtonLabel[32];
+  sprintf(typeButtonLabel, "[%s]", scriptFunctionTypeLabel(sfType));
+  if(ImGui::SmallButton(typeButtonLabel) && isPrototype == TRUE && sfType != SCRIPT_FUNCTION_TYPE_PCF)
   {
-    sfType = (ScriptFunctionType)(((int32)sfType + 1) % (int32)SCRIPT_FUNCTION_TYPE_COUNT);
+    sfType = (ScriptFunctionType)( ((int32)sfType + 1) % (int32)SCRIPT_FUNCTION_TYPE_COUNT);
 
     // NOTE: PCF cannot be selected
     if(sfType == SCRIPT_FUNCTION_TYPE_PCF)
     {
-      sfType = (ScriptFunctionType)(((int32)sfType + 1) % (int32)SCRIPT_FUNCTION_TYPE_COUNT);      
+      sfType = (ScriptFunctionType)( ((int32)sfType + 1) % (int32)SCRIPT_FUNCTION_TYPE_COUNT);      
     }
     
     scriptFunctionSetType(data->function, sfType);
@@ -271,8 +271,53 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
            LOG_MESSAGE_TYPE_SUCCESS,
            "changed script function type to '%s'", scriptFunctionTypeLabel(sfType));
   }
+
+  ImGui::PopStyleColor();
+
+  if(sfType == SCRIPT_FUNCTION_TYPE_PCF)
+  {
+    // --------------------------------------------------------------------------
+    // Combination type changing button (PCF only)
+    // --------------------------------------------------------------------------  
+    
+    ImGui::PushStyleColor(ImGuiCol_Text, (float4)WarningClr);  
+    ImGui::SameLine();
+
+    PCFNativeType pcfType = pcfGetNativeType(data->function);
+
+    char pcfTypeButtonLabel[32];
+    sprintf(pcfTypeButtonLabel, "[%s %s]",
+            pcfNativeTypeGetLabel(pcfType), pcfNativeTypeGetIcon(pcfType));
+
+    if(ImGui::SmallButton(pcfTypeButtonLabel))
+    {
+      pcfType = (PCFNativeType)( ((int32)pcfType + 1) % (int32)PCF_NATIVE_TYPE_COUNT);
+      pcfSetNativeType(data->function, pcfType);
+      
+      geometryTraversePostorder(sceneGetGeometryRoot(editorGetCurrentScene()),
+                                notifyGeometryScriptFunctionHasChanged,
+                                data->function);      
+    }
+
+    ImGui::PopStyleColor();
+
+    // --------------------------------------------------------------------------
+    // Multiplier slider (PCF only)
+    // --------------------------------------------------------------------------  
+
+    float32 multiplier = pcfGetBoundingMultiplier(data->function);
+    
+    ImGui::SameLine();
+    ImGui::PushItemWidth(50.0);
+    if(ImGui::DragFloat("Multiplier", &multiplier, 0.25, 0.1, 8.0, "%.1f"))
+    {
+      pcfSetBoundingMultiplier(data->function, multiplier);
+    }
+    ImGui::PopItemWidth();
+    
+  }
   
-  ImGui::PopStyleColor();  
+
   popIconSmallButtonStyle();
 
 

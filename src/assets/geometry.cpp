@@ -53,7 +53,6 @@ struct Geometry
   
   // Branch geometry data
   std::vector<AssetPtr> children;  
-  CombinationFunction combinationFunction;
 
   // Leaf geometry data
   AssetPtr sdf;
@@ -65,79 +64,9 @@ static bool8 geometrySerialize(Asset* geometry) { /** TODO */ }
 static bool8 geometryDeserialize(Asset* geometry) { /** TODO */ }
 static uint32 geometryGetSize(Asset* geometry) { /** TODO */ }
 
-const char* combinationFunctionLabel(CombinationFunction function)
-{
-  static const char* labels[] =
-  {
-    "Intersection",
-    "Union",
-    "Subtraction"
-  };
-
-  return labels[(uint32)function];
-}
-
 // ----------------------------------------------------------------------------
 // Helper functions
 // ----------------------------------------------------------------------------
-
-float32 combineDistances(Asset* geometry,
-                         float32 distanceA,
-                         float32 distanceB,
-                         Asset* closestGeometryA,
-                         Asset* closestGeometryB,
-                         Asset** newClosestGeometry)
-{
-  assert(geometryIsBranch(geometry));
-
-  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
-  
-  float32 result = distanceA;
-  
-  // max(distanceA, distanceB)
-  if(geometryData->combinationFunction == COMBINATION_INTERSECTION)
-  {
-    if(distanceA > distanceB)
-    {
-      result = distanceA;
-      *newClosestGeometry = closestGeometryA;
-    }
-    else
-    {
-      result = distanceB;
-      *newClosestGeometry = closestGeometryB;
-    }
-  }
-  // min(distanceA, distanceB)
-  else if(geometryData->combinationFunction == COMBINATION_UNION)
-  {
-    if(distanceA > distanceB)
-    {
-      result = distanceB;
-      *newClosestGeometry = closestGeometryB;
-    }
-    else
-    {
-      result = distanceA;
-      *newClosestGeometry = closestGeometryA;
-    }    
-  }
-  // max(distanceA, -distanceB)
-  else if(geometryData->combinationFunction == COMBINATION_SUBTRACTION)
-  {
-    if(distanceA > -distanceB)
-    {
-      result = distanceA;
-      *newClosestGeometry = closestGeometryB;
-    }
-    else
-    {
-      assert(FALSE && "Is it possible at all?");
-    }    
-  }
-
-  return result;
-}
 
 static void geometryRecalculateFullTransforms(Asset* geometry, bool8 parentWasDirty = FALSE)
 {
@@ -237,24 +166,10 @@ static uint32 geometryGetIndexInBranch(Asset* geometry)
   return 0;
 }
 
-static const char* getCombinationFunctionShaderName(CombinationFunction function)
-{
-  switch(function)
-  {
-    case COMBINATION_INTERSECTION: return "intersectGeometries";
-    case COMBINATION_UNION: return "unionGeometries";
-    case COMBINATION_SUBTRACTION: return "subtractGeometries";
-    default: assert(FALSE); return "";
-  }
-
-  return "";
-}
-
 static void geometryGenerateDistancesCombinationCode(Asset* geometry, ShaderBuild* build)
 {
   // Detect its number in parent's branch
   bool8 firstInBranch = geometryGetIndexInBranch(geometry) == 0 ? TRUE : FALSE;
-  CombinationFunction parentCombFunction = geometryGetCombinationFunction(geometryGetParent(geometry));
   
   // This is the first leaf/branch in group - just push geometry to the stack
   if(firstInBranch == TRUE)
@@ -614,7 +529,6 @@ bool8 createGeometry(const string& name, Asset** outGeometry)
   assert(allocateAsset(interface, name, outGeometry));
 
   Geometry* geometryData = engineAllocObject<Geometry>(MEMORY_TYPE_GENERAL);
-  geometryData->combinationFunction = COMBINATION_UNION;
   geometryData->scale = 1.0f;
   geometryData->position = float3(0.0f, 0.0f, 0.0f);
   geometryData->orientation = quat(0.0f, 0.0f, 0.0f, 1.0f);
@@ -1376,27 +1290,6 @@ uint32 geometryGetTotalChildrenCount(Asset* geometry)
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
 
   return geometryData->totalChildrenCount;
-}
-
-void geometrySetCombinationFunction(Asset* geometry, CombinationFunction function)
-{
-  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);  
-  
-  geometryData->combinationFunction = function;
-
-  geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);    
-}
-
-CombinationFunction geometryGetCombinationFunction(Asset* geometry)
-{
-  if(geometry == nullptr)
-  {
-    return COMBINATION_UNION;
-  }
-  
-  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);  
-  
-  return geometryData->combinationFunction;
 }
 
 // ----------------------------------------------------------------------------

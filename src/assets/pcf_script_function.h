@@ -19,6 +19,9 @@ enum PCFNativeType
   PCF_NATIVE_TYPE_UNKNOWN
 };
 
+const char* pcfNativeTypeGetLabel(PCFNativeType type);
+const char* pcfNativeTypeGetIcon(PCFNativeType type);
+
 ENGINE_API bool8 createPCF(const std::string& name, PCFNativeType nativeType, Asset** outAsset);
 
 ENGINE_API void pcfSetNativeType(Asset* pcf, PCFNativeType type);

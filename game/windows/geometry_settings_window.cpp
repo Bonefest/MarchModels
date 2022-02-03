@@ -320,30 +320,22 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
   // Combination function
   pushIconSmallButtonStyle();
 
-  ImGui::Text("( Combination type");
+  ImGui::Text("( Combination name");
   ImGui::SameLine();
   
   ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
 
-    static const char* combFuncIcon[] =
-    {
-      ICON_KI_STAR_HALF,
-      ICON_KI_STAR,
-      ICON_KI_STAR_O
-    };
-    
-    CombinationFunction combinationFunc = geometryGetCombinationFunction(data->geometry);
+    AssetPtr pcf = geometryGetPCF(data->geometry);
   
     char combFuncLabel[32];
     sprintf(combFuncLabel, "%s %s",
-            combinationFunctionLabel(combinationFunc),
-            combFuncIcon[(uint32)combinationFunc]);
+            assetGetName(pcf).c_str(),
+            pcfNativeTypeGetIcon(pcfGetNativeType(pcf)));
     
 
     if(ImGui::SmallButton(combFuncLabel))
     {
-      combinationFunc = (CombinationFunction)(((uint32)combinationFunc + 1) % (uint32)COMBINATION_COUNT);
-      geometrySetCombinationFunction(data->geometry, combinationFunc);
+      openScriptFunctionSettingsWindow(data->geometry, pcf);
     }
 
   ImGui::PopStyleColor();
