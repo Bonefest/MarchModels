@@ -1,12 +1,41 @@
 #pragma once
 
+#include <memory>
+
 #include "defines.h"
 #include "logging.h"
 #include "memory_manager.h"
 
+template <typename T, void(*)(T*)>
+class WeakPtr;
+
+/**
+ * It's a std::shared_ptr analog adapted to the API of the engine. It's applied only
+ * by types that are created by API itself and types which are using memory
+ * allocated from the engine.
+ *
+ * Reasons of existing of SharedPtr:
+ *   1. We need to have a way to pass destroyFunc as part of a type (std::shared_ptr
+ *      only provides a way to pass a Deleter object.
+ *   2. We'd like to have implicit conversions between SharedPtr --> T*, because
+ *      most of the API's functions are using raw pointers and it should look
+ *      consistently.
+ */
 template <typename T, void(*destroyFunc)(T*) = nullptr>
 class SharedPtr
 {
+  friend class WeakPtr<T, destroyFunc>;
+private:
+
+  // NOTE: Custom memory deallocator
+  struct RefCounterDeleter
+  {
+    void operator()(uint32* counter)
+    {
+      engineFreeObject(counter, MEMORY_TYPE_GENERAL);
+    }
+  };
+  
 public:
   SharedPtr() = default;
   
@@ -18,7 +47,8 @@ public:
     if(rawPtr != nullptr)
     {
       m_ptr = rawPtr;
-      m_refCounter = engineAllocObject<uint32>(MEMORY_TYPE_GENERAL);
+      m_refCounter = std::shared_ptr<uint32>(engineAllocObject<uint32>(MEMORY_TYPE_GENERAL),
+                                             [](uint32* counter) { engineFreeObject(counter, MEMORY_TYPE_GENERAL); });
       retain();          
     }
   }
@@ -101,7 +131,7 @@ public:
       return;
     }
     
-    assert(m_refCounter > 0 && "Attempt to release an empty shared ptr!");
+    assert(*m_refCounter > 0 && "Attempt to release an empty shared ptr!");
     (*m_refCounter)--;
     if((*m_refCounter) == 0)
     {
@@ -115,7 +145,6 @@ public:
         m_ptr = nullptr;
       }
 
-      engineFreeObject(m_refCounter, MEMORY_TYPE_GENERAL);
       m_refCounter = nullptr;
     }
   }
@@ -125,7 +154,7 @@ public:
     return m_refCounter == nullptr ? 0 : *m_refCounter;
   }
 
-  T* raw()
+  T* raw() const
   {
     return m_ptr;
   }
@@ -133,7 +162,7 @@ public:
   operator T*() const { return m_ptr; }
   
 private:
-  uint32* m_refCounter = nullptr;
+  std::shared_ptr<uint32> m_refCounter = nullptr;
 
   // NOTE: Previously raw pointer was public. It's a bad idea because user has a chance
   // to write something like: "createNewWindow(&sharedPtr.ptr)", meaning that previous raw pointer
@@ -143,5 +172,31 @@ private:
   // You still can access the raw pointer, but now you are forced to change it only through the
   // corresponding API (e.g create a new shared ptr and reassign it)
   T* m_ptr = nullptr;
+};
+
+template <typename T, void(*destroyFunc)(T*)>
+class WeakPtr
+{
+public:  
+  WeakPtr(const SharedPtr<T, destroyFunc>& sptr)
+  {
+    m_refCounter = sptr.m_refCounter;
+  }
+
+  T* raw() const
+  {
+    assert(*m_refCounter > 0);
+    return m_data;
+  }
   
+  bool8 available() const
+  {
+    return *m_refCounter > 0 ? TRUE : FALSE;
+  }
+
+  operator T*() const { return raw(); }
+  
+private:
+  std::shared_ptr<uint32> m_refCounter;
+  T* m_data;
 };

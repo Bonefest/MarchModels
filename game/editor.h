@@ -17,3 +17,9 @@ void editorProcessInput(Application* app, const EventData& eventData, void* send
 
 void editorSetScene(Scene* scene);
 Scene* editorGetCurrentScene();
+
+bool8 editorAddSelectedGeometry(AssetWPtr geometry);
+bool8 editorGeometryIsSelected(AssetWPtr geometry);
+bool8 editorRemoveSelectedGeometry(AssetWPtr geometry);
+std::vector<AssetWPtr>& editorGetSelectedGeometry();
+

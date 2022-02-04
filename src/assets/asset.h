@@ -40,4 +40,5 @@ ENGINE_API AssetType assetGetType(Asset* asset);
 void assetSetInternalData(Asset* asset, void* data);
 void* assetGetInternalData(Asset* asset);
 
-using AssetPtr = SharedPtr<Asset, &destroyAsset>;
+using AssetPtr = SharedPtr<Asset, destroyAsset>;
+using AssetWPtr = WeakPtr<Asset, destroyAsset>;

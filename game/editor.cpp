@@ -37,6 +37,8 @@ struct EditorData
   WindowPtr viewWindow;
   WindowPtr sceneHierarchyWindow;
   WindowPtr consoleWindow;
+
+  vector<AssetWPtr> selectedGeometry;
 };
 
 static EditorData editorData;
@@ -267,4 +269,44 @@ void editorSetScene(Scene* scene)
 Scene* editorGetCurrentScene()
 {
   return editorData.currentScene;
+}
+
+bool8 editorAddSelectedGeometry(AssetWPtr geometry)
+{
+  if(editorGeometryIsSelected(geometry))
+  {
+    return FALSE;
+  }
+
+  editorData.selectedGeometry.push_back(geometry);
+  return TRUE;
+}
+
+bool8 editorGeometryIsSelected(AssetWPtr geometry)
+{
+  auto it = std::find(editorData.selectedGeometry.begin(),
+                      editorData.selectedGeometry.end(),
+                      geometry);
+  
+  return it != editorData.selectedGeometry.end() ? TRUE : FALSE;
+}
+
+bool8 editorRemoveSelectedGeometry(AssetWPtr geometry)
+{
+  auto it = std::find(editorData.selectedGeometry.begin(),
+                      editorData.selectedGeometry.end(),
+                      geometry);
+  
+  if(it == editorData.selectedGeometry.end())
+  {
+    return FALSE;
+  }
+
+  editorData.selectedGeometry.erase(it);
+  return TRUE;
+}
+
+vector<AssetWPtr>& editorGetSelectedGeometry()
+{
+  return editorData.selectedGeometry;
 }
