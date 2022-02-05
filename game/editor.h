@@ -21,5 +21,6 @@ Scene* editorGetCurrentScene();
 bool8 editorAddSelectedGeometry(AssetWPtr geometry);
 bool8 editorGeometryIsSelected(AssetWPtr geometry);
 bool8 editorRemoveSelectedGeometry(AssetWPtr geometry);
+void editorClearSelectedGeometry();
 std::vector<AssetWPtr>& editorGetSelectedGeometry();
 

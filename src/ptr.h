@@ -177,10 +177,13 @@ private:
 template <typename T, void(*destroyFunc)(T*)>
 class WeakPtr
 {
-public:  
+public:
+  WeakPtr() = delete;
+  
   WeakPtr(const SharedPtr<T, destroyFunc>& sptr)
   {
     m_refCounter = sptr.m_refCounter;
+    m_data = sptr.m_ptr;
   }
 
   T* raw() const
@@ -194,6 +197,16 @@ public:
     return *m_refCounter > 0 ? TRUE : FALSE;
   }
 
+  bool operator==(const WeakPtr& ptr) const 
+  {
+    return m_data == ptr.m_data;
+  }
+
+  bool operator!=(const WeakPtr& ptr) const
+  {
+    return m_data != ptr.m_data;
+  }
+  
   operator T*() const { return raw(); }
   
 private:

@@ -306,6 +306,11 @@ bool8 editorRemoveSelectedGeometry(AssetWPtr geometry)
   return TRUE;
 }
 
+void editorClearSelectedGeometry()
+{
+  editorData.selectedGeometry.clear();
+}
+
 vector<AssetWPtr>& editorGetSelectedGeometry()
 {
   return editorData.selectedGeometry;

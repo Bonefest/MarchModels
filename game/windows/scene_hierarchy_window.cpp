@@ -54,9 +54,19 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
   const char* geometryName = assetGetName(geometry).c_str();
   ImGuiStyle& style = ImGui::GetStyle();  
   
-  ImGui::PushID(geometry);
+  ImGui::PushID(geometryGetID(geometry));
 
-  bool treeOpen = ImGui::TreeNode(geometryName);
+  bool treeSelected = editorGeometryIsSelected(geometry) ? TRUE : FALSE;
+  ImGuiTreeNodeFlags treeFlags = ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
+  if(treeSelected)
+  {
+    treeFlags |= ImGuiTreeNodeFlags_Selected;
+  }
+
+  bool treeOpen = ImGui::TreeNodeEx(geometryName, treeFlags);
+  bool treeClicked = ImGui::IsItemClicked();
+  bool ctrlPressed = ImGui::GetIO().KeyCtrl;
+  
   bool8 processedNormally = TRUE;
   
   ImGui::SameLine();
@@ -141,6 +151,26 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
         
       pushIconSmallButtonStyle();
       ImGui::TreePop();
+    }
+
+    if(treeClicked)
+    {
+      if(ctrlPressed)
+      {
+        if(treeSelected)
+        {
+          editorRemoveSelectedGeometry(geometry);
+        }
+        else
+        {
+          editorAddSelectedGeometry(geometry);
+        }
+      }
+      else
+      {
+        editorClearSelectedGeometry();
+        editorAddSelectedGeometry(geometry);
+      }
     }
 
     popIconSmallButtonStyle();
