@@ -24,7 +24,8 @@ bool8 createLightSource(const std::string& name,
   assert(allocateAsset(interface, name, lsource));
 
   LightSource* lsourceData = engineAllocObject<LightSource>(MEMORY_TYPE_GENERAL);
-
+  lsourceData->parameters.type = type;
+  
   assetSetInternalData(*lsource, lsourceData);
   
   return TRUE;

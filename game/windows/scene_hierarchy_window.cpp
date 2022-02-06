@@ -19,14 +19,11 @@ struct SceneHierarchyData
 {
   bool showMetaInfo = true;
   
-  bool listGeometry = true;
   bool listGeometrySDF = true;
   bool listGeometryIDF = true;
   bool listGeometryODF = true;
   bool listGeometryPCF = true;
   bool listGeometryMaterial = true;
-  
-  bool listLights = true;
 
   vector<AssetWPtr> selectedGeometry;
 };
@@ -179,6 +176,8 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
 
 static void sceneHierarchyDraw(Window* window, float64 delta)
 {
+  ImGuiStyle& imstyle = ImGui::GetStyle();  
+  
   Scene* currentScene = editorGetCurrentScene();
   SceneHierarchyData* data = (SceneHierarchyData*)windowGetInternalData(window);
   
@@ -198,21 +197,11 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
 
   if(ImGui::BeginPopup("Filter popup##SceneHierarchySearch"))
   {
-    ImGui::Checkbox("List geometry", &data->listGeometry);
-    if(data->listGeometry)
-    {
-      ImGui::Indent();
-      
-      ImGui::Checkbox("List SDFs", &data->listGeometrySDF);
-      ImGui::Checkbox("List IDFs", &data->listGeometryIDF);
-      ImGui::Checkbox("List ODFs", &data->listGeometryODF);
-      ImGui::Checkbox("List PCFs", &data->listGeometryPCF);      
-      ImGui::Checkbox("List materials", &data->listGeometryMaterial);
-
-      ImGui::Unindent();
-    }
-
-    ImGui::Checkbox("List lights", &data->listLights);
+    ImGui::Checkbox("List SDFs", &data->listGeometrySDF);
+    ImGui::Checkbox("List IDFs", &data->listGeometryIDF);
+    ImGui::Checkbox("List ODFs", &data->listGeometryODF);
+    ImGui::Checkbox("List PCFs", &data->listGeometryPCF);      
+    ImGui::Checkbox("List materials", &data->listGeometryMaterial);
     ImGui::Checkbox("Show metainfo", &data->showMetaInfo);    
 
     ImGui::EndPopup();
@@ -222,11 +211,6 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
   {
     pushIconSmallButtonStyle();
     ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
-      if(ImGui::SmallButton("[New geometry]"))
-      {
-        sceneAddGeometry(currentScene, createNewGeometry());
-      }
-
       ImGui::SameLine();
       ImGui::SmallButton("[New light]");  
     ImGui::PopStyleColor();
@@ -234,12 +218,62 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
 
     ImGui::Separator();    
   }
-  
-  if(data->listGeometry)
+
+  // --------------------------------------------------------------------------
+  // Geometry list
+  // --------------------------------------------------------------------------
+  ImGui::PushStyleColor(ImGuiCol_Header, (float4)imstyle.Colors[ImGuiCol_MenuBarBg]);
+  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, (float4)imstyle.Colors[ImGuiCol_MenuBarBg] * 1.1f);
+  ImGui::PushStyleColor(ImGuiCol_HeaderActive, (float4)imstyle.Colors[ImGuiCol_MenuBarBg] * 1.2f);    
+  bool showGeometry = ImGui::CollapsingHeader("Scene geometry", ImGuiTreeNodeFlags_AllowItemOverlap);
+  ImGui::PopStyleColor(3);
+
+  ImGui::SameLine();
+
+  pushIconSmallButtonStyle();    
+  ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
+  if(ImGui::SmallButton("[New geometry]"))
   {
+    sceneAddGeometry(currentScene, createNewGeometry());
+  }
+  ImGui::PopStyleColor();
+  popIconSmallButtonStyle();
+    
+  if(showGeometry)
+  {
+    ImGui::Indent();
     std::vector<AssetPtr>& geometryArray = sceneGetChildren(currentScene);
     sceneHierarchyProcessGeometryArray(window, geometryArray, data, currentScene);
+    ImGui::Unindent();
   }
+
+  // --------------------------------------------------------------------------
+  // Light sources list
+  // --------------------------------------------------------------------------  
+  ImGui::PushStyleColor(ImGuiCol_Header, (float4)imstyle.Colors[ImGuiCol_MenuBarBg]);
+  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, (float4)imstyle.Colors[ImGuiCol_MenuBarBg] * 1.1f);
+  ImGui::PushStyleColor(ImGuiCol_HeaderActive, (float4)imstyle.Colors[ImGuiCol_MenuBarBg] * 1.2f);    
+  bool showLights = ImGui::CollapsingHeader("Scene lights", ImGuiTreeNodeFlags_AllowItemOverlap);
+  ImGui::PopStyleColor(3);
+
+  ImGui::SameLine();
+
+  pushIconSmallButtonStyle();    
+  ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
+  if(ImGui::SmallButton("[New light]"))
+  {
+    sceneAddGeometry(currentScene, createNewLight());
+  }
+  ImGui::PopStyleColor();
+  popIconSmallButtonStyle();
+    
+  if(showLights)
+  {
+    ImGui::Indent();
+
+    ImGui::Unindent();
+  }
+
 }
 
 static void sceneHierarchyProcessInput(Window* window, const EventData& eventData, void* sender)

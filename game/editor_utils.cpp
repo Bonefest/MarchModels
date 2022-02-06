@@ -2,6 +2,7 @@
 using std::string;
 
 #include <assets/geometry.h>
+#include <assets/light_source.h>
 #include <assets/assets_manager.h>
 
 #include "editor_utils.h"
@@ -44,3 +45,10 @@ AssetPtr createNewGeometry()
   return AssetPtr(newGeometry);
 }
 
+AssetPtr createNewLight()
+{
+  Asset* newLight;
+  createLightSource("point light", LIGHT_SOURCE_TYPE_POINT, &newLight);
+
+  return AssetPtr(newLight);
+}

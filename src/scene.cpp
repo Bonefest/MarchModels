@@ -9,7 +9,7 @@ using std::vector;
 struct Scene
 {
   AssetPtr geometryRoot;
-  vector<LightSource*> lightSourceArray;
+  vector<AssetPtr> lightSources;
 };
 
 bool8 createScene(Scene** outScene)
@@ -59,18 +59,28 @@ AssetPtr sceneGetGeometryRoot(Scene* scene)
   return scene->geometryRoot;
 }
 
-void sceneAddLightSource(Scene* scene, LightSource* lightSource)
+void sceneAddLightSource(Scene* scene, AssetPtr lightSource)
 {
-
+  scene->lightSources.push_back(lightSource);
 }
 
-void sceneRemoveLightSource(Scene* scene, LightSource* lightSource)
+bool8 sceneRemoveLightSource(Scene* scene, AssetPtr lightSource)
 {
+  auto it = std::find(scene->lightSources.begin(),
+                      scene->lightSources.end(),
+                      lightSource);
 
+  if(it == scene->lightSources.end())
+  {
+    return FALSE;
+  }
+
+  scene->lightSources.erase(it);
+  return TRUE;
 }
 
-std::vector<LightSource*>& sceneGetLightSources(Scene* scene)
+std::vector<AssetPtr>& sceneGetLightSources(Scene* scene)
 {
-  return scene->lightSourceArray;
+  return scene->lightSources;
 }
 
