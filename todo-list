@@ -45,3 +45,4 @@
 45. extend assets manager
 46. compilation of pcf always fails
 47. drag-n-drop for geometry
+48. thanks to the id buffer, we can easily track user clicks. When mouse isn't released, move/rotate object in corresponding direction.

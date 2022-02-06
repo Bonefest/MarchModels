@@ -98,4 +98,21 @@
     uint4 max;
   };
 
+  struct LightSourceParameters
+  {
+    uint32 type;
+    bool    enabled;
+    bool    shadowEnabled;
+    float32 shadowFactor;    
+
+    float2  attenuationDistance;
+    float2  attenuationAngle;
+    
+    float4 position;
+    quat   orientation;
+    float4 intensity;
+    float4 attenuation;
+    
+  };
+
 #endif
