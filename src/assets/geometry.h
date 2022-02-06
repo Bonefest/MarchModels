@@ -55,6 +55,9 @@ ENGINE_API bool8 geometryIsRoot(Asset* geometry);
 ENGINE_API bool8 geometryIsBranch(Asset* geometry);
 ENGINE_API bool8 geometryIsLeaf(Asset* geometry);
 
+ENGINE_API void geometrySetSelected(Asset* geometry, bool8 selected);
+ENGINE_API bool8 geometryIsSelected(Asset* geometry);
+
 ENGINE_API float3 geometryTransformToParent(Asset* geometry, float3 localPos);
 ENGINE_API float3 geometryTransformFromParent(Asset* geometry, float3 parentPos);
 ENGINE_API float3 geometryTransformToLocal(Asset* geometry, float3 worldPos);

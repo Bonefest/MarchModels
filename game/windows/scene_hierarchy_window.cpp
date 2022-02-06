@@ -1,3 +1,5 @@
+#include <vector>
+
 #include <memory_manager.h>
 #include <assets/assets_manager.h>
 #include <assets/script_function.h>
@@ -11,6 +13,8 @@
 #include "geometry_settings_window.h"
 #include "script_function_settings_window.h"
 
+using std::vector;
+
 struct SceneHierarchyData
 {
   bool showMetaInfo = true;
@@ -23,7 +27,8 @@ struct SceneHierarchyData
   bool listGeometryMaterial = true;
   
   bool listLights = true;
-  
+
+  vector<AssetWPtr> selectedGeometry;
 };
 
 static void sceneHierarchyProcessGeometryArray(Window* window,
@@ -56,14 +61,16 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
   
   ImGui::PushID(geometryGetID(geometry));
 
-  bool treeSelected = editorGeometryIsSelected(geometry) ? TRUE : FALSE;
+  bool treeSelected = geometryIsSelected(geometry) ? TRUE : FALSE;
   ImGuiTreeNodeFlags treeFlags = ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
   if(treeSelected)
   {
     treeFlags |= ImGuiTreeNodeFlags_Selected;
   }
 
-  bool treeOpen = ImGui::TreeNodeEx(geometryName, treeFlags);
+  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, float4(0.5f, 0.5f, 0.5f, 0.25f));
+    bool treeOpen = ImGui::TreeNodeEx(geometryName, treeFlags);
+  ImGui::PopStyleColor();
   bool treeClicked = ImGui::IsItemClicked();
   bool ctrlPressed = ImGui::GetIO().KeyCtrl;
   
@@ -155,22 +162,12 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
 
     if(treeClicked)
     {
-      if(ctrlPressed)
-      {
-        if(treeSelected)
-        {
-          editorRemoveSelectedGeometry(geometry);
-        }
-        else
-        {
-          editorAddSelectedGeometry(geometry);
-        }
-      }
-      else
+      if(!ctrlPressed)
       {
         editorClearSelectedGeometry();
-        editorAddSelectedGeometry(geometry);
       }
+
+      geometrySetSelected(geometry, treeSelected ? FALSE : TRUE);      
     }
 
     popIconSmallButtonStyle();

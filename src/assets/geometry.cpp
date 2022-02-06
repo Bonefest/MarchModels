@@ -50,6 +50,7 @@ struct Geometry
   bool8 needAABBRecalculation;
   bool8 needRebuild;
   bool8 dirty;
+  bool8 selected;
   
   // Branch geometry data
   std::vector<AssetPtr> children;  
@@ -1018,6 +1019,18 @@ bool8 geometryIsLeaf(Asset* geometry)
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   
   return geometryData->children.size() == 0;
+}
+
+void geometrySetSelected(Asset* geometry, bool8 selected)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  geometryData->selected = selected;  
+}
+
+bool8 geometryIsSelected(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  return geometryData->selected;
 }
 
 float3 geometryTransformToParent(Asset* geometry, float3 p)

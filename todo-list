@@ -44,3 +44,4 @@
 44. PCF compilation check is not full; PCF's script function type cannot be changed
 45. extend assets manager
 46. compilation of pcf always fails
+47. drag-n-drop for geometry

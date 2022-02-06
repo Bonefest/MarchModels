@@ -271,47 +271,17 @@ Scene* editorGetCurrentScene()
   return editorData.currentScene;
 }
 
-bool8 editorAddSelectedGeometry(AssetWPtr geometry)
+static bool8 traverseGeometryUnselect(Asset* geometry, void* udata)
 {
-  if(editorGeometryIsSelected(geometry))
-  {
-    return FALSE;
-  }
-
-  editorData.selectedGeometry.push_back(geometry);
-  return TRUE;
-}
-
-bool8 editorGeometryIsSelected(AssetWPtr geometry)
-{
-  auto it = std::find(editorData.selectedGeometry.begin(),
-                      editorData.selectedGeometry.end(),
-                      geometry);
-  
-  return it != editorData.selectedGeometry.end() ? TRUE : FALSE;
-}
-
-bool8 editorRemoveSelectedGeometry(AssetWPtr geometry)
-{
-  auto it = std::find(editorData.selectedGeometry.begin(),
-                      editorData.selectedGeometry.end(),
-                      geometry);
-  
-  if(it == editorData.selectedGeometry.end())
-  {
-    return FALSE;
-  }
-
-  editorData.selectedGeometry.erase(it);
-  return TRUE;
+  geometrySetSelected(geometry, FALSE);
+  return FALSE;
 }
 
 void editorClearSelectedGeometry()
 {
-  editorData.selectedGeometry.clear();
-}
-
-vector<AssetWPtr>& editorGetSelectedGeometry()
-{
-  return editorData.selectedGeometry;
+  if(editorData.currentScene != nullptr)
+  {
+    geometryTraversePostorder(sceneGetGeometryRoot(editorData.currentScene),
+                              traverseGeometryUnselect);
+  }
 }

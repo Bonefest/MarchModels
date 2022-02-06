@@ -43,3 +43,4 @@ AssetPtr createNewGeometry()
 
   return AssetPtr(newGeometry);
 }
+

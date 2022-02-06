@@ -10,6 +10,8 @@
 
 #include "aabb_visualization_pass.h"
 
+using std::vector;
+
 const static uint32 MAX_INSTANCES = 1024;
 const static uint32 CUBE_VRT_BUFFER_SLOT = 0;
 const static uint32 CUBE_INST_BUFFER_SLOT = 1;
@@ -39,6 +41,12 @@ const static uint32 cubeIndexData[] =
   4, 5, 7, 4, 7, 6, // top face
 };
 
+struct AABBVisualizationPassInstanceData
+{
+  float3 position;
+  float3 size; 
+  float3 color;
+};
 
 struct AABBVisualizationPassData
 {
@@ -68,12 +76,15 @@ static void destroyAABBVisualizationPass(RenderPass* pass)
   engineFreeObject(data, MEMORY_TYPE_GENERAL);
 }
 
-static void gatherAABBs(AABBVisualizationPassData* data, Asset* geometry, std::vector<float3>& outAABBData)
+static void gatherAABBs(AABBVisualizationPassData* data,
+                        Asset* geometry,
+                        vector<AABBVisualizationPassInstanceData>& unselectedInstances,
+                        vector<AABBVisualizationPassInstanceData>& selectedInstances)
 {
-  std::vector<AssetPtr>& children = geometryGetChildren(geometry);
+  vector<AssetPtr>& children = geometryGetChildren(geometry);
   for(auto child: children)
   {
-    gatherAABBs(data, child, outAABBData);
+    gatherAABBs(data, child, unselectedInstances, selectedInstances);
   }
 
   if(data->showParents == TRUE || geometryIsLeaf(geometry) == TRUE)
@@ -88,18 +99,30 @@ static void gatherAABBs(AABBVisualizationPassData* data, Asset* geometry, std::v
       aabb = geometryGetFinalAABB(geometry);
     }
 
-    outAABBData.push_back(aabb.getCenter());
-    outAABBData.push_back(aabb.getDimensions());    
+    AABBVisualizationPassInstanceData instanceData = {};
+    instanceData.position = aabb.getCenter();
+    instanceData.size = aabb.getDimensions();
+
+    if(geometryIsSelected(geometry) == TRUE)
+    {
+      instanceData.color = float3(0.0, 1.0, 0.0);
+      unselectedInstances.push_back(instanceData);
+    }
+    else
+    {
+      instanceData.color = float3(0.0, 0.6, 0.0);
+      selectedInstances.push_back(instanceData);
+    }
   }
 }
 
 static void drawAABBs(AABBVisualizationPassData* data)
 {
-  std::vector<float3> aabbData;
-  gatherAABBs(data, sceneGetGeometryRoot(rendererGetPassedScene()), aabbData);
+  vector<AABBVisualizationPassInstanceData> selectedInstances;
+  vector<AABBVisualizationPassInstanceData> unselectedInstances;  
+  gatherAABBs(data, sceneGetGeometryRoot(rendererGetPassedScene()),
+              selectedInstances, unselectedInstances);
 
-  model3DUpdateBuffer(data->cubesModel, CUBE_INST_BUFFER_SLOT,
-                      0, &aabbData[0], sizeof(float32) * 3 * aabbData.size());
 
   glDepthFunc(GL_LESS);
   glEnable(GL_DEPTH_TEST);
@@ -109,11 +132,22 @@ static void drawAABBs(AABBVisualizationPassData* data)
   shaderProgramUse(data->aabbVisualizationProgram);
 
   float4x4 viewProj = cameraGetWorldNDCMat(rendererGetPassedCamera());
-  
   glUniformMatrix4fv(0, 1, GL_FALSE, &viewProj[0][0]);
   
   glBindVertexArray(model3DGetVAOHandle(data->cubesModel));
-  glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0, aabbData.size() >> 1);
+
+  glLineWidth(2.0);
+  model3DUpdateBuffer(data->cubesModel, CUBE_INST_BUFFER_SLOT,
+                      0, &selectedInstances[0], sizeof(AABBVisualizationPassInstanceData) * selectedInstances.size());
+  
+  glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0, selectedInstances.size());
+  
+  glLineWidth(1.0);
+
+  model3DUpdateBuffer(data->cubesModel, CUBE_INST_BUFFER_SLOT,
+                      0, &unselectedInstances[0], sizeof(AABBVisualizationPassInstanceData) * unselectedInstances.size());
+  
+  glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0, unselectedInstances.size());
   
   shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -252,8 +286,9 @@ static Model3DPtr createCubesModel()
   model3DAttachBuffer(model, CUBE_INST_BUFFER_SLOT, NULL, sizeof(float32) * 6 * MAX_INSTANCES, GL_DYNAMIC_DRAW);
 
   model3DDescribeInput(model, 0, CUBE_VRT_BUFFER_SLOT, 3, GL_FLOAT, 3 * sizeof(float32), 0);
-  model3DDescribeInput(model, 1, CUBE_INST_BUFFER_SLOT, 3, GL_FLOAT, 6 * sizeof(float32), 0, FALSE);
-  model3DDescribeInput(model, 2, CUBE_INST_BUFFER_SLOT, 3, GL_FLOAT, 6 * sizeof(float32), 3 * sizeof(float32), FALSE);
+  model3DDescribeInput(model, 1, CUBE_INST_BUFFER_SLOT, 3, GL_FLOAT, sizeof(AABBVisualizationPassInstanceData), offsetof(AABBVisualizationPassInstanceData, position), FALSE);
+  model3DDescribeInput(model, 2, CUBE_INST_BUFFER_SLOT, 3, GL_FLOAT, sizeof(AABBVisualizationPassInstanceData), offsetof(AABBVisualizationPassInstanceData, size), FALSE);
+  model3DDescribeInput(model, 3, CUBE_INST_BUFFER_SLOT, 3, GL_FLOAT, sizeof(AABBVisualizationPassInstanceData), offsetof(AABBVisualizationPassInstanceData, color), FALSE);  
 
   return Model3DPtr(model);
 }

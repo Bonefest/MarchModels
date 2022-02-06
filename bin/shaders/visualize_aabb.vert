@@ -8,11 +8,18 @@ layout(location = 0) in float3 vertexPos;
 // Per-instance attributes
 layout(location = 1) in float3 aabbPosition;
 layout(location = 2) in float3 aabbSize;
+layout(location = 3) in float3 aabbColor;
 
+// Output attributes
+layout(location = 0) out float3 outAABBColor;
+
+// Uniforms
 layout(location = 0) uniform mat4 viewProj;
 
 void main()
 {
+  outAABBColor = aabbColor;
+
   // NOTE: NDC is in LHS --> We can apply our usual transformations
   gl_Position = viewProj * float4(vertexPos * aabbSize + aabbPosition, 1.0);
 
