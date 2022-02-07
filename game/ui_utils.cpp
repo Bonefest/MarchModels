@@ -288,3 +288,43 @@ bool8 drawGeometryItemActionButtons(Scene* scene, AssetPtr geometry)
   
   return removeIsPressed;
 }
+
+bool8 drawLightSourceItemActionButtons(AssetPtr lightSource)
+{
+  bool8 removeIsPressed = FALSE;
+
+  pushIconSmallButtonStyle();
+    if(ImGui::SmallButton(ICON_KI_PENCIL"##LightSourceChangeName"))
+    {
+      ImGui::OpenPopup("Change light source name");
+      strcpy(textInputPopupGetBuffer(), assetGetName(lightSource).c_str());
+    }
+  popIconSmallButtonStyle();
+  
+  ImGuiUtilsButtonsFlags pressedButton = textInputPopup("Change light source name", "Enter a new name");
+
+  if(ImGuiUtilsButtonsFlags_Accept == pressedButton)
+  {
+    assetSetName(lightSource, textInputPopupGetBuffer());
+  }
+      
+  pushIconSmallButtonStyle();
+  
+    ImGui::SameLine();
+    if(ImGui::SmallButton(ICON_KI_COG"##LightSourceEdit"))
+    {
+      // TODO
+    }
+    
+    ImGui::SameLine();
+    ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
+      if(ImGui::SmallButton(ICON_KI_TRASH"##LightSourceRemove"))
+      {
+        removeIsPressed = TRUE;
+      }
+    ImGui::PopStyleColor();
+
+  popIconSmallButtonStyle();
+  
+  return removeIsPressed;
+}

@@ -81,6 +81,12 @@ public:
     return *this;
   }
 
+  // NOTE: For data structures that require the less operator (e.g set, map)
+  bool operator<(const SharedPtr& ptr) const
+  {
+    return m_ptr < ptr.m_ptr;
+  }
+  
   bool operator==(T* data)
   {
     return m_ptr == data;
@@ -183,13 +189,13 @@ public:
   WeakPtr(const SharedPtr<T, destroyFunc>& sptr)
   {
     m_refCounter = sptr.m_refCounter;
-    m_data = sptr.m_ptr;
+    m_ptr = sptr.m_ptr;
   }
 
   T* raw() const
   {
     assert(*m_refCounter > 0);
-    return m_data;
+    return m_ptr;
   }
   
   bool8 available() const
@@ -197,19 +203,35 @@ public:
     return *m_refCounter > 0 ? TRUE : FALSE;
   }
 
+  // NOTE: For data structures that require the less operator (e.g set, map)
+  bool operator<(const WeakPtr& ptr) const
+  {
+    return m_ptr < ptr.m_ptr;
+  }
+  
+  bool operator==(const SharedPtr<T, destroyFunc>& sptr) const
+  {
+    return m_ptr == sptr.m_ptr;
+  }
+  
   bool operator==(const WeakPtr& ptr) const 
   {
-    return m_data == ptr.m_data;
+    return m_ptr == ptr.m_ptr;
   }
 
+  bool operator!=(const SharedPtr<T, destroyFunc>& sptr) const
+  {
+    return m_ptr != sptr.m_ptr;
+  }
+  
   bool operator!=(const WeakPtr& ptr) const
   {
-    return m_data != ptr.m_data;
+    return m_ptr != ptr.m_ptr;
   }
   
   operator T*() const { return raw(); }
   
 private:
   std::shared_ptr<uint32> m_refCounter;
-  T* m_data;
+  T* m_ptr;
 };

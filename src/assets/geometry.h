@@ -2,6 +2,7 @@
 
 #include "asset.h"
 
+#include <set>
 #include <string>
 #include <vector>
 
@@ -92,6 +93,8 @@ typedef bool8(*fpTraverseFunction)(Asset* geometry, void* userData);
 ENGINE_API bool8 geometryTraversePostorder(Asset* geometry,
                                            fpTraverseFunction traverseFunction,
                                            void* userData = nullptr);
+
+const std::set<AssetPtr>& geometryRootGetAllChildren(Asset* root);
 
 // ----------------------------------------------------------------------------
 // Branch geometry-related interface

@@ -1,7 +1,5 @@
 #include <string>
 #include <vector>
-using std::string;
-using std::vector;
 
 #include "logging.h"
 #include "shader_build.h"
@@ -10,6 +8,10 @@ using std::vector;
 #include "renderer/passes/geometry_native_aabb_calculation_pass.h"
 
 #include "geometry.h"
+
+using std::set;
+using std::string;
+using std::vector;
 
 DECLARE_CVAR(engine_AABBCalculation_IterationsCount, 12u);
 DECLARE_CVAR(engine_AABBCalculation_RaysPerIteration, 1024u);
@@ -51,6 +53,9 @@ struct Geometry
   bool8 needRebuild;
   bool8 dirty;
   bool8 selected;
+
+  // Root geometry data
+  set<AssetPtr> allChildren;
   
   // Branch geometry data
   std::vector<AssetPtr> children;  
@@ -513,6 +518,33 @@ static void geometryRecalculateIDs(Asset* geometry)
   geometryRecalculateIDs(geometryGetRoot(geometry), idCounter);
 
   assert(idCounter < 65535);
+}
+
+static void geometryChildWasAdded(Asset* parent, AssetPtr child)
+{
+  Geometry* childData = (Geometry*)assetGetInternalData(child);
+  for(AssetPtr childOfChild: childData->children)
+  {
+    geometryChildWasAdded(child, childOfChild);
+  }
+  
+  Asset* root = geometryGetRoot(parent);
+  Geometry* rootData = (Geometry*)assetGetInternalData(root);
+  auto insertInfo = rootData->allChildren.insert(child);
+  assert(insertInfo.second);
+}
+
+static void geometryChildWasRemoved(Asset* parent, AssetPtr child)
+{
+  Geometry* childData = (Geometry*)assetGetInternalData(child);
+  for(AssetPtr childOfChild: childData->children)
+  {
+    geometryChildWasRemoved(child, childOfChild);
+  }
+  
+  Asset* root = geometryGetRoot(parent);
+  Geometry* rootData = (Geometry*)assetGetInternalData(root);
+  assert(rootData->allChildren.erase(child) == 1);
 }
 
 // ----------------------------------------------------------------------------
@@ -1255,6 +1287,12 @@ bool8 geometryTraversePostorder(Asset* geometry, fpTraverseFunction traverseFunc
   return traverseFunction(geometry, userData);
 }
 
+const std::set<AssetPtr>& geometryRootGetAllChildren(Asset* root)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(root);
+  return geometryData->allChildren;
+}
+
 // ----------------------------------------------------------------------------
 // Branch geometry-related interface
 // ----------------------------------------------------------------------------
@@ -1269,6 +1307,8 @@ void geometryAddChild(AssetPtr geometry, AssetPtr child)
   geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);
 
   geometryRecalculateIDs(geometry);
+
+  geometryChildWasAdded(geometry, child);
 }
 
 bool8 geometryRemoveChild(Asset* geometry, Asset* child)
@@ -1281,6 +1321,8 @@ bool8 geometryRemoveChild(Asset* geometry, Asset* child)
     return FALSE;
   }
 
+  geometryChildWasRemoved(geometry, *childIt);
+  
   geometryData->children.erase(childIt);
 
   geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);

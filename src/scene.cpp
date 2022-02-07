@@ -59,6 +59,11 @@ AssetPtr sceneGetGeometryRoot(Scene* scene)
   return scene->geometryRoot;
 }
 
+const std::set<AssetPtr>& sceneGetAllChildren(Scene* scene)
+{
+  return geometryRootGetAllChildren(scene->geometryRoot);
+}
+
 void sceneAddLightSource(Scene* scene, AssetPtr lightSource)
 {
   scene->lightSources.push_back(lightSource);

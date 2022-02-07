@@ -285,3 +285,18 @@ void editorClearSelectedGeometry()
                               traverseGeometryUnselect);
   }
 }
+
+std::vector<AssetPtr> editorGetSelectedGeometry()
+{
+  std::vector<AssetPtr> selectedGeometry;
+  const std::set<AssetPtr>& geometryList = sceneGetAllChildren(editorData.currentScene);
+  for(AssetPtr geometry: geometryList)
+  {
+    if(geometryIsSelected(geometry))
+    {
+      selectedGeometry.push_back(geometry);
+    }
+  }
+
+  return selectedGeometry;
+}

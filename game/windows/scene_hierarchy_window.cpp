@@ -1,5 +1,6 @@
 #include <vector>
 
+#include <utils.h>
 #include <memory_manager.h>
 #include <assets/assets_manager.h>
 #include <assets/script_function.h>
@@ -49,9 +50,9 @@ static void sceneHierarchyUpdate(Window* window, float64 delta)
 }
 
 static bool8 sceneHierarchyDrawGeometryData(Window* window,
-                                           AssetPtr geometry,
-                                           SceneHierarchyData* data,
-                                           Scene* currentScene)
+                                            AssetPtr geometry,
+                                            SceneHierarchyData* data,
+                                            Scene* currentScene)
 {
   const char* geometryName = assetGetName(geometry).c_str();
   ImGuiStyle& style = ImGui::GetStyle();  
@@ -77,9 +78,10 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
   pushIconSmallButtonStyle();
 
     // Geometry-related action buttons ----------------------------------------
-
-    processedNormally = drawGeometryItemActionButtons(currentScene, geometry) == TRUE ? FALSE : TRUE;
-  
+    popIconSmallButtonStyle();
+      processedNormally = drawGeometryItemActionButtons(currentScene, geometry) == TRUE ? FALSE : TRUE;
+    pushIconSmallButtonStyle();
+      
     // Geometry content -------------------------------------------------------
     if(treeOpen)
     {
@@ -174,6 +176,25 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
   return processedNormally;
 }
 
+static bool8 sceneHierarchyDrawLightSourceData(Window* window,
+                                               AssetPtr lightSource,
+                                               SceneHierarchyData* data,
+                                               Scene* currentScene)
+{
+  const char* lightSourceName = assetGetName(lightSource).c_str();
+  bool8 removeIsPressed = FALSE;
+  
+  ImGui::PushID(lightSource.raw());
+  
+    ImGui::TreeNodeEx(lightSourceName, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+    ImGui::SameLine();
+    removeIsPressed = drawLightSourceItemActionButtons(lightSource);
+    
+  ImGui::PopID();
+
+  return removeIsPressed;
+}
+
 static void sceneHierarchyDraw(Window* window, float64 delta)
 {
   ImGuiStyle& imstyle = ImGui::GetStyle();  
@@ -207,32 +228,39 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
     ImGui::EndPopup();
   }
 
-  if(data->showMetaInfo == TRUE)
-  {
-    pushIconSmallButtonStyle();
-    ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
-      ImGui::SameLine();
-      ImGui::SmallButton("[New light]");  
-    ImGui::PopStyleColor();
-    popIconSmallButtonStyle();
-
-    ImGui::Separator();    
-  }
+  ImGui::Separator();    
 
   // --------------------------------------------------------------------------
   // Geometry list
   // --------------------------------------------------------------------------
+  std::vector<AssetPtr> selectedGeometry = editorGetSelectedGeometry();
+  float32 geometryHeaderAvalSize = ImGui::GetContentRegionAvail().x;
+  
   ImGui::PushStyleColor(ImGuiCol_Header, (float4)imstyle.Colors[ImGuiCol_MenuBarBg]);
   ImGui::PushStyleColor(ImGuiCol_HeaderHovered, (float4)imstyle.Colors[ImGuiCol_MenuBarBg] * 1.1f);
   ImGui::PushStyleColor(ImGuiCol_HeaderActive, (float4)imstyle.Colors[ImGuiCol_MenuBarBg] * 1.2f);    
   bool showGeometry = ImGui::CollapsingHeader("Scene geometry", ImGuiTreeNodeFlags_AllowItemOverlap);
   ImGui::PopStyleColor(3);
 
-  ImGui::SameLine();
+  if(selectedGeometry.size() > 0)
+  {
+    ImGui::SameLine();    
+    ImGui::TextColored("_<C>%#010x</C>_ (Selected %lu element%s)",
+                       revbytes((uint32)DarkFadedClr),
+                       selectedGeometry.size(),
+                       selectedGeometry.size() == 1 ? "" : "s");
+  }
 
-  pushIconSmallButtonStyle();    
+  static float32 newGeometryButtonWidth = 0;
+  
+  pushIconSmallButtonStyle();
   ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
-  if(ImGui::SmallButton("[New geometry]"))
+  ImGui::SameLine(geometryHeaderAvalSize - newGeometryButtonWidth);  
+  bool newGeometryPressed = ImGui::SmallButton("[New geometry]");
+  
+  newGeometryButtonWidth = ImGui::GetItemRectSize().x;
+
+  if(newGeometryPressed)
   {
     sceneAddGeometry(currentScene, createNewGeometry());
   }
@@ -249,29 +277,45 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
 
   // --------------------------------------------------------------------------
   // Light sources list
-  // --------------------------------------------------------------------------  
+  // --------------------------------------------------------------------------
+  float32 lightSourcesHeaderAvalSize = ImGui::GetContentRegionAvail().x;  
+  
   ImGui::PushStyleColor(ImGuiCol_Header, (float4)imstyle.Colors[ImGuiCol_MenuBarBg]);
   ImGui::PushStyleColor(ImGuiCol_HeaderHovered, (float4)imstyle.Colors[ImGuiCol_MenuBarBg] * 1.1f);
   ImGui::PushStyleColor(ImGuiCol_HeaderActive, (float4)imstyle.Colors[ImGuiCol_MenuBarBg] * 1.2f);    
   bool showLights = ImGui::CollapsingHeader("Scene lights", ImGuiTreeNodeFlags_AllowItemOverlap);
   ImGui::PopStyleColor(3);
 
-  ImGui::SameLine();
 
+  static float32 newLightSourceButtonWidth = 0;
+  
   pushIconSmallButtonStyle();    
   ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
-  if(ImGui::SmallButton("[New light]"))
+  ImGui::SameLine(lightSourcesHeaderAvalSize - newLightSourceButtonWidth);  
+  bool newLightPressed = ImGui::SmallButton("[New light]");
+  newLightSourceButtonWidth = ImGui::GetItemRectSize().x;
+
+  if(newLightPressed)
   {
-    sceneAddGeometry(currentScene, createNewLight());
+    sceneAddLightSource(currentScene, createNewLight());
   }
   ImGui::PopStyleColor();
   popIconSmallButtonStyle();
     
   if(showLights)
   {
-    ImGui::Indent();
-
-    ImGui::Unindent();
+    std::vector<AssetPtr>& lightSources = sceneGetLightSources(currentScene);
+    for(auto lsourceIt = lightSources.begin(); lsourceIt != lightSources.end();)
+    {
+      if(sceneHierarchyDrawLightSourceData(window, *lsourceIt, data, currentScene) == TRUE)
+      {
+        lightSources.erase(lsourceIt);
+      }
+      else
+      {
+        lsourceIt++;
+      }
+    }
   }
 
 }

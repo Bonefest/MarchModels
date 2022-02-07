@@ -19,4 +19,4 @@ void editorSetScene(Scene* scene);
 Scene* editorGetCurrentScene();
 
 void editorClearSelectedGeometry();
-
+std::vector<AssetPtr> editorGetSelectedGeometry();
