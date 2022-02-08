@@ -54,9 +54,11 @@ static void sceneHierarchyDrawHeader(const char* objectTypeName,
                                      uint32 selectedObjectsCount,
                                      float32& newButtonWidth,
                                      bool& clearPressed,
+                                     bool& deletePressed,
                                      bool& newPressed,
                                      bool& headerOpened)
 {
+  ImGui::PushID(objectTypeName);
   ImGuiStyle& imstyle = ImGui::GetStyle();  
   float32 headerAvalSize = ImGui::GetContentRegionAvail().x;
 
@@ -73,21 +75,28 @@ static void sceneHierarchyDrawHeader(const char* objectTypeName,
   if(selectedObjectsCount > 0)
   {
     ImGui::SameLine();
-    ImGui::TextColored("_<C>%#010x</C>_ (", revbytes((uint32)DarkFadedClr));
-    ImGui::SameLine();
-
-    pushIconSmallButtonStyle();
-    ImGui::PushStyleColor(ImGuiCol_Text, (float4)DangerClr);
-    clearPressed = ImGui::SmallButton("X");
-    ImGui::PopStyleColor();
-    popIconSmallButtonStyle();
-    ImGui::SameLine();
-    
-    ImGui::TextColored("_<C>%#010x</C>_Selected %u element%s)",
+    ImGui::TextColored("_<C>%#010x</C>_( Selected %u element%s",
                        revbytes((uint32)DarkFadedClr),
                        selectedObjectsCount,
                        selectedObjectsCount == 1 ? "" : "s");
+    ImGui::SameLine();
+    
+    pushIconSmallButtonStyle();
+    
+    ImGui::PushStyleColor(ImGuiCol_Text, (float4)DangerClr);
+    clearPressed = ImGui::SmallButton("[X Cancel]");
+    ImGui::PopStyleColor();
+    
+    ImGui::SameLine();
 
+    ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
+    deletePressed = ImGui::SmallButton("[" ICON_KI_TRASH " Delete]");
+    ImGui::PopStyleColor();
+    
+    popIconSmallButtonStyle();
+    ImGui::SameLine();
+    
+    ImGui::TextColored("_<C>%#010x</C>_)", revbytes((uint32)DarkFadedClr));
   }
 
   pushIconSmallButtonStyle();
@@ -98,6 +107,7 @@ static void sceneHierarchyDrawHeader(const char* objectTypeName,
 
   ImGui::PopStyleColor();
   popIconSmallButtonStyle();
+  ImGui::PopID();
 }
 
 static bool8 sceneHierarchyDrawGeometryData(Window* window,
@@ -110,7 +120,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
   
   ImGui::PushID(geometryGetID(geometry));
 
-  bool treeSelected = geometryIsSelected(geometry) ? TRUE : FALSE;
+  bool treeSelected = geometryIsSelected(geometry);
   ImGuiTreeNodeFlags treeFlags = ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
   if(treeSelected)
   {
@@ -236,10 +246,30 @@ static bool8 sceneHierarchyDrawLightSourceData(Window* window,
   bool8 removeIsPressed = FALSE;
   
   ImGui::PushID(lightSource.raw());
-  
-    ImGui::TreeNodeEx(lightSourceName, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen);
+
+    bool treeSelected = lightSourceIsSelected(lightSource);
+    ImGuiTreeNodeFlags treeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+    if(treeSelected)
+    {
+      treeFlags |= ImGuiTreeNodeFlags_Selected;
+    }
+    
+    ImGui::TreeNodeEx(lightSourceName, treeFlags);
+    bool treeClicked = ImGui::IsItemClicked();
+    bool ctrlPressed = ImGui::GetIO().KeyCtrl;
+    
     ImGui::SameLine();
     removeIsPressed = drawLightSourceItemActionButtons(lightSource);
+
+    if(treeClicked)
+    {
+      if(!ctrlPressed)
+      {
+        editorClearSelectedLightSources();
+      }
+
+      lightSourceSetSelected(lightSource, treeSelected ? FALSE : TRUE);
+    }
     
   ImGui::PopID();
 
@@ -285,12 +315,14 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
   // Geometry list
   // --------------------------------------------------------------------------
   static float32 newGeometryButtonWidth = 0.0f;
-  bool clearGeometryPressed = false, newGeometryPressed = false, showGeometryPressed = false;
+  bool clearGeometryPressed = false, deleteGeometryPressed = false,
+    newGeometryPressed = false, showGeometryPressed = false;
   std::vector<AssetPtr> selectedGeometry = editorGetSelectedGeometry();
 
   sceneHierarchyDrawHeader("geometry", "geometries", selectedGeometry.size(),
                            newGeometryButtonWidth,
                            clearGeometryPressed,
+                           deleteGeometryPressed,
                            newGeometryPressed,
                            showGeometryPressed);
 
@@ -299,6 +331,18 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
     editorClearSelectedGeometry();
   }
 
+  if(deleteGeometryPressed)
+  {
+    for(AssetPtr geometry: selectedGeometry)
+    {
+      AssetPtr parent = geometryGetParent(geometry);
+      if(parent != nullptr)
+      {
+        geometryRemoveChild(parent, geometry);
+      }
+    }
+  }
+  
   if(newGeometryPressed)
   {
     sceneAddGeometry(currentScene, createNewGeometry());
@@ -316,18 +360,28 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
   // Light sources list
   // --------------------------------------------------------------------------
   static float32 newLightSourceButtonWidth = 0.0f;
-  bool clearLsourcePressed = false, newLsourcePressed = false, showLsourcePressed = false;
+  bool clearLsourcePressed = false, deleteLsourcePressed = false,
+    newLsourcePressed = false, showLsourcePressed = false;
   std::vector<AssetPtr> selectedLightSources = editorGetSelectedLightSources();
 
   sceneHierarchyDrawHeader("light", "lights", selectedLightSources.size(),
                            newLightSourceButtonWidth,
                            clearLsourcePressed,
+                           deleteLsourcePressed,
                            newLsourcePressed,
                            showLsourcePressed);
 
   if(clearLsourcePressed)
   {
     editorClearSelectedLightSources();
+  }
+
+  if(deleteLsourcePressed)
+  {
+    for(AssetPtr lsource: selectedLightSources)
+    {
+      assert(sceneRemoveLightSource(currentScene, lsource));
+    }
   }
 
   if(newLsourcePressed)

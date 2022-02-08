@@ -12,7 +12,6 @@
 #include <application.h>
 #include <memory_manager.h>
 #include <game_framework.h>
-#include <assets/light_source.h>
 #include <assets/assets_manager.h>
 #include <assets/script_function.h>
 #include <assets/pcf_script_function.h>

@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "assets/geometry.h"
+#include "assets/light_source.h"
 
 struct Scene;
 

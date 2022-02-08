@@ -541,6 +541,8 @@ static void geometryChildWasRemoved(Asset* parent, AssetPtr child)
   {
     geometryChildWasRemoved(child, childOfChild);
   }
+  childData->parent = AssetPtr(nullptr);
+
   
   Asset* root = geometryGetRoot(parent);
   Geometry* rootData = (Geometry*)assetGetInternalData(root);
