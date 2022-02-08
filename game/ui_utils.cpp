@@ -9,6 +9,7 @@
 #include "ui_styles.h"
 #include "windows/list_window.h"
 #include "windows/window_manager.h"
+#include "windows/light_settings_window.h"
 #include "windows/geometry_settings_window.h"
 #include "windows/script_function_settings_window.h"
 
@@ -313,7 +314,18 @@ bool8 drawLightSourceItemActionButtons(AssetPtr lightSource)
     ImGui::SameLine();
     if(ImGui::SmallButton(ICON_KI_COG"##LightSourceEdit"))
     {
-      // TODO
+      WindowPtr lightSettingsWindow = windowManagerGetWindow(geometrySettingsWindowIdentifier(lightSource));
+      if(lightSettingsWindow == nullptr)
+      {
+        Window* newSettingsWindow = nullptr;        
+        assert(createLightSettingsWindow(lightSource, &newSettingsWindow));
+        windowSetSize(newSettingsWindow, float2(480.0f, 180.0f));
+        windowManagerAddWindow(WindowPtr(newSettingsWindow));
+      }
+      else
+      {
+        windowSetFocused(lightSettingsWindow, TRUE);
+      }            
     }
     
     ImGui::SameLine();
