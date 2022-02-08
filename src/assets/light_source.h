@@ -41,6 +41,9 @@ ENGINE_API LightSourceType lightSourceGetType(Asset* lsource);
 ENGINE_API void lightSourceSetEnabled(Asset* lsource, bool8 enabled);
 ENGINE_API bool8 lightSourceIsEnabled(Asset* lsource);
 
+ENGINE_API void lightSourceSetSelected(Asset* lsource, bool8 selected);
+ENGINE_API bool8 lightSourceIsSelected(Asset* lsource);
+
 ENGINE_API void lightSourceSetShadowEnabled(Asset* lsource, bool8 enabled);
 ENGINE_API bool8 lightSourceIsShadowEnabled(Asset* lsource);
 

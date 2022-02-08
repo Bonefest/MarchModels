@@ -12,6 +12,7 @@
 #include <application.h>
 #include <memory_manager.h>
 #include <game_framework.h>
+#include <assets/light_source.h>
 #include <assets/assets_manager.h>
 #include <assets/script_function.h>
 #include <assets/pcf_script_function.h>
@@ -299,4 +300,27 @@ std::vector<AssetPtr> editorGetSelectedGeometry()
   }
 
   return selectedGeometry;
+}
+
+void editorClearSelectedLightSources()
+{
+  if(editorData.currentScene != nullptr)
+  {
+    std::vector<AssetPtr>& lightSources = sceneGetLightSources(editorData.currentScene);
+    for(AssetPtr lightSource: lightSources)
+    {
+      lightSourceSetSelected(lightSource, FALSE);
+    }
+  }
+}
+
+std::vector<AssetPtr> editorGetSelectedLightSources()
+{
+  std::vector<AssetPtr> selectedLightSources;
+  std::vector<AssetPtr>& lightSources = sceneGetLightSources(editorData.currentScene);
+  std::copy_if(lightSources.begin(), lightSources.end(),
+               std::back_inserter(selectedLightSources),
+               [](AssetPtr lsource) { return lightSourceIsSelected(lsource) == TRUE; });
+
+  return selectedLightSources;
 }

@@ -8,6 +8,7 @@ static uint32 lightSourceGetSize(Asset* asset) { /** TODO */ }
 struct LightSource
 {
   LightSourceParameters parameters;
+  bool8 selected = FALSE;
 };
 
 bool8 createLightSource(const std::string& name,
@@ -148,6 +149,20 @@ bool8 lightSourceIsEnabled(Asset* lsource)
   LightSource* lsourceData = (LightSource*)assetGetInternalData(lsource);
 
   return lsourceData->parameters.enabled;
+}
+
+void lightSourceSetSelected(Asset* lsource, bool8 selected)
+{
+  LightSource* lsourceData = (LightSource*)assetGetInternalData(lsource);
+
+  lsourceData->selected = selected;
+}
+
+bool8 lightSourceIsSelected(Asset* lsource)
+{
+  LightSource* lsourceData = (LightSource*)assetGetInternalData(lsource);
+
+  return lsourceData->selected;
 }
 
 void lightSourceSetShadowEnabled(Asset* lsource, bool8 enabled)

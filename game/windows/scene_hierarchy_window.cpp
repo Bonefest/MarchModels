@@ -49,6 +49,57 @@ static void sceneHierarchyUpdate(Window* window, float64 delta)
 
 }
 
+static void sceneHierarchyDrawHeader(const char* objectTypeName,
+                                     const char* objectTypeNamePlural,
+                                     uint32 selectedObjectsCount,
+                                     float32& newButtonWidth,
+                                     bool& clearPressed,
+                                     bool& newPressed,
+                                     bool& headerOpened)
+{
+  ImGuiStyle& imstyle = ImGui::GetStyle();  
+  float32 headerAvalSize = ImGui::GetContentRegionAvail().x;
+
+  char headerTitle[32], newButtonTitle[32];
+  sprintf(headerTitle, "Scene %s tree", objectTypeNamePlural);
+  sprintf(newButtonTitle, "[New %s]", objectTypeName);  
+  
+  ImGui::PushStyleColor(ImGuiCol_Header, (float4)imstyle.Colors[ImGuiCol_MenuBarBg]);
+  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, (float4)imstyle.Colors[ImGuiCol_MenuBarBg] * 1.1f);
+  ImGui::PushStyleColor(ImGuiCol_HeaderActive, (float4)imstyle.Colors[ImGuiCol_MenuBarBg] * 1.2f);
+  headerOpened = ImGui::CollapsingHeader(headerTitle, ImGuiTreeNodeFlags_AllowItemOverlap);
+  ImGui::PopStyleColor(3);
+
+  if(selectedObjectsCount > 0)
+  {
+    ImGui::SameLine();
+    ImGui::TextColored("_<C>%#010x</C>_ (", revbytes((uint32)DarkFadedClr));
+    ImGui::SameLine();
+
+    pushIconSmallButtonStyle();
+    ImGui::PushStyleColor(ImGuiCol_Text, (float4)DangerClr);
+    clearPressed = ImGui::SmallButton("X");
+    ImGui::PopStyleColor();
+    popIconSmallButtonStyle();
+    ImGui::SameLine();
+    
+    ImGui::TextColored("_<C>%#010x</C>_Selected %u element%s)",
+                       revbytes((uint32)DarkFadedClr),
+                       selectedObjectsCount,
+                       selectedObjectsCount == 1 ? "" : "s");
+
+  }
+
+  pushIconSmallButtonStyle();
+  ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
+  ImGui::SameLine(headerAvalSize - newButtonWidth);  
+  newPressed = ImGui::SmallButton(newButtonTitle);
+  newButtonWidth = ImGui::GetItemRectSize().x;
+
+  ImGui::PopStyleColor();
+  popIconSmallButtonStyle();
+}
+
 static bool8 sceneHierarchyDrawGeometryData(Window* window,
                                             AssetPtr geometry,
                                             SceneHierarchyData* data,
@@ -233,76 +284,58 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
   // --------------------------------------------------------------------------
   // Geometry list
   // --------------------------------------------------------------------------
+  static float32 newGeometryButtonWidth = 0.0f;
+  bool clearGeometryPressed = false, newGeometryPressed = false, showGeometryPressed = false;
   std::vector<AssetPtr> selectedGeometry = editorGetSelectedGeometry();
-  float32 geometryHeaderAvalSize = ImGui::GetContentRegionAvail().x;
-  
-  ImGui::PushStyleColor(ImGuiCol_Header, (float4)imstyle.Colors[ImGuiCol_MenuBarBg]);
-  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, (float4)imstyle.Colors[ImGuiCol_MenuBarBg] * 1.1f);
-  ImGui::PushStyleColor(ImGuiCol_HeaderActive, (float4)imstyle.Colors[ImGuiCol_MenuBarBg] * 1.2f);    
-  bool showGeometry = ImGui::CollapsingHeader("Scene geometry", ImGuiTreeNodeFlags_AllowItemOverlap);
-  ImGui::PopStyleColor(3);
 
-  if(selectedGeometry.size() > 0)
+  sceneHierarchyDrawHeader("geometry", "geometries", selectedGeometry.size(),
+                           newGeometryButtonWidth,
+                           clearGeometryPressed,
+                           newGeometryPressed,
+                           showGeometryPressed);
+
+  if(clearGeometryPressed)
   {
-    ImGui::SameLine();    
-    ImGui::TextColored("_<C>%#010x</C>_ (Selected %lu element%s)",
-                       revbytes((uint32)DarkFadedClr),
-                       selectedGeometry.size(),
-                       selectedGeometry.size() == 1 ? "" : "s");
+    editorClearSelectedGeometry();
   }
-
-  static float32 newGeometryButtonWidth = 0;
-  
-  pushIconSmallButtonStyle();
-  ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
-  ImGui::SameLine(geometryHeaderAvalSize - newGeometryButtonWidth);  
-  bool newGeometryPressed = ImGui::SmallButton("[New geometry]");
-  
-  newGeometryButtonWidth = ImGui::GetItemRectSize().x;
 
   if(newGeometryPressed)
   {
     sceneAddGeometry(currentScene, createNewGeometry());
   }
-  ImGui::PopStyleColor();
-  popIconSmallButtonStyle();
-    
-  if(showGeometry)
+
+  if(showGeometryPressed)
   {
     ImGui::Indent();
     std::vector<AssetPtr>& geometryArray = sceneGetChildren(currentScene);
     sceneHierarchyProcessGeometryArray(window, geometryArray, data, currentScene);
-    ImGui::Unindent();
+    ImGui::Unindent();    
   }
 
   // --------------------------------------------------------------------------
   // Light sources list
   // --------------------------------------------------------------------------
-  float32 lightSourcesHeaderAvalSize = ImGui::GetContentRegionAvail().x;  
-  
-  ImGui::PushStyleColor(ImGuiCol_Header, (float4)imstyle.Colors[ImGuiCol_MenuBarBg]);
-  ImGui::PushStyleColor(ImGuiCol_HeaderHovered, (float4)imstyle.Colors[ImGuiCol_MenuBarBg] * 1.1f);
-  ImGui::PushStyleColor(ImGuiCol_HeaderActive, (float4)imstyle.Colors[ImGuiCol_MenuBarBg] * 1.2f);    
-  bool showLights = ImGui::CollapsingHeader("Scene lights", ImGuiTreeNodeFlags_AllowItemOverlap);
-  ImGui::PopStyleColor(3);
+  static float32 newLightSourceButtonWidth = 0.0f;
+  bool clearLsourcePressed = false, newLsourcePressed = false, showLsourcePressed = false;
+  std::vector<AssetPtr> selectedLightSources = editorGetSelectedLightSources();
 
+  sceneHierarchyDrawHeader("light", "lights", selectedLightSources.size(),
+                           newLightSourceButtonWidth,
+                           clearLsourcePressed,
+                           newLsourcePressed,
+                           showLsourcePressed);
 
-  static float32 newLightSourceButtonWidth = 0;
-  
-  pushIconSmallButtonStyle();    
-  ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
-  ImGui::SameLine(lightSourcesHeaderAvalSize - newLightSourceButtonWidth);  
-  bool newLightPressed = ImGui::SmallButton("[New light]");
-  newLightSourceButtonWidth = ImGui::GetItemRectSize().x;
+  if(clearLsourcePressed)
+  {
+    editorClearSelectedLightSources();
+  }
 
-  if(newLightPressed)
+  if(newLsourcePressed)
   {
     sceneAddLightSource(currentScene, createNewLight());
   }
-  ImGui::PopStyleColor();
-  popIconSmallButtonStyle();
-    
-  if(showLights)
+
+  if(showLsourcePressed)
   {
     std::vector<AssetPtr>& lightSources = sceneGetLightSources(currentScene);
     for(auto lsourceIt = lightSources.begin(); lsourceIt != lightSources.end();)

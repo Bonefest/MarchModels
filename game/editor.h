@@ -20,3 +20,6 @@ Scene* editorGetCurrentScene();
 
 void editorClearSelectedGeometry();
 std::vector<AssetPtr> editorGetSelectedGeometry();
+
+void editorClearSelectedLightSources();
+std::vector<AssetPtr> editorGetSelectedLightSources();
