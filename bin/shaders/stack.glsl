@@ -24,8 +24,8 @@ GeometryData stackFront(uint2 pixelCoord)
 
   GeometryData data;
   
-  data.distance = _stacks[byteOffset + 1];
-  data.id = uint32(_stacks[byteOffset + 2]);
+  data.distance = _stacks[byteOffset + 2];
+  data.id = uint32(_stacks[byteOffset + 3]);
 
   return data;
 }
@@ -37,8 +37,8 @@ GeometryData stackBack(uint2 pixelCoord)
   
   GeometryData data;
   
-  data.distance = _stacks[byteOffset + (stackSize - 1) * GEOMETRY_MEMBERS_COUNT + 1];
-  data.id = uint32(_stacks[byteOffset + (stackSize - 1) * GEOMETRY_MEMBERS_COUNT + 2]);
+  data.distance = _stacks[byteOffset + (stackSize - 1) * GEOMETRY_MEMBERS_COUNT + 2];
+  data.id = uint32(_stacks[byteOffset + (stackSize - 1) * GEOMETRY_MEMBERS_COUNT + 3]);
 
   return data;
 }
@@ -60,8 +60,8 @@ void stackPushGeometry(uint2 pixelCoord, GeometryData geometry)
   uint32 byteOffset = getStackIndex(pixelCoord);
   uint32 stackSize = uint32(_stacks[byteOffset]);
 
-  _stacks[byteOffset + stackSize * GEOMETRY_MEMBERS_COUNT + 1]  = geometry.distance;
-  _stacks[byteOffset + stackSize * GEOMETRY_MEMBERS_COUNT + 2]  = geometry.id;
+  _stacks[byteOffset + stackSize * GEOMETRY_MEMBERS_COUNT + 2]  = geometry.distance;
+  _stacks[byteOffset + stackSize * GEOMETRY_MEMBERS_COUNT + 3]  = geometry.id;
 
   _stacks[byteOffset] = stackSize + 1;
 }
@@ -75,10 +75,29 @@ GeometryData stackPopGeometry(uint2 pixelCoord)
   return data;
 }
 
+void stackAddTotalDistance(uint2 pixelCoord, float32 distance)
+{
+  uint32 byteOffset = getStackIndex(pixelCoord);
+  _stacks[byteOffset + 1] += distance;
+}
+
+float32 stackGetTotalDistance(uint2 pixelCoord)
+{
+  uint32 byteOffset = getStackIndex(pixelCoord);
+  return _stacks[byteOffset + 1];
+}
+
+void stackClearSize(uint2 pixelCoord)
+{
+  uint32 byteOffset = getStackIndex(pixelCoord);
+  _stacks[byteOffset] = 0;
+}
+
 void stackClear(uint2 pixelCoord)
 {
   uint32 byteOffset = getStackIndex(pixelCoord);
   _stacks[byteOffset] = 0;
+  _stacks[byteOffset + 1] = 0;  
 }
 
 #endif

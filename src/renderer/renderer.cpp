@@ -144,6 +144,19 @@ static bool8 initGeometryTransformParamsUBO()
   return TRUE;
 }
 
+static bool8 initCoverageMaskTexture()
+{
+  glGenTextures(1, &data.handles[RR_COVERAGE_MASK_TEXTURE]);
+  glBindTexture(GL_TEXTURE_2D, data.handles[RR_COVERAGE_MASK_TEXTURE]);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8,
+               MAX_WIDTH, MAX_HEIGHT, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  return TRUE;
+}
+
 static bool8 initRaysMapTexture()
 {
   glGenTextures(1, &data.handles[RR_RAYS_MAP_TEXTURE]);
@@ -211,6 +224,7 @@ static bool8 initializeRendererResources()
   INIT(initStacksSSBO);
   INIT(initGlobalParamsUBO);
   INIT(initGeometryTransformParamsUBO);
+  INIT(initCoverageMaskTexture);
   INIT(initRaysMapTexture);
   INIT(initGeometryIDMapTexture);
   INIT(initDistancesMapTexture);
@@ -226,6 +240,7 @@ static void destroyRendererResources()
   glDeleteBuffers(1, &data.handles[RR_DISTANCES_STACK_SSBO]);
   glDeleteBuffers(1, &data.handles[RR_GLOBAL_PARAMS_UBO]);
   glDeleteBuffers(1, &data.handles[RR_GEOTRANSFORM_PARAMS_UBO]);
+  glDeleteTextures(1, &data.handles[RR_COVERAGE_MASK_TEXTURE]);
   glDeleteTextures(1, &data.handles[RR_RAYS_MAP_TEXTURE]);
   glDeleteTextures(1, &data.handles[RR_GEOIDS_MAP_TEXTURE]);  
   glDeleteTextures(1, &data.handles[RR_DISTANCES_MAP_TEXTURE]);  

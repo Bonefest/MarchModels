@@ -179,7 +179,7 @@ bool8 lightSourceIsShadowEnabled(Asset* lsource)
   return lsourceData->parameters.shadowEnabled;
 }
 
-const LightSourceParameters& lightSourceGetParameters(Asset* lsource)
+LightSourceParameters& lightSourceGetParameters(Asset* lsource)
 {
   LightSource* lsourceData = (LightSource*)assetGetInternalData(lsource);
 

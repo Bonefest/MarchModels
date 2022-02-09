@@ -379,7 +379,8 @@ static bool8 geometryRebuildDrawProgram(Asset* geometry)
   assert(createShaderBuild(&build));
 
   shaderBuildAddVersion(build, 430, "core");
-
+  shaderBuildAddCode(build, "layout(early_fragment_tests) in;");
+  
   assert(shaderBuildIncludeFile(build, "shaders/common.glsl") == TRUE);  
   assert(shaderBuildIncludeFile(build, "shaders/geometry_common.glsl") == TRUE);
 

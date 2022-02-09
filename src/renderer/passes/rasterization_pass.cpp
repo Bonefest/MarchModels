@@ -138,33 +138,50 @@ static bool8 rasterizationPassRasterize(RasterizationPassData* data)
   static uint32& culledObjectsCounter = CVarSystemGetUint("engine_RasterizationStatistics_LastFrameCulledObjects");
   
   Scene* sceneToRasterize = rendererGetPassedScene();
+
+  glBindFramebuffer(GL_FRAMEBUFFER, data->raysMapFBO);
+
+  glClearStencil(1);
+  glClear(GL_STENCIL_BUFFER_BIT);  
+  glEnable(GL_STENCIL_TEST);
+  
+  glEnable(GL_BLEND);
+  pushBlend(GL_FUNC_ADD, GL_FUNC_ADD, GL_ZERO, GL_ONE, GL_ONE, GL_ONE);
   
   for(uint32 i = 0; i < renderingParams.rasterItersMaxCount; i++)
   {
-    culledObjectsCounter = 0;    
-    // Calculate distances
+    culledObjectsCounter = 0;
+
+    // Render only fragments that did not intersected something
+    // nor moved too far
+    glStencilFuncSeparate(GL_FRONT_AND_BACK, GL_EQUAL, 1, 0xFF);
+    glStencilOpSeparate(GL_FRONT_AND_BACK, GL_KEEP, GL_KEEP, GL_KEEP);
+
+    // Calculate distances    
     drawGeometryInorder(rendererGetPassedCamera(),
                         sceneGetGeometryRoot(sceneToRasterize),
                         0, 0,
                         culledObjectsCounter);
     
-    // Move per-pixel rays based on calculated distances
-    glBindFramebuffer(GL_FRAMEBUFFER, data->raysMapFBO);
+
+    // Move through all rays, shader will export ref value itself -->
+    // replace stencil's value by exported one.
+    glStencilFuncSeparate(GL_FRONT_AND_BACK, GL_ALWAYS, 0, 0xFF);
+    glStencilOpSeparate(GL_FRONT_AND_BACK, GL_KEEP, GL_KEEP, GL_REPLACE);
     
-    glEnable(GL_BLEND);
-    pushBlend(GL_FUNC_ADD, GL_FUNC_ADD, GL_ZERO, GL_ONE, GL_ONE, GL_ONE);
-
+    // Move per-pixel rays based on calculated distances    
     shaderProgramUse(data->raysMoverProgram);
-
     glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(data->raysMoverProgram), "curIterIdx"), i);
     drawTriangleNoVAO();
-    shaderProgramUse(nullptr);
-    
-    assert(popBlend() == TRUE);
-    glDisable(GL_BLEND);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);    
   }
+
+  assert(popBlend() == TRUE);
+  glDisable(GL_BLEND);
+  glDisable(GL_STENCIL_TEST);
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);  
   
   return TRUE;
 }
@@ -231,8 +248,8 @@ static GLuint createRayMapFramebuffer()
   glGenFramebuffers(1, &framebuffer);
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
   glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rendererGetResourceHandle(RR_RAYS_MAP_TEXTURE), 0);
-  // TODO: attach stencil too
-  if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, rendererGetResourceHandle(RR_COVERAGE_MASK_TEXTURE), 0);
+   if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
   {
     return 0;
   }

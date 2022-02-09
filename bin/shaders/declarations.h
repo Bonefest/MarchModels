@@ -27,8 +27,11 @@
     uint32 id;
   };
 
-  // One geometry stack consists of one member for size + array of geometry (see GeometriesStack declaration)
-  #define GEOMETRY_STACK_MEMBERS_COUNT (1 + GEOMETRY_MEMBERS_COUNT * MAX_STACK_SIZE)
+  // One geometry stack consists of
+  //   1. one member for size
+  //   2. one member for total traversed distance
+  //   3. array of geometry (see GeometriesStack declaration)
+  #define GEOMETRY_STACK_MEMBERS_COUNT (2 + GEOMETRY_MEMBERS_COUNT * MAX_STACK_SIZE)
 
   struct GeometriesStack
   {

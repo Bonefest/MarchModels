@@ -1,4 +1,5 @@
 #version 450 core
+#extension GL_ARB_shader_stencil_export : require
 
 #include stack.glsl
 
@@ -11,15 +12,27 @@ void main()
     int2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);
 
     float32 distance = stackFront(ifragCoord).distance;
+    float32 totalDistance = stackGetTotalDistance(ifragCoord);
 
-    bool notLastIteration = (curIterIdx + 1 < params.rasterItersMaxCount);
-    if(notLastIteration)
+    if(totalDistance > 100.0 || distance < params.intersectionThreshold)
     {
-      stackClear(ifragCoord);
+      gl_FragStencilRefARB = 0;
+      outCameraRay = float4(0.0f);
+    }
+    else
+    {
+      gl_FragStencilRefARB = 1;
+      
+      bool notLastIteration = (curIterIdx + 1 < params.rasterItersMaxCount);    
+      if(notLastIteration)
+      {
+        stackClearSize(ifragCoord);
+      }
+
+      stackAddTotalDistance(ifragCoord, distance);
+
+      outCameraRay = float4(0, 0, 0, distance);                
     }
 
-    // TODO: Check if distance < threshold - mark pixel as intersected (in coverage mask)
-    
-    outCameraRay = float4(0, 0, 0, distance);
 }
 
