@@ -166,7 +166,7 @@ static bool8 rasterizationPassRasterize(RasterizationPassData* data)
 
     // Move through all rays, shader will export ref value itself -->
     // replace stencil's value by exported one.
-    glStencilFuncSeparate(GL_FRONT_AND_BACK, GL_ALWAYS, 0, 0xFF);
+    glStencilFuncSeparate(GL_FRONT_AND_BACK, GL_ALWAYS, 1, 0xFF);
     glStencilOpSeparate(GL_FRONT_AND_BACK, GL_KEEP, GL_KEEP, GL_REPLACE);
     
     // Move per-pixel rays based on calculated distances    

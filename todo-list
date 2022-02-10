@@ -48,3 +48,4 @@
 48. thanks to the id buffer, we can easily track user clicks. When mouse isn't released, move/rotate object in corresponding direction.
 49. visualize distance attenuation
 50. calcualte stack id only once in shaders
+51. investigate problem of ringing during normals visualization. Temp fix: decrease intersection threshold
