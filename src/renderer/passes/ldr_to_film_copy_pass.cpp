@@ -4,6 +4,7 @@
 #include "renderer/renderer.h"
 #include "renderer/renderer_utils.h"
 
+#include "passes_common.h"
 #include "ldr_to_film_copy_pass.h"
 
 struct LDRToFilmCopyPassData
@@ -45,23 +46,6 @@ static const char* LDRToFilmCopyPassGetName(RenderPass* pass)
   return "LDRToFilmCopyPass";
 }
 
-static ShaderProgram* createCopyProgram()
-{
-  ShaderProgram* program = nullptr;
-  
-  createShaderProgram(&program);
-  shaderProgramAttachShader(program, shaderManagerGetShader("triangle.vert"));
-  shaderProgramAttachShader(program, shaderManagerLoadShader(GL_FRAGMENT_SHADER, "shaders/ldr_passthrough.frag"));
-
-  if(linkShaderProgram(program) == FALSE)
-  {
-    destroyShaderProgram(program);
-    return nullptr;
-  }
-  
-  return program;
-}
-
 bool8 createLDRToFilmCopyPass(RenderPass** outPass)
 {
   RenderPassInterface interface = {};
@@ -77,7 +61,7 @@ bool8 createLDRToFilmCopyPass(RenderPass** outPass)
 
   LDRToFilmCopyPassData* data = engineAllocObject<LDRToFilmCopyPassData>(MEMORY_TYPE_GENERAL);
   
-  data->copyProgram = createCopyProgram();
+  data->copyProgram = createAndLinkTriangleShadingProgram("shaders/ldr_passthrough.frag");
   assert(data->copyProgram != nullptr);
 
   renderPassSetInternalData(*outPass, data);

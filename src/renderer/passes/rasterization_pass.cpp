@@ -5,6 +5,7 @@
 #include "renderer/renderer_utils.h"
 #include <../bin/shaders/declarations.h>
 
+#include "passes_common.h"
 #include "rasterization_pass.h"
 
 DECLARE_CVAR(engine_RasterizationStatistics_LastFrameCulledObjects, 0u);
@@ -46,92 +47,6 @@ static bool8 rasterizationPassPrepareToRasterize(RasterizationPassData* data)
   return TRUE;
 }
 
-/**
- * @return boolean value which indicates whether it was rendered or not
- */
-static bool8 drawGeometryInorder(Camera* camera,
-                                 AssetPtr geometry,
-                                 uint32 indexInBranch,
-                                 uint32 culledSiblingsCount,
-                                 uint32& culledObjCounter)
-{
-  const AABB& geometryAABB = geometryGetFinalAABB(geometry);
-  if(cameraGetFrustum(camera).intersects(geometryAABB) == FALSE)
-  {
-    // NOTE: We've culled the object + its children
-    culledObjCounter += geometryGetTotalChildrenCount(geometry) + 1;
-    return FALSE;
-  }
-
-  std::vector<AssetPtr>& children = geometryGetChildren(geometry);
-
-  // NOTE: This counter stores number of culled objects on the current level, this number is crucial for
-  // some optimizations (e.g knowing that all previous siblings were culled, we know
-  // that we don't need to read the stack)
-  uint32 culledChildrenCount = 0;
-  for(uint32 i = 0; i < children.size(); i++)
-  {
-    if(drawGeometryInorder(camera, children[i], i, culledChildrenCount, culledObjCounter) == FALSE)
-    {
-      culledChildrenCount++;
-    }
-    else
-    {
-      // NOTE: Read https://gamedev.stackexchange.com/questions/151563/synchronization-between-several-gldispatchcompute-with-same-ssbos;
-      // The idea is that we need to tell OpenGL explicitly that we want to synchronize several draw calls, which are
-      // reading/writing from the SSBO. Otherwise some strange artifacts may occur.
-      glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    }
-  }
-
-  if(!children.empty() && culledChildrenCount == children.size())
-  {
-    return FALSE;
-  }
-  
-  // NOTE: If it's a root - omit further actions, because it's treated in a special way
-  // (it's not a real geometry object)
-  if(geometryIsRoot(geometry) == TRUE)
-  {
-    return TRUE;
-  }
-  
-  ShaderProgram* geometryProgram = geometryGetDrawProgram(geometry);
-  if(geometryProgram == nullptr)
-  {
-    return FALSE;
-  }
-
-  GeometryTransformParameters geoTransforms = {};
-  geoTransforms.position = float4(geometryGetPosition(geometry), 1.0);
-  geoTransforms.geoWorldMat = geometryGetGeoWorldMat(geometry);
-  geoTransforms.worldGeoMat = geometryGetWorldGeoMat(geometry);
-  geoTransforms.geoParentMat = geometryGetGeoParentMat(geometry);
-  geoTransforms.parentGeoMat = geometryGetParentGeoMat(geometry);
-  
-  glBindBuffer(GL_UNIFORM_BUFFER, rendererGetResourceHandle(RR_GEOTRANSFORM_PARAMS_UBO));
-  glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(GeometryTransformParameters), &geoTransforms);
-  glBindBuffer(GL_UNIFORM_BUFFER, 0);                  
-
-  shaderProgramUse(geometryProgram);
-
-  glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(geometryProgram), "geometryID"),
-               geometryGetID(geometry));
-  glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(geometryProgram), "indexInBranch"),
-               indexInBranch);
-  glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(geometryProgram), "prevCulledSiblingsCount"),
-               culledSiblingsCount);
-  
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_RAYS_MAP_TEXTURE));
-  
-  drawTriangleNoVAO();
-  
-  shaderProgramUse(nullptr);
-
-  return TRUE;
-}
-
 static bool8 rasterizationPassRasterize(RasterizationPassData* data)
 {
   const RenderingParameters& renderingParams = rendererGetPassedRenderingParameters();
@@ -158,12 +73,11 @@ static bool8 rasterizationPassRasterize(RasterizationPassData* data)
     glStencilOpSeparate(GL_FRONT_AND_BACK, GL_KEEP, GL_KEEP, GL_KEEP);
 
     // Calculate distances    
-    drawGeometryInorder(rendererGetPassedCamera(),
-                        sceneGetGeometryRoot(sceneToRasterize),
-                        0, 0,
-                        culledObjectsCounter);
+    drawGeometryPostorder(rendererGetPassedCamera(),
+                          sceneGetGeometryRoot(sceneToRasterize),
+                          0, 0,
+                          culledObjectsCounter);
     
-
     // Move through all rays, shader will export ref value itself -->
     // replace stencil's value by exported one.
     glStencilFuncSeparate(GL_FRONT_AND_BACK, GL_ALWAYS, 1, 0xFF);
@@ -222,23 +136,6 @@ static bool8 rasterizationPassExecute(RenderPass* pass)
 static const char* rasterizationPassGetName(RenderPass* pass)
 {
   return "RasterizationPass";
-}
-
-static ShaderProgram* createAndLinkProgram(const char* fragmentShaderPath)
-{
-  ShaderProgram* program = nullptr;
-  
-  createShaderProgram(&program);
-  shaderProgramAttachShader(program, shaderManagerGetShader("triangle.vert"));
-  shaderProgramAttachShader(program, shaderManagerLoadShader(GL_FRAGMENT_SHADER, fragmentShaderPath));
-
-  if(linkShaderProgram(program) == FALSE)
-  {
-    destroyShaderProgram(program);
-    return nullptr;
-  }
-  
-  return program;
 }
 
 static GLuint createRayMapFramebuffer()
@@ -303,13 +200,13 @@ bool8 createRasterizationPass(RenderPass** outPass)
   data->geometryAndDistancesFBO = createGeometryAndDistancesFramebuffer();
   assert(data->geometryAndDistancesFBO != 0);
 
-  data->preparingProgram = createAndLinkProgram("shaders/prepare_to_raster.frag");
+  data->preparingProgram = createAndLinkTriangleShadingProgram("shaders/prepare_to_raster.frag");
   assert(data->preparingProgram != nullptr);
 
-  data->raysMoverProgram = createAndLinkProgram("shaders/rays_mover.frag");
+  data->raysMoverProgram = createAndLinkTriangleShadingProgram("shaders/rays_mover.frag");
   assert(data->raysMoverProgram != nullptr);
 
-  data->resultsExtractionProgram = createAndLinkProgram("shaders/extract_raster_results.frag");
+  data->resultsExtractionProgram = createAndLinkTriangleShadingProgram("shaders/extract_raster_results.frag");
   assert(data->resultsExtractionProgram != nullptr);
   
   renderPassSetInternalData(*outPass, data);

@@ -6,6 +6,7 @@
 #include "renderer/renderer.h"
 #include "renderer/renderer_utils.h"
 
+#include "passes_common.h"
 #include "distances_visualization_pass.h"
 
 struct DistancesVisualizationPassData
@@ -65,23 +66,6 @@ static const char* distancesVisualizationPassGetName(RenderPass* pass)
   return "DistancesVisualizationPass";
 }
 
-static ShaderProgram* createVisualizationProgram()
-{
-  ShaderProgram* program = nullptr;
-  
-  createShaderProgram(&program);
-  shaderProgramAttachShader(program, shaderManagerGetShader("triangle.vert"));
-  shaderProgramAttachShader(program, shaderManagerLoadShader(GL_FRAGMENT_SHADER, "shaders/visualize_distances.frag"));
-
-  if(linkShaderProgram(program) == FALSE)
-  {
-    destroyShaderProgram(program);
-    return nullptr;
-  }
-  
-  return program;
-}
-
 static GLuint createLDRFramebuffer()
 {
   GLuint framebuffer = 0;
@@ -122,7 +106,7 @@ bool8 createDistancesVisualizationPass(float2 distancesRange,
   data->ldrFBO = createLDRFramebuffer();
   assert(data->ldrFBO != 0);
 
-  data->visualizationProgram = createVisualizationProgram();
+  data->visualizationProgram = createAndLinkTriangleShadingProgram("shaders/visualize_distances.frag");
   assert(data->visualizationProgram != nullptr);
 
   renderPassSetInternalData(*outPass, data);

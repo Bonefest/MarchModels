@@ -4,6 +4,7 @@
 #include "renderer/renderer.h"
 #include "renderer/renderer_utils.h"
 
+#include "passes_common.h"
 #include "normals_visualization_pass.h"
 
 struct NormalsVisualizationPassData
@@ -46,23 +47,6 @@ static const char* normalsVisualizationPassGetName(RenderPass* pass)
   return "NormalsVisualizationPass";
 }
 
-static ShaderProgram* createVisualizationProgram()
-{
-  ShaderProgram* program = nullptr;
-  
-  createShaderProgram(&program);
-  shaderProgramAttachShader(program, shaderManagerGetShader("triangle.vert"));
-  shaderProgramAttachShader(program, shaderManagerLoadShader(GL_FRAGMENT_SHADER, "shaders/visualize_normals.frag"));
-
-  if(linkShaderProgram(program) == FALSE)
-  {
-    destroyShaderProgram(program);
-    return nullptr;
-  }
-  
-  return program;
-}
-
 static GLuint createLDRFramebuffer()
 {
   GLuint framebuffer = 0;
@@ -97,7 +81,7 @@ bool8 createNormalsVisualizationPass(RenderPass** outPass)
   data->ldrFBO = createLDRFramebuffer();
   assert(data->ldrFBO != 0);
 
-  data->visualizationProgram = createVisualizationProgram();
+  data->visualizationProgram = createAndLinkTriangleShadingProgram("shaders/visualize_normals.frag");
   assert(data->visualizationProgram != nullptr);
 
   renderPassSetInternalData(*outPass, data);
