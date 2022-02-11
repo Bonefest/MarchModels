@@ -81,7 +81,7 @@ void lightSettingsWindowDraw(Window* window, float64 delta)
   ImGui::Combo("Light type", (int32*)&parameters.type, lightSourceTypesLabels, ARRAY_SIZE(lightSourceTypesLabels));
 
   ImGui::PushItemWidth(avalWidth * 0.1);
-  ImGui::Checkbox("Shadow", &parameters.shadowEnabled);
+  ImGui::Checkbox("Shadow", (bool*)&parameters.shadowEnabled);
   ImGui::PopItemWidth();
   ImGui::SameLine();
   

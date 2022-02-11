@@ -12,6 +12,7 @@
   #define STACKS_SSBO_BINDING             2
   #define AABB_CALCULATION_SSBO_BINDING   3
 
+  #define MAX_LIGHT_SOURCES_COUNT         4
   #define MAX_STACK_SIZE                  8
   #define INF_DISTANCE                    77777.0
   #define UKNOWN_GEOMETRY_ID              65535
@@ -59,13 +60,13 @@
 
     float32  intersectionThreshold;
     float32  worldSize;
-    float32  _gap1;
-    float32  _gap2;    
+    uint32   lightsCount;
+    uint32   shadowLightsCount;
     
     uint32   pixelGapX;
     uint32   pixelGapY;
     uint32   rasterItersMaxCount;
-    uint32   _gap3;
+    uint32   _gap1;
     
     uint2    resolution;
     float2   invResolution;
@@ -77,7 +78,12 @@
     quat     camOrientation;
     float4   camFwdAxis;
     float4   camSideAxis;
+    
     float4   camUpAxis;
+    float4   _gap2;
+    float4   _gap3;
+    float4   _gap4;
+    
     float4x4 camNDCCameraMat;
     float4x4 camCameraNDCMat;  
     float4x4 camNDCWorldMat;
@@ -103,18 +109,21 @@
 
   struct LightSourceParameters
   {
-    uint32 type;
-    bool    enabled;
-    bool    shadowEnabled;
+    uint32  type;
+    uint32  enabled;
+    uint32  shadowEnabled;
     float32 shadowFactor;    
 
     float2  attenuationDistance;
     float2  attenuationAngle;
+
+    float4  _gap1;
+    float4  _gap2;
     
-    float4 position;
-    quat   orientation;
-    float4 intensity;
-    float4 attenuation;
+    float4  position;
+    quat    orientation;
+    float4  intensity;
+    float4  attenuation;
     
   };
 

@@ -4,6 +4,7 @@
 #include <memory_manager.h>
 #include <assets/assets_manager.h>
 #include <assets/script_function.h>
+#include <../bin/shaders/declarations.h>
 
 #include "editor.h"
 #include "ui_utils.h"
@@ -386,7 +387,10 @@ static void sceneHierarchyDraw(Window* window, float64 delta)
 
   if(newLsourcePressed)
   {
-    sceneAddLightSource(currentScene, createNewLight());
+    if(sceneAddLightSource(currentScene, createNewLight()) == FALSE)
+    {
+      LOG_WARNING("Attempt to create more light sources than possible (%d)!", MAX_LIGHT_SOURCES_COUNT);
+    }
   }
 
   if(showLsourcePressed)

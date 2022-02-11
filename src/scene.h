@@ -7,15 +7,6 @@
 
 struct Scene;
 
-struct IntersectionDetails
-{
-  // TODO: Provide AssetPtr instead of raw pointer
-  Asset* geometry;
-  float3 normal;
-  float32 totalDistance;
-  bool8 intersected;
-};
-
 ENGINE_API bool8 createScene(Scene** outScene);
 ENGINE_API void destroyScene(Scene* scene);
 
@@ -27,6 +18,6 @@ ENGINE_API std::vector<AssetPtr>& sceneGetChildren(Scene* scene);
 ENGINE_API AssetPtr sceneGetGeometryRoot(Scene* scene);
 ENGINE_API const std::set<AssetPtr>& sceneGetAllChildren(Scene* scene);
 
-ENGINE_API void sceneAddLightSource(Scene* scene, AssetPtr lightSource);
+ENGINE_API bool8 sceneAddLightSource(Scene* scene, AssetPtr lightSource);
 ENGINE_API bool8 sceneRemoveLightSource(Scene* scene, AssetPtr lightSource);
 ENGINE_API std::vector<AssetPtr>& sceneGetLightSources(Scene* scene);

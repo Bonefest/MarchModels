@@ -6,6 +6,7 @@
   layout(std140, binding = GLOBAL_PARAMS_UBO_BINDING) uniform GlobalParametersUBO
   {
     GlobalParameters params;
+    LightSourceParameters lightParams[MAX_LIGHT_SOURCES_COUNT];
   };
 
   float2 fragCoordToUV(float2 fragCoord)

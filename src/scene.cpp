@@ -1,5 +1,7 @@
 #include <algorithm>
 
+#include <../bin/shaders/declarations.h>
+
 #include "memory_manager.h"
 
 #include "scene.h"
@@ -64,9 +66,15 @@ const std::set<AssetPtr>& sceneGetAllChildren(Scene* scene)
   return geometryRootGetAllChildren(scene->geometryRoot);
 }
 
-void sceneAddLightSource(Scene* scene, AssetPtr lightSource)
+bool8 sceneAddLightSource(Scene* scene, AssetPtr lightSource)
 {
+  if(scene->lightSources.size() >= MAX_LIGHT_SOURCES_COUNT)
+  {
+    return FALSE;
+  }
+  
   scene->lightSources.push_back(lightSource);
+  return TRUE;
 }
 
 bool8 sceneRemoveLightSource(Scene* scene, AssetPtr lightSource)

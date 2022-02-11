@@ -29,6 +29,8 @@ static void destroyShadowRasterizationPass(RenderPass* pass)
 
 static bool8 shadowRasterizationPassPrepareToRasterize(ShadowRasterizationPassData* data)
 {
+  
+  
   return TRUE;
 }
 

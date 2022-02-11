@@ -100,11 +100,33 @@ static void rendererSetupGlobalParameters(Film* film,
   parameters.camWorldCameraMat = cameraGetWorldCameraMat(camera);
   parameters.camFwdAxis = parameters.camCameraWorldMat[2];
   parameters.camSideAxis = parameters.camCameraWorldMat[0];
-  parameters.camUpAxis = parameters.camCameraWorldMat[1];    
+  parameters.camUpAxis = parameters.camCameraWorldMat[1];
   
   glBindBuffer(GL_UNIFORM_BUFFER, rendererGetResourceHandle(RR_GLOBAL_PARAMS_UBO));
   glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(GlobalParameters), &parameters);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);                    
+}
+
+static void rendererSetupGlobalLightParameters(Scene* scene)
+{
+  std::vector<AssetPtr>& lightSources = sceneGetLightSources(scene);  
+  std::vector<LightSourceParameters> parameters;
+
+  for(uint32 i = 0; i < std::min<uint32>(MAX_LIGHT_SOURCES_COUNT, lightSources.size()); i++)
+  {
+    parameters.push_back(lightSourceGetParameters(lightSources[i]));
+  }
+
+  uint32 offset = sizeof(GlobalParameters);
+
+  if(!parameters.empty())
+  {
+    glBindBuffer(GL_UNIFORM_BUFFER, rendererGetResourceHandle(RR_GLOBAL_PARAMS_UBO));
+    glBufferSubData(GL_UNIFORM_BUFFER, offset,
+                    sizeof(LightSourceParameters) * parameters.size(),
+                    &parameters[0]);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -126,7 +148,9 @@ static bool8 initGlobalParamsUBO()
 {
   glGenBuffers(1, &data.handles[RR_GLOBAL_PARAMS_UBO]);
   glBindBuffer(GL_UNIFORM_BUFFER, data.handles[RR_GLOBAL_PARAMS_UBO]);
-  glBufferData(GL_UNIFORM_BUFFER, sizeof(GlobalParameters), NULL, GL_DYNAMIC_DRAW);
+  glBufferData(GL_UNIFORM_BUFFER,
+               sizeof(GlobalParameters) + MAX_LIGHT_SOURCES_COUNT * sizeof(LightSourceParameters),
+               NULL, GL_DYNAMIC_DRAW);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
   glBindBufferBase(GL_UNIFORM_BUFFER, GLOBAL_PARAMS_UBO_BINDING, data.handles[RR_GLOBAL_PARAMS_UBO]);
 
@@ -323,6 +347,7 @@ bool8 rendererRenderScene(Film* film,
   data.passedRenderingParams = params;
   
   rendererSetupGlobalParameters(film, scene, camera, params);
+  rendererSetupGlobalLightParameters(scene);
 
   pushViewport(0, 0, data.globalParameters.gapResolution.x, data.globalParameters.gapResolution.y);
 
