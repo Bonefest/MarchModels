@@ -53,32 +53,32 @@ float3 lightSourceGetPosition(Asset* lsource)
   return lsourceData->parameters.position.xyz();
 }
 
-void lightSourceSetOrientation(Asset* lsource, quat orientation)
+void lightSourceSetFwdDirection(Asset* lsource, float4 fwdDirection)
 {
   LightSource* lsourceData = (LightSource*)assetGetInternalData(lsource);
 
-  lsourceData->parameters.orientation = orientation;
+  lsourceData->parameters.forward = fwdDirection;
 }
 
-quat lightSourceGetOrientation(Asset* lsource)
+float4 lightSourceGetFwdDirection(Asset* lsource)
 {
   LightSource* lsourceData = (LightSource*)assetGetInternalData(lsource);
 
-  return lsourceData->parameters.orientation;
+  return lsourceData->parameters.forward;
 }
 
-void lightSourceSetAttenuationDistance(Asset* lsource, float2 attDistance)
+void lightSourceSetAttenuationDistanceFactors(Asset* lsource, float2 attDistance)
 {
   LightSource* lsourceData = (LightSource*)assetGetInternalData(lsource);
 
-  lsourceData->parameters.attenuationDistance = attDistance;
+  lsourceData->parameters.attenuationDistanceFactors = attDistance;
 }
 
-float2 lightSourceGetAttenuationDistance(Asset* lsource)
+float2 lightSourceGetAttenuationDistanceFactors(Asset* lsource)
 {
   LightSource* lsourceData = (LightSource*)assetGetInternalData(lsource);
 
-  return lsourceData->parameters.attenuationDistance;
+  return lsourceData->parameters.attenuationDistanceFactors;
 }
 
 void lightSourceSetIntensity(Asset* lsource, float4 intensity)
@@ -95,18 +95,18 @@ float4 lightSourceGetIntensity(Asset* lsource)
   return lsourceData->parameters.intensity;
 }
 
-void lightSourceSetAttenuationAngle(Asset* lsource, float2 attAngle)
+void lightSourceSetAttenuationAngleFactors(Asset* lsource, float2 attAngle)
 {
   LightSource* lsourceData = (LightSource*)assetGetInternalData(lsource);
 
-  lsourceData->parameters.attenuationAngle = attAngle;
+  lsourceData->parameters.attenuationAngleFactors = attAngle;
 }
 
-float2 lightSourceGetAttenuationAngle(Asset* lsource)
+float2 lightSourceGetAttenuationAngleFactors(Asset* lsource)
 {
   LightSource* lsourceData = (LightSource*)assetGetInternalData(lsource);
 
-  return lsourceData->parameters.attenuationAngle;
+  return lsourceData->parameters.attenuationAngleFactors;
 }
 
 void lightSourceSetShadowFactor(Asset* lsource, float32 factor)

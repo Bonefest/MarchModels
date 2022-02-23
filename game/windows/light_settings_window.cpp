@@ -92,20 +92,28 @@ void lightSettingsWindowDraw(Window* window, float64 delta)
   ImGui::EndDisabled();
   
   ImGui::SliderFloat3("Position", &parameters.position[0], -10.0f, 10.0f);
-  if(ImGui::SliderFloat4("Orientation", &parameters.orientation[0], -1.0f, 1.0f))
+  if(ImGui::SliderFloat3("Direction", &parameters.forward[0], -1.0f, 1.0f))
   {
-    parameters.orientation = linalg::normalize(parameters.orientation);
+    parameters.forward = float4(linalg::normalize(parameters.forward.xyz()), 0.0);
   }
 
   ImGui::PushItemWidth(avalWidth * 0.5);
-    ImGui::SliderFloat("Linear distance attenuation", &parameters.attenuationDistance[0], 0.01f, 10.0f);
-    ImGui::SliderFloat("Quadratic distance attenuation", &parameters.attenuationDistance[1], 0.01f, 10.0f);
+    ImGui::SliderFloat("Linear distance attenuation factor",
+                       &parameters.attenuationDistanceFactors[0], 0.01f, 10.0f);
+    ImGui::SliderFloat("Quadratic distance attenuation factor",
+                       &parameters.attenuationDistanceFactors[1], 0.01f, 10.0f);
 
-    ImGui::SliderAngle("Cutoff start angle", &parameters.attenuationAngle[0], 0.0f, 90.0f);
-    ImGui::SliderAngle("Cutoff end angle", &parameters.attenuationAngle[1], 0.0f, 90.0f);
+    parameters.attenuationAngleFactors[0] = acos(parameters.attenuationAngleFactors[0]);
+    parameters.attenuationAngleFactors[1] = acos(parameters.attenuationAngleFactors[1]);
+    
+    ImGui::SliderAngle("Cutoff start angle", &parameters.attenuationAngleFactors[0], 0.0f, 90.0f);
+    ImGui::SliderAngle("Cutoff end angle", &parameters.attenuationAngleFactors[1], 0.0f, 90.0f);
 
-    parameters.attenuationAngle[1] = std::max(parameters.attenuationAngle[0],
-                                              parameters.attenuationAngle[1]);
+    parameters.attenuationAngleFactors[1] = std::max(parameters.attenuationAngleFactors[0],
+                                                     parameters.attenuationAngleFactors[1]);
+
+    parameters.attenuationAngleFactors[0] = cos(parameters.attenuationAngleFactors[0]);
+    parameters.attenuationAngleFactors[1] = cos(parameters.attenuationAngleFactors[1]);
   ImGui::PopItemWidth();
 
   ImGui::ColorEdit4("Intensity", &parameters.intensity[0]);

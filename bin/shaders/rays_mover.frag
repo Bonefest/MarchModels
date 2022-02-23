@@ -24,7 +24,7 @@ void main()
       gl_FragStencilRefARB = 0;
       outCameraRay = float4(0.0f);
     }
-    // Distances larger than 0.001 causes "ringing" effect
+    // Distances larger than 0.001 cause "ringing" effect
     // during normals visualization
     else if(totalDistance > 100.0 || distance < 0.001)
     {

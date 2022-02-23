@@ -9,6 +9,22 @@
     LightSourceParameters lightParams[MAX_LIGHT_SOURCES_COUNT];
   };
 
+  float32 normalizeAndGetLength(inout float3 vector)
+  {
+    float32 len = length(vector);
+    vector /= len;
+
+    return len;
+  }
+
+  float32 calculateAttenuationRadius(float2 k, float32 minAttenuation)
+  {
+    float32 D = k.x * k.x * minAttenuation * minAttenuation - 4 * minAttenuation * k.y * (minAttenuation - 1);
+    float32 r = (-minAttenuation * k.x + sqrt(D)) / (2 * minAttenuation * k.y);
+
+    return r;
+  }
+
   float2 fragCoordToUV(float2 fragCoord)
   {
     return float2(fragCoord.x * params.invGapResolution.x, fragCoord.y * params.invGapResolution.y);

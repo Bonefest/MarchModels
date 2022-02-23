@@ -107,6 +107,15 @@
     uint4 max;
   };
 
+  #define LIGHT_SOURCE_TYPE_DIRECTIONAL 0
+  #define LIGHT_SOURCE_TYPE_SPOT        1
+  #define LIGHT_SOURCE_TYPE_POINT       2
+  #define LIGHT_MIN_ATTENUATION     0.001
+
+  #if defined(__cplusplus)
+    using LightSourceType = uint32;
+  #endif
+
   struct LightSourceParameters
   {
     uint32  type;
@@ -114,14 +123,17 @@
     uint32  shadowEnabled;
     float32 shadowFactor;    
 
-    float2  attenuationDistance;
-    float2  attenuationAngle;
+    // x = linear attenuation, y = quadratic attenuation
+    float2  attenuationDistanceFactors;
+
+    // x = cos(inner angle), y = cos(outer angle)
+    float2  attenuationAngleFactors;
 
     float4  _gap1;
     float4  _gap2;
     
     float4  position;
-    quat    orientation;
+    float4  forward;
     float4  intensity;
     float4  attenuation;
     

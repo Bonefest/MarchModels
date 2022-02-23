@@ -26,9 +26,57 @@ void main()
     float2 uv = fragCoordToUV(gl_FragCoord);
     float32 worldPos = getWorldPos(uv);
     float3 normal = texture(normalsMap, uv);
-    
-    // TODO: Based on light type generate light direction
-    // TODO: Based on light type generate initial coverage mask
-    
-    outCameraRay = float4(generateRayDir(uv), 0.0);
+
+    const LightSourceParamters light = lightParams[lightIndex];
+
+    // Based on light type, precalculate light direction. Additionally perform early-quit tests:
+    //   1) Check if light source is too far (based on its attenuation) to be kicked
+    //   2) Check if light point is out of light source cone (based on angle between normal and light direction)
+    float3 l;
+    switch(light.type)
+    {
+      case LIGHT_SOURCE_TYPE_DIRECTIONAL:
+      {
+        l = light.direction;
+
+        if(dot(l, normal) < 0.0)
+        {
+          gl_FragStencilRefARB = 0;
+          outCameraRay = float4(0.0f);
+          return;
+        }
+      } break;
+      
+      case LIGHT_SOURCE_TYPE_SPOT:
+      {
+        l = light.position - worldPos;
+        float32 lDistance = normalizeAndGetLength(l);
+        float32 attRadius = calculateAttenuationRadius(light.attenuationDistanceFactors, LIGHT_MIN_ATTENUATION);
+        
+        if(lDistance > attRadius || dot(l, normal) < light.attenuationAngleFactors.y)
+        {
+          gl_FragStencilRefARB = 0;
+          outCameraRay = float4(0.0f);
+          return;
+        }
+      } break;
+      
+      case LIGHT_SOURCE_TYPE_POINT:
+      {
+        l = light.position - worldPos;
+        float32 lDistance = normalizeAndGetLength(l);
+        float32 attRadius = calculateAttenuationRadius(light.attenuationDistanceFactors, LIGHT_MIN_ATTENUATION);        
+        if(lDistance > attRadius || dot(l, normal) < 0.0)
+        {
+          gl_FragStencilRefARB = 0;
+          outCameraRay = float4(0.0f);
+          return;
+        }
+        
+      } break;
+    }
+
+    gl_FragStencilRefARB = 1;        
+    outCameraRay = float4(l, 0.0);
+
 }
