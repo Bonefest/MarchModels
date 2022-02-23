@@ -14,7 +14,5 @@ void main()
     // we may want to use some sort of src/samplers/sampler.h
     float2 uv = fragCoordToUV(float2(ifragCoord.x, ifragCoord.y));
 
-    // TODO: Somehow generate stencil mask here (if possible with GL_ARB_shader_stencil_export)
-    
     outCameraRay = float4(generateRayDir(uv), 0.0);
 }

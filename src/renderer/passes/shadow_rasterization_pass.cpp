@@ -27,9 +27,24 @@ static void destroyShadowRasterizationPass(RenderPass* pass)
   engineFreeObject(data, MEMORY_TYPE_GENERAL);
 }
 
-static bool8 shadowRasterizationPassPrepareToRasterize(ShadowRasterizationPassData* data)
+static bool8 shadowRasterizationPassPrepareToRasterize(ShadowRasterizationPassData* data, uint32 lightIndex)
 {
+  shaderProgramUse(data->preparingProgram);
+  glBindFramebuffer(GL_FRAMEBUFFER, data->raysMapFBO);
   
+  glClearStencil(1);
+  glClear(GL_STENCIL_BUFFER_BIT);
+  glEnable(GL_STENCIL_TEST);
+
+  glStencilFuncSeparate(GL_FRONT_AND_BACK, GL_ALWAYS, 1, 0xFF);
+  glStencilOpSeparate(GL_FRONT_AND_BACK, GL_KEEP, GL_KEEP, GL_REPLACE);
+
+  glUniform1ui(2, lightIndex);
+  drawTriangleNoVAO();
+
+  glDisable(GL_STENCIL_TEST);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  shaderProgramUse(nullptr);
   
   return TRUE;
 }
@@ -48,7 +63,7 @@ static bool8 shadowRasterizationPassExecute(RenderPass* pass)
 {
   ShadowRasterizationPassData* data = (ShadowRasterizationPassData*)renderPassGetInternalData(pass);
 
-  assert(shadowRasterizationPassPrepareToRasterize(data));
+  assert(shadowRasterizationPassPrepareToRasterize(data, 0));
   assert(shadowRasterizationPassRasterize(data));
   assert(shadowRasterizationPassExtractResults(data));
   
@@ -96,7 +111,7 @@ bool8 createShadowRasterizationPass(RenderPass** outPass)
   data->raysMapFBO = createRayMapFramebuffer();
   assert(data->raysMapFBO != 0);
 
-  data->preparingProgram = createAndLinkTriangleShadingProgram("shaders/prepare_to_raster.frag");
+  data->preparingProgram = createAndLinkTriangleShadingProgram("shaders/prepare_to_shadow_raster.frag");
   assert(data->preparingProgram != nullptr);
 
   data->raysMoverProgram = createAndLinkTriangleShadingProgram("shaders/rays_mover.frag");

@@ -8,6 +8,7 @@
 #include "passes/ids_visualization_pass.h"
 #include "passes/aabb_visualization_pass.h"
 #include "passes/normals_calculation_pass.h"
+#include "passes/shadow_rasterization_pass.h"
 #include "passes/normals_visualization_pass.h"
 #include "passes/distances_visualization_pass.h"
 #include "passes/geometry_native_aabb_calculation_pass.h"
@@ -23,6 +24,7 @@ struct Renderer
   
   RenderPass* rasterizationPass;
   RenderPass* normalsCalculationPass;
+  RenderPass* shadowRasterizationPass;
 
   RenderPass* distancesVisualizationPass;
   RenderPass* idsVisualizationPass;
@@ -278,6 +280,7 @@ static void destroyRendererResources()
 static bool8 initializeRenderPasses()
 {
   INIT(createRasterizationPass, &data.rasterizationPass);
+  INIT(createShadowRasterizationPass, &data.shadowRasterizationPass);
   INIT(createNormalsCalculationPass, &data.normalsCalculationPass);
   INIT(createDistancesVisualizationPass,
        float2(0.0f, 20.0f), float3(0.156f, 0.7, 0.06), float3(0.0f, 0.0f, 0.0f),

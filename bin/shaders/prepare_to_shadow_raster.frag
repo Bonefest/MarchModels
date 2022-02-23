@@ -1,18 +1,18 @@
 #version 450 core
 #extension GL_ARB_shader_stencil_export : require
 
-#include geometry_common.glsl
+#include stack.glsl
 
 out float4 outCameraRay;
 
-layout(location = 0) uniform texture2D depthMap;
-layout(location = 1) uniform texture2D normalsMap;
+layout(location = 0) uniform sampler2D depthMap;
+layout(location = 1) uniform sampler2D normalsMap;
 
 layout(location = 2) uniform uint32 lightIndex;
 
 float3 getWorldPos(float2 uv)
 {
-  float3 ndcPos = float3(uv * float2(-2.0, 2.0) + float2(1.0, -1.0), texture(depth, uv) * 2.0 - 1.0);
+  float3 ndcPos = float3(uv * float2(-2.0, 2.0) + float2(1.0, -1.0), texture(depthMap, uv) * 2.0 - 1.0);
   float4 worldPos = params.camNDCWorldMat * float4(ndcPos, 1.0);
 
   return worldPos.xyz / worldPos.w;
@@ -23,21 +23,22 @@ void main()
     int2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);
     stackClear(ifragCoord);
 
-    float2 uv = fragCoordToUV(gl_FragCoord);
-    float32 worldPos = getWorldPos(uv);
-    float3 normal = texture(normalsMap, uv);
+    float2 uv = fragCoordToUV(gl_FragCoord.xy);
+    float3 worldPos = getWorldPos(uv);
+    float3 normal = texture(normalsMap, uv).xyz;
 
-    const LightSourceParamters light = lightParams[lightIndex];
+    const LightSourceParameters light = lightParams[lightIndex];
 
     // Based on light type, precalculate light direction. Additionally perform early-quit tests:
     //   1) Check if light source is too far (based on its attenuation) to be kicked
-    //   2) Check if light point is out of light source cone (based on angle between normal and light direction)
+    //   2) Check if point is out of light source cone (based on angle between light and light forward axis)
+    //   3) Check if source is below horizon (i.e lambert factor is negative)
     float3 l;
     switch(light.type)
     {
       case LIGHT_SOURCE_TYPE_DIRECTIONAL:
       {
-        l = light.direction;
+        l = light.forward.xyz;
 
         if(dot(l, normal) < 0.0)
         {
@@ -49,11 +50,11 @@ void main()
       
       case LIGHT_SOURCE_TYPE_SPOT:
       {
-        l = light.position - worldPos;
+        l = light.position.xyz - worldPos;
         float32 lDistance = normalizeAndGetLength(l);
         float32 attRadius = calculateAttenuationRadius(light.attenuationDistanceFactors, LIGHT_MIN_ATTENUATION);
         
-        if(lDistance > attRadius || dot(l, normal) < light.attenuationAngleFactors.y)
+        if(lDistance > attRadius || dot(l, light.forward.xyz) < light.attenuationAngleFactors.y || dot(l, normal) < 0)
         {
           gl_FragStencilRefARB = 0;
           outCameraRay = float4(0.0f);
@@ -63,7 +64,7 @@ void main()
       
       case LIGHT_SOURCE_TYPE_POINT:
       {
-        l = light.position - worldPos;
+        l = light.position.xyz - worldPos;
         float32 lDistance = normalizeAndGetLength(l);
         float32 attRadius = calculateAttenuationRadius(light.attenuationDistanceFactors, LIGHT_MIN_ATTENUATION);        
         if(lDistance > attRadius || dot(l, normal) < 0.0)
