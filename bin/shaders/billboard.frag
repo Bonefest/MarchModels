@@ -14,5 +14,5 @@ layout(location = 2) uniform sampler2D billboard;
 
 void main()
 {
-  outColor = float4(texture2D(billboard, uv).rgb * billboardColor.rgb, billboardColor.a);
+  outColor = texture(billboard, uv) * billboardColor;
 }

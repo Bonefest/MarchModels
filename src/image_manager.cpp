@@ -53,8 +53,20 @@ ImagePtr imageManagerLoadImage(const char* path)
   GLuint textureHandle;
   glGenTextures(1, &textureHandle);
   glBindTexture(GL_TEXTURE_2D, textureHandle);
-  
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+
+  if(channelsCount == 3)
+  {
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+  }
+  else if(channelsCount == 4)
+  {
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);    
+  }
+  else
+  {
+    assert(FALSE && "Given image's format is not supported...");
+  }
+
   glGenerateMipmap(GL_TEXTURE_2D);
   
   glBindTexture(GL_TEXTURE_2D, 0);

@@ -4,6 +4,7 @@
 #include "model3d.h"
 #include "renderer.h"
 #include "shader_manager.h"
+#include "renderer_utils.h"
 #include "billboard_system.h"
 
 using std::vector;
@@ -155,6 +156,13 @@ void billboardSystemPresent()
   glBindFramebuffer(GL_FRAMEBUFFER, data.ldrFramebuffer);
   shaderProgramUse(data.program);
   glBindVertexArray(model3DGetVAOHandle(data.rectangleModel));
+
+  glDepthFunc(GL_LESS);
+  glEnable(GL_DEPTH_TEST);
+  
+  glEnable(GL_BLEND);
+  pushBlend(GL_FUNC_ADD, GL_FUNC_ADD,
+            GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
   
   for(auto batch: data.batches)
   {
@@ -166,11 +174,17 @@ void billboardSystemPresent()
 
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, batch.second.size());
   }
-
+  
+  
   glBindVertexArray(0);
   shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+  popBlend();
+  
+  glDisable(GL_BLEND);
+  glDisable(GL_DEPTH_TEST);
+  
   data.batches.clear();
 }
 
