@@ -93,7 +93,7 @@ static void createRectangleModel()
 
   // Per-vertex input description
   model3DDescribeInput(model, 0, RECT_VRT_BUFFER_SLOT, 3, GL_FLOAT, 5 * sizeof(float32), 0);
-  model3DDescribeInput(model, 1, RECT_VRT_BUFFER_SLOT, 2, GL_FLOAT, 5 * sizeof(float32), sizeof(float3) * 3);
+  model3DDescribeInput(model, 1, RECT_VRT_BUFFER_SLOT, 2, GL_FLOAT, 5 * sizeof(float32), sizeof(float32) * 3);
 
   // Per-instance input description
   model3DDescribeInput(model, 2, RECT_INST_BUFFER_SLOT, 2, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, size), FALSE);     // Size
@@ -144,7 +144,7 @@ void billboardSystemDrawImage(ImagePtr image,
     size,
     worldPosition,
     color,
-    float4(uvMin.x, uvMin.y, uvMin.x, uvMin.y)
+    float4(uvMin.x, uvMin.y, uvMax.x, uvMax.y)
   };
 
   data.batches[imageGetGLHandle(image)].push_back(billboardData);
@@ -158,6 +158,9 @@ void billboardSystemPresent()
   
   for(auto batch: data.batches)
   {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, batch.first);
+    
     model3DUpdateBuffer(data.rectangleModel, RECT_INST_BUFFER_SLOT,
                         0, &batch.second[0], sizeof(BillboardData) * batch.second.size());
 

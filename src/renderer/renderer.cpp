@@ -342,6 +342,8 @@ void shutdownRenderer()
   data = Renderer{};
 }
 
+#include "image_manager.h"
+
 bool8 rendererRenderScene(Film* film,
                           Scene* scene,
                           Camera* camera,
@@ -382,6 +384,8 @@ bool8 rendererRenderScene(Film* film,
     assert(renderPassExecute(data.aabbVisualizationPass));
   }
 
+  billboardSystemDrawImage(imageManagerLoadImage("assets/lights_sprites.png"), float3());
+  
   if(params.showBillboards == TRUE)
   {
     billboardSystemPresent();

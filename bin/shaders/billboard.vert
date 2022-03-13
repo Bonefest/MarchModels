@@ -1,6 +1,6 @@
 #version 450 core
 
-#include defines.glsl
+#include common.glsl
 
 // Per-vetex attributes
 layout(location = 0) in float3 rectVertexPos;
@@ -16,10 +16,6 @@ layout(location = 5) in float4 billboardUVRect;
 layout(location = 0) out float4 outBillboardColor;
 layout(location = 1) out float2 outUV;
 
-// Uniforms
-layout(location = 0) uniform mat4 view;
-layout(location = 1) uniform mat4 proj;
-
 void main()
 {
   outBillboardColor = billboardColor;
@@ -27,9 +23,9 @@ void main()
   float2 uvSize = billboardUVRect.zw - billboardUVRect.xy;
   outUV = rectUV * uvSize + billboardUVRect.xy;
   
-  float4 billboardPosCS = view * float4(billboardPosition, 1.0);
+  float4 billboardPosCS = params.camWorldCameraMat * float4(billboardPosition, 1.0);
 
-  gl_Position = proj * float4(rectVertexPos * float3(billboardSize, 1.0) + billboardPosCS.xyz, 1.0);
+  gl_Position = params.camCameraNDCMat * float4(rectVertexPos * float3(billboardSize, 1.0) + billboardPosCS.xyz, 1.0);
   gl_Position.x = -gl_Position.x;
 }
 
