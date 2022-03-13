@@ -2,6 +2,7 @@
 
 #include "logging.h"
 #include "renderer_utils.h"
+#include "billboard_system.h"
 #include "passes/render_pass.h"
 #include "passes/rasterization_pass.h"
 #include "passes/ldr_to_film_copy_pass.h"
@@ -323,6 +324,7 @@ bool8 initializeRenderer()
 
   INIT(initializeRendererResources);
   INIT(initializeRenderPasses);
+  INIT(initializeBillboardSystem);
   
   data.initialized = TRUE;
   
@@ -332,7 +334,8 @@ bool8 initializeRenderer()
 void shutdownRenderer()
 {
   assert(data.initialized == TRUE);
-  
+
+  shutdownBillboardSystem();
   destroyRendererResources();
   destroyRenderPasses();
   
@@ -377,6 +380,11 @@ bool8 rendererRenderScene(Film* film,
   if(params.showAABB == TRUE)
   {
     assert(renderPassExecute(data.aabbVisualizationPass));
+  }
+
+  if(params.showBillboards == TRUE)
+  {
+    billboardSystemPresent();
   }
   
   assert(popViewport() == TRUE);

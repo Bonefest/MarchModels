@@ -90,7 +90,7 @@
     float4x4 camWorldNDCMat;
     float4x4 camCameraWorldMat;
     float4x4 camWorldCameraMat;
-v  };
+  };
 
   struct GeometryTransformParameters
   {

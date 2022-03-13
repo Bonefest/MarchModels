@@ -4,6 +4,7 @@
 
 #include "stopwatch.h"
 #include "event_system.h"
+#include "image_manager.h"
 #include "shader_manager.h"
 #include "memory_manager.h"
 #include "lua/lua_system.h"
@@ -312,6 +313,7 @@ static bool8 initApplication()
     LOG_SUCCESS("Lua system has been initialized successfully!");
   }
 
+  /** --- Rendering system initialization ---------------------------------- */  
   if(initializeRenderer() == FALSE)
   {
     LOG_ERROR("Cannot initialize rendering system!");
@@ -319,9 +321,20 @@ static bool8 initApplication()
   }
   else
   {
-    LOG_SUCCESS("Rendering system has been initialize successfully!");
+    LOG_SUCCESS("Rendering system has been initialized successfully!");
   }
-  
+
+  /** --- Images manager initialization ------------------------------------ */
+  if(initializeImageManager() == FALSE)
+  {
+    LOG_ERROR("Cannot initialize image manager!");
+    return FALSE;
+  }
+  else
+  {
+    LOG_SUCCESS("Image manager has been initialized successfully!");
+  }
+
   /** --- Game initialization ---------------------------------------------- */
 
   if(!game.initialize(&application))

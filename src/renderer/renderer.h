@@ -60,9 +60,10 @@ struct RenderingParameters
 
   uint2 pixelGap = uint2(2, 2);
   
-  bool8 enableNormals = TRUE;
-  bool8 enableShadows = TRUE;
-  bool8 showAABB      = TRUE;
+  bool8 enableNormals  = TRUE;
+  bool8 enableShadows  = TRUE;
+  bool8 showAABB       = TRUE;
+  bool8 showBillboards = TRUE;
 
   // TODO: Coverage mask generator (pixel gap is an example of mask generator)
   // TODO: Postprocessing choices

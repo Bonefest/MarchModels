@@ -1,6 +1,9 @@
 #include <vector>
 #include <unordered_map>
 
+#include "model3d.h"
+#include "renderer.h"
+#include "shader_manager.h"
 #include "billboard_system.h"
 
 using std::vector;
@@ -13,10 +16,10 @@ const static uint32 MAX_BATCH_SIZE        = 128;
 const static float32 rectangleVertexData[] =
 {
   // Coordinates are provided in our RHS system (x - left, y - up, z - forward)
-   1.0f, -1.0f, 0.0f, // Left, bottom, near
-  -1.0f, -1.0f, 0.0f, // Right, bottom, near
-  -1.0f,  1.0f, 0.0f, // Right, top, near
-   1.0f,  1.0f, 0.0f, // Left, top, near    
+   1.0f, -1.0f, 0.0f, /* Left, bottom, near  */ 0.0f, 0.0f, /* UV left bottom  */
+  -1.0f, -1.0f, 0.0f, /* Right, bottom, near */ 1.0f, 0.0f, /* UV right bottom */
+  -1.0f,  1.0f, 0.0f, /* Right, top, near    */ 1.0f, 1.0f, /* UV right top    */
+   1.0f,  1.0f, 0.0f, /* Left, top, near     */ 0.0f, 1.0f  /* UV left top     */
 };
 
 const static uint32 rectangleIndexData[] =
@@ -27,9 +30,9 @@ const static uint32 rectangleIndexData[] =
 struct BillboardData
 {
   float2 size;
-  float3 worldPosition;
+  float3 position;
   float4 color;
-  float4 uvMinMax;
+  float4 uvRect;
 };
 
 struct BillboardSystemData
@@ -38,10 +41,10 @@ struct BillboardSystemData
   
   GLuint ldrFramebuffer;
   Model3DPtr rectangleModel;
+  ShaderProgram* program;
   
   unordered_map<GLuint, vector<BillboardData>> batches;
 };
-
 
 static BillboardSystemData data;
 
@@ -64,6 +67,21 @@ static bool8 createLDRFramebuffer()
   return TRUE;
 }
 
+static bool8 createProgram()
+{
+  createShaderProgram(&data.program);
+  shaderProgramAttachShader(data.program, shaderManagerLoadShader(GL_VERTEX_SHADER, "shaders/billboard.vert"));
+  shaderProgramAttachShader(data.program, shaderManagerLoadShader(GL_FRAGMENT_SHADER, "shaders/billboard.frag"));
+
+  if(linkShaderProgram(data.program) == FALSE)
+  {
+    destroyShaderProgram(data.program);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static void createRectangleModel()
 {
   Model3D* model = nullptr;
@@ -73,11 +91,15 @@ static void createRectangleModel()
   model3DAttachBuffer(model, RECT_VRT_BUFFER_SLOT, rectangleVertexData, sizeof(rectangleVertexData), GL_STATIC_DRAW);
   model3DAttachBuffer(model, RECT_INST_BUFFER_SLOT, NULL, sizeof(BillboardData) * MAX_BATCH_SIZE, GL_DYNAMIC_DRAW);
 
-  model3DDescribeInput(model, 0, RECT_VRT_BUFFER_SLOT, 3, GL_FLOAT, 3 * sizeof(float32), 0);
-  model3DDescribeInput(model, 1, RECT_INST_BUFFER_SLOT, 2, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, size), FALSE);
-  model3DDescribeInput(model, 2, CUBE_INST_BUFFER_SLOT, 3, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, position), FALSE);
-  model3DDescribeInput(model, 3, CUBE_INST_BUFFER_SLOT, 4, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, color), FALSE);
-  model3DDescribeInput(model, 4, CUBE_INST_BUFFER_SLOT, 4, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, uvMinMax), FALSE);    
+  // Per-vertex input description
+  model3DDescribeInput(model, 0, RECT_VRT_BUFFER_SLOT, 3, GL_FLOAT, 5 * sizeof(float32), 0);
+  model3DDescribeInput(model, 1, RECT_VRT_BUFFER_SLOT, 2, GL_FLOAT, 5 * sizeof(float32), sizeof(float3) * 3);
+
+  // Per-instance input description
+  model3DDescribeInput(model, 2, RECT_INST_BUFFER_SLOT, 2, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, size), FALSE);     // Size
+  model3DDescribeInput(model, 3, RECT_INST_BUFFER_SLOT, 3, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, position), FALSE); // Position
+  model3DDescribeInput(model, 4, RECT_INST_BUFFER_SLOT, 4, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, color), FALSE);    // Color
+  model3DDescribeInput(model, 5, RECT_INST_BUFFER_SLOT, 4, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, uvRect), FALSE);   // UV Rect
   
   data.rectangleModel = Model3DPtr(model);
 }
@@ -86,6 +108,18 @@ bool8 initializeBillboardSystem()
 {
   assert(data.initiailized == FALSE);
 
+  if(createLDRFramebuffer() == FALSE)
+  {
+    return FALSE;
+  }
+
+  if(createProgram() == FALSE)
+  {
+    return FALSE;
+  }
+  
+  createRectangleModel();
+  
   data.initiailized = TRUE;
 
   return TRUE;
@@ -98,12 +132,12 @@ void shutdownBillboardSystem()
   data.initiailized = FALSE;
 }
 
-void billboardDrawSprite(GLuint imageHandle,
-                         float3 worldPosition,
-                         float2 size,
-                         float4 color,
-                         float2 uvMin,
-                         float2 uvMax)
+void billboardSystemDrawImage(ImagePtr image,
+                              float3 worldPosition,
+                              float2 size,
+                              float4 color,
+                              float2 uvMin,
+                              float2 uvMax)
 {
   BillboardData billboardData =
   {
@@ -113,15 +147,28 @@ void billboardDrawSprite(GLuint imageHandle,
     float4(uvMin.x, uvMin.y, uvMin.x, uvMin.y)
   };
 
-  batches[imageHandle].push_back(billboardData);
+  data.batches[imageGetGLHandle(image)].push_back(billboardData);
 }
 
-void billboardPresent()
+void billboardSystemPresent()
 {
+  glBindFramebuffer(GL_FRAMEBUFFER, data.ldrFramebuffer);
+  shaderProgramUse(data.program);
+  glBindVertexArray(model3DGetVAOHandle(data.rectangleModel));
+  
   for(auto batch: data.batches)
   {
-    
+    model3DUpdateBuffer(data.rectangleModel, RECT_INST_BUFFER_SLOT,
+                        0, &batch.second[0], sizeof(BillboardData) * batch.second.size());
+
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, batch.second.size());
   }
+
+  glBindVertexArray(0);
+  shaderProgramUse(nullptr);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  data.batches.clear();
 }
 
 

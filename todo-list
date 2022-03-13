@@ -50,3 +50,4 @@
 50. calcualte stack id only once in shaders
 51. investigate problem of ringing during normals visualization. Temp fix: decrease intersection threshold
 52. billboard rendering
+53. texture/buffer wrapper which is freed when sptr counter is 0
