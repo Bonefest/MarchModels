@@ -26,6 +26,7 @@ bool8 createLightSource(const std::string& name,
 
   LightSource* lsourceData = engineAllocObject<LightSource>(MEMORY_TYPE_GENERAL);
   lsourceData->parameters.type = type;
+  lsourceData->parameters.intensity = float4(1.0f, 1.0f, 1.0f, 1.0f);
   
   assetSetInternalData(*lsource, lsourceData);
   

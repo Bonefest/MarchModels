@@ -10,6 +10,7 @@
 #include "passes/aabb_visualization_pass.h"
 #include "passes/normals_calculation_pass.h"
 #include "passes/shadow_rasterization_pass.h"
+#include "passes/lights_visualization_pass.h"
 #include "passes/normals_visualization_pass.h"
 #include "passes/distances_visualization_pass.h"
 #include "passes/geometry_native_aabb_calculation_pass.h"
@@ -32,6 +33,7 @@ struct Renderer
   RenderPass* normalsVisualizationPass;
   RenderPass* shadowsVisualizationPass;
   RenderPass* aabbVisualizationPass;
+  RenderPass* lightsVisualizationPass;
 
   RenderPass* simpleShadingPass;
   RenderPass* pbrShadingPass;
@@ -289,6 +291,7 @@ static bool8 initializeRenderPasses()
   INIT(createIDsVisualizationPass, &data.idsVisualizationPass);
   INIT(createNormalsVisualizationPass, &data.normalsVisualizationPass);
   INIT(createAABBVisualizationPass, &data.aabbVisualizationPass);
+  INIT(createLightsVisualizationPass, &data.lightsVisualizationPass);
   INIT(createLDRToFilmCopyPass, &data.ldrToFilmPass);
   INIT(initializeAABBCalculationPass);
 
@@ -310,6 +313,7 @@ static void destroyRenderPasses()
   destroyRenderPass(data.idsVisualizationPass);
   destroyRenderPass(data.normalsVisualizationPass);
   destroyRenderPass(data.aabbVisualizationPass);
+  destroyRenderPass(data.lightsVisualizationPass);
   destroyRenderPass(data.ldrToFilmPass);
   destroyAABBCalculationPass();
 }
@@ -384,7 +388,10 @@ bool8 rendererRenderScene(Film* film,
     assert(renderPassExecute(data.aabbVisualizationPass));
   }
 
-  billboardSystemDrawImage(imageManagerLoadImage("assets/lights_sprites.png"), float3());
+  if(params.showLights == TRUE)
+  {
+    assert(renderPassExecute(data.lightsVisualizationPass));
+  }
   
   if(params.showBillboards == TRUE)
   {

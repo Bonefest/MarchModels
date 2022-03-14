@@ -51,3 +51,5 @@
 51. investigate problem of ringing during normals visualization. Temp fix: decrease intersection threshold
 52. billboard rendering
 53. texture/buffer wrapper which is freed when sptr counter is 0
+54. selected light's billboard should be somehow highlighted
+55. lights with enabled shadow should have an additional mark on its billboard
