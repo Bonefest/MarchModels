@@ -20,17 +20,27 @@ static bool8 lightsVisualizationPassExecute(RenderPass* pass)
     float4 intensity = lightSourceGetIntensity(light);
     float3 position = lightSourceGetPosition(light);
 
-    float2 uvSize = float2(0.25f, 1.0f);
-    float2 uvOffset = float2((int32)type * uvSize.x, 0.0f);
+    uint2 size = uint2(256, 256);
+    uint2 offset = uint2((int32)type * size.x, 0);
+    
+    billboardSystemDrawImagePix(lightsImagesAtlas,
+                                position,
+                                size,
+                                offset,
+                                intensity);
 
-    billboardSystemDrawImage(lightsImagesAtlas,
-                             position,
-                             float2(1.0f, 1.0f),
-                             intensity,
-                             uvOffset,
-                             uvOffset + uvSize);
+    billboardSystemDrawImagePix(lightsImagesAtlas,
+                                position,
+                                uint2(64, 64),
+                                uint2(768, 0),
+                                float4(1, 1, 1, 1),
+                                float2(0.2, 0.2),
+                                float2(2.0f, 2.0f),
+                                TRUE);
+    
   }
 
+  
   return TRUE;
 }
 

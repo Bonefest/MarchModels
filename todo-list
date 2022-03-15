@@ -53,3 +53,4 @@
 53. texture/buffer wrapper which is freed when sptr counter is 0
 54. selected light's billboard should be somehow highlighted
 55. lights with enabled shadow should have an additional mark on its billboard
+56. local normalized offset in billboard system API, e.g 0.5, 0.5 shift half width + half height

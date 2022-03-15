@@ -15,4 +15,10 @@ layout(location = 2) uniform sampler2D billboard;
 void main()
 {
   outColor = texture(billboard, uv) * billboardColor;
+
+  // NOTE: Cheap optimization in order to avoid distance-ordering, will work only in binary alpha case
+  if(outColor.a < 0.01)
+  {
+    discard;
+  } 
 }

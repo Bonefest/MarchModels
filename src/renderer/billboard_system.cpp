@@ -7,6 +7,7 @@
 #include "renderer_utils.h"
 #include "billboard_system.h"
 
+using std::pair;
 using std::vector;
 using std::unordered_map;
 
@@ -30,7 +31,8 @@ const static uint32 rectangleIndexData[] =
 
 struct BillboardData
 {
-  float2 size;
+  float2 offset;
+  float2 scale;
   float3 position;
   float4 color;
   float4 uvRect;
@@ -44,7 +46,8 @@ struct BillboardSystemData
   Model3DPtr rectangleModel;
   ShaderProgram* program;
   
-  unordered_map<GLuint, vector<BillboardData>> batches;
+  vector<pair<GLuint, BillboardData>> painterOrderedBatches;
+  unordered_map<GLuint, vector<BillboardData>> zOrderedBatches;
 };
 
 static BillboardSystemData data;
@@ -97,10 +100,11 @@ static void createRectangleModel()
   model3DDescribeInput(model, 1, RECT_VRT_BUFFER_SLOT, 2, GL_FLOAT, 5 * sizeof(float32), sizeof(float32) * 3);
 
   // Per-instance input description
-  model3DDescribeInput(model, 2, RECT_INST_BUFFER_SLOT, 2, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, size), FALSE);     // Size
-  model3DDescribeInput(model, 3, RECT_INST_BUFFER_SLOT, 3, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, position), FALSE); // Position
-  model3DDescribeInput(model, 4, RECT_INST_BUFFER_SLOT, 4, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, color), FALSE);    // Color
-  model3DDescribeInput(model, 5, RECT_INST_BUFFER_SLOT, 4, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, uvRect), FALSE);   // UV Rect
+  model3DDescribeInput(model, 2, RECT_INST_BUFFER_SLOT, 2, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, offset), FALSE);   // Offset  
+  model3DDescribeInput(model, 3, RECT_INST_BUFFER_SLOT, 2, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, scale), FALSE);    // Scale
+  model3DDescribeInput(model, 4, RECT_INST_BUFFER_SLOT, 3, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, position), FALSE); // Position
+  model3DDescribeInput(model, 5, RECT_INST_BUFFER_SLOT, 4, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, color), FALSE);    // Color
+  model3DDescribeInput(model, 6, RECT_INST_BUFFER_SLOT, 4, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, uvRect), FALSE);   // UV Rect
   
   data.rectangleModel = Model3DPtr(model);
 }
@@ -135,21 +139,50 @@ void shutdownBillboardSystem()
 
 void billboardSystemDrawImage(ImagePtr image,
                               float3 worldPosition,
-                              float2 size,
-                              float4 color,
                               float2 uvMin,
-                              float2 uvMax)
+                              float2 uvMax,
+                              float4 color,                              
+                              float2 scale,
+                              float2 offset,
+                              bool8 usePainterOrder)
 {
   BillboardData billboardData =
   {
-    size,
+    offset,    
+    scale,
     worldPosition,
     color,
     float4(uvMin.x, uvMin.y, uvMax.x, uvMax.y)
   };
 
-  data.batches[imageGetGLHandle(image)].push_back(billboardData);
+  if(usePainterOrder == TRUE)
+  {
+    data.painterOrderedBatches.push_back(std::make_pair(imageGetGLHandle(image), billboardData));
+  }
+  else
+  {
+    data.zOrderedBatches[imageGetGLHandle(image)].push_back(billboardData);
+  }
 }
+
+void billboardSystemDrawImagePix(ImagePtr image,
+                                 float3 worldPosition,
+                                 uint2 pixelSize,
+                                 uint2 pixelOffset,
+                                 float4 color,
+                                 float2 scale,
+                                 float2 offset,
+                                 bool8 usePainterOrder)
+{
+  float32 invWidth = 1.0f / float32(imageGetWidth(image));
+  float32 invHeight = 1.0f / float32(imageGetHeight(image));
+
+  float2 uvMin = float2(float32(pixelOffset.x) * invWidth, float32(pixelOffset.y) * invHeight);
+  float2 uvMax = float2(float32(pixelSize.x) * invWidth, float32(pixelSize.y) * invHeight) + uvMin;
+
+  billboardSystemDrawImage(image, worldPosition, uvMin, uvMax, color, scale, offset, usePainterOrder);
+}
+
 
 void billboardSystemPresent()
 {
@@ -157,14 +190,15 @@ void billboardSystemPresent()
   shaderProgramUse(data.program);
   glBindVertexArray(model3DGetVAOHandle(data.rectangleModel));
 
-  glDepthFunc(GL_LESS);
-  glEnable(GL_DEPTH_TEST);
   
   glEnable(GL_BLEND);
   pushBlend(GL_FUNC_ADD, GL_FUNC_ADD,
             GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+
+  glDepthFunc(GL_LESS);
+  glEnable(GL_DEPTH_TEST);
   
-  for(auto batch: data.batches)
+  for(auto batch: data.zOrderedBatches)
   {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, batch.first);
@@ -175,6 +209,18 @@ void billboardSystemPresent()
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, batch.second.size());
   }
   
+  glDisable(GL_DEPTH_TEST);
+  
+  for(auto batch: data.painterOrderedBatches)
+  {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, batch.first);
+    
+    model3DUpdateBuffer(data.rectangleModel, RECT_INST_BUFFER_SLOT,
+                        0, &batch.second, sizeof(BillboardData));
+
+    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, 1);
+  }
   
   glBindVertexArray(0);
   shaderProgramUse(nullptr);
@@ -184,8 +230,9 @@ void billboardSystemPresent()
   
   glDisable(GL_BLEND);
   glDisable(GL_DEPTH_TEST);
-  
-  data.batches.clear();
+
+  data.painterOrderedBatches.clear();  
+  data.zOrderedBatches.clear();
 }
 
 
