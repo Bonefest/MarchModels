@@ -27,14 +27,15 @@ static bool8 lightsVisualizationPassExecute(RenderPass* pass)
                                 position,
                                 size,
                                 offset,
-                                intensity);
+                                intensity,
+                                float2(10.0f, 10.0f));
 
     billboardSystemDrawImagePix(lightsImagesAtlas,
                                 position,
                                 uint2(64, 64),
                                 uint2(768, 0),
-                                float4(1, 1, 1, 1),
-                                float2(0.2, 0.2),
+                                float4(1, 1, 1, 0.1),
+                                float2(5.0f, 5.0f),
                                 float2(2.0f, 2.0f),
                                 TRUE);
     
