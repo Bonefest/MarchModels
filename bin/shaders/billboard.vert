@@ -7,8 +7,8 @@ layout(location = 0) in float3 rectVertexPos;
 layout(location = 1) in float2 rectUV;
 
 // Per-instance attributes
-layout(location = 2) in float2 billboardOffset;
-layout(location = 3) in float2 billboardScale;
+layout(location = 2) in float2 billboardScale;
+layout(location = 3) in float3 billboardOffset;
 layout(location = 4) in float3 billboardPosition;
 layout(location = 5) in float4 billboardColor;
 layout(location = 6) in float4 billboardUVRect;
@@ -31,12 +31,13 @@ void main()
   //   4) Convert given rectangle vertex position in NDC into Camera Space
   
   float32 invAspect = float32(params.gapResolution.y) / float32(params.gapResolution.x);
-  float3 vertexPos = rectVertexPos * float3(billboardScale * float2(invAspect, 1.0), 1.0) + float3(billboardOffset * billboardScale, 0.0);
+  float3 vertexPos = rectVertexPos * float3(billboardScale * float2(invAspect, 1.0), 1.0) + float3(billboardOffset.xy * billboardScale, 0.0);
   float4 vertexPosCS = params.camNDCCameraMat * float4(vertexPos, 1.0);
   vertexPosCS /= vertexPosCS.w;
 
-  // NOTE: Convert billboard center pos from Wolrd Space to Camera Space 
+  // NOTE: Convert billboard center pos from WorldSpace to Camera Space 
   float4 billboardPosCS = params.camWorldCameraMat * float4(billboardPosition, 1.0);
+  billboardPosCS.z += billboardOffset.z;
 
   // NOTE: Finally, offset billboard's vertex by billboard position and convert
   // the result into NDC space

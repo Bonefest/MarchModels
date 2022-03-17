@@ -28,17 +28,21 @@ static bool8 lightsVisualizationPassExecute(RenderPass* pass)
                                 size,
                                 offset,
                                 intensity,
-                                float2(10.0f, 10.0f));
-
-    billboardSystemDrawImagePix(lightsImagesAtlas,
-                                position,
-                                uint2(64, 64),
-                                uint2(768, 0),
-                                float4(1, 1, 1, 0.1),
-                                float2(5.0f, 5.0f),
-                                float2(2.0f, 2.0f),
+                                float2(10.0f, 10.0f),
+                                float3(),
                                 TRUE);
-    
+
+    if(lightSourceIsSelected(light) == TRUE)
+    {
+      billboardSystemDrawImagePix(lightsImagesAtlas,
+                                  position,
+                                  uint2(64, 64),
+                                  uint2(768, 128),
+                                  float4(0, 1, 0, 1.0),
+                                  float2(12.5f, 12.5f),
+                                  float3(0.0f, 0.0f, 0.0f),
+                                  TRUE);
+    }    
   }
 
   

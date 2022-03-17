@@ -31,8 +31,8 @@ const static uint32 rectangleIndexData[] =
 
 struct BillboardData
 {
-  float2 offset;
   float2 scale;
+  float3 offset;  
   float3 position;
   float4 color;
   float4 uvRect;
@@ -100,8 +100,8 @@ static void createRectangleModel()
   model3DDescribeInput(model, 1, RECT_VRT_BUFFER_SLOT, 2, GL_FLOAT, 5 * sizeof(float32), sizeof(float32) * 3);
 
   // Per-instance input description
-  model3DDescribeInput(model, 2, RECT_INST_BUFFER_SLOT, 2, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, offset), FALSE);   // Offset  
-  model3DDescribeInput(model, 3, RECT_INST_BUFFER_SLOT, 2, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, scale), FALSE);    // Scale
+  model3DDescribeInput(model, 2, RECT_INST_BUFFER_SLOT, 2, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, scale), FALSE);    // Scale  
+  model3DDescribeInput(model, 3, RECT_INST_BUFFER_SLOT, 3, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, offset), FALSE);   // Offset  
   model3DDescribeInput(model, 4, RECT_INST_BUFFER_SLOT, 3, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, position), FALSE); // Position
   model3DDescribeInput(model, 5, RECT_INST_BUFFER_SLOT, 4, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, color), FALSE);    // Color
   model3DDescribeInput(model, 6, RECT_INST_BUFFER_SLOT, 4, GL_FLOAT, sizeof(BillboardData), offsetof(BillboardData, uvRect), FALSE);   // UV Rect
@@ -143,13 +143,13 @@ void billboardSystemDrawImage(ImagePtr image,
                               float2 uvMax,
                               float4 color,                              
                               float2 scale,
-                              float2 offset,
+                              float3 offset,
                               bool8 usePainterOrder)
 {
   BillboardData billboardData =
   {
-    offset,    
     scale,
+    offset,        
     worldPosition,
     color,
     float4(uvMin.x, uvMin.y, uvMax.x, uvMax.y)
@@ -171,7 +171,7 @@ void billboardSystemDrawImagePix(ImagePtr image,
                                  uint2 pixelOffset,
                                  float4 color,
                                  float2 scale,
-                                 float2 offset,
+                                 float3 offset,
                                  bool8 usePainterOrder)
 {
   float32 invWidth = 1.0f / float32(imageGetWidth(image));
@@ -195,7 +195,7 @@ void billboardSystemPresent()
   pushBlend(GL_FUNC_ADD, GL_FUNC_ADD,
             GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
 
-  glDepthFunc(GL_LESS);
+  glDepthFunc(GL_LEQUAL);
   glEnable(GL_DEPTH_TEST);
   
   for(auto batch: data.zOrderedBatches)
@@ -209,7 +209,7 @@ void billboardSystemPresent()
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, batch.second.size());
   }
   
-  glDisable(GL_DEPTH_TEST);
+  //glDisable(GL_DEPTH_TEST);
   
   for(auto batch: data.painterOrderedBatches)
   {
