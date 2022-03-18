@@ -28,7 +28,7 @@ bool8 drawGeometryPostorder(Camera* camera,
                             uint32& culledObjCounter)
 {
   const AABB& geometryAABB = geometryGetFinalAABB(geometry);
-  if(cameraGetFrustum(camera).intersects(geometryAABB) == FALSE)
+  if(camera != nullptr && cameraGetFrustum(camera).intersects(geometryAABB) == FALSE)
   {
     // NOTE: We've culled the object + its children
     culledObjCounter += geometryGetTotalChildrenCount(geometry) + 1;

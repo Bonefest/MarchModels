@@ -18,6 +18,13 @@ float3 getWorldPos(float2 uv)
   return worldPos.xyz / worldPos.w;
 }
 
+void markFragmentAsCulled(int2 ifragCoord)
+{
+  gl_FragStencilRefARB = 0;
+  outCameraRay = float4(0.0f);
+  stackAddTotalDistance(ifragCoord, INF_DISTANCE);
+}
+
 void main()
 {
     int2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);
@@ -42,8 +49,7 @@ void main()
 
         if(dot(l, normal) < 0.0)
         {
-          gl_FragStencilRefARB = 0;
-          outCameraRay = float4(0.0f);
+          markFragmentAsCulled(ifragCoord);
           return;
         }
       } break;
@@ -56,8 +62,7 @@ void main()
         
         if(lDistance > attRadius || dot(l, light.forward.xyz) < light.attenuationAngleFactors.y || dot(l, normal) < 0)
         {
-          gl_FragStencilRefARB = 0;
-          outCameraRay = float4(0.0f);
+          markFragmentAsCulled(ifragCoord);
           return;
         }
       } break;
@@ -69,8 +74,7 @@ void main()
         float32 attRadius = calculateAttenuationRadius(light.attenuationDistanceFactors, LIGHT_MIN_ATTENUATION);        
         if(lDistance > attRadius || dot(l, normal) < 0.0)
         {
-          gl_FragStencilRefARB = 0;
-          outCameraRay = float4(0.0f);
+          markFragmentAsCulled(ifragCoord);
           return;
         }
         

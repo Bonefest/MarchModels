@@ -246,6 +246,18 @@ static bool8 initNormalsMapTexture()
   return TRUE;
 }
 
+static bool8 initShadowsMapTexture()
+{
+  glGenTextures(1, &data.handles[RR_SHADOWS_MAP_TEXTURE]);
+  glBindTexture(GL_TEXTURE_2D, data.handles[RR_SHADOWS_MAP_TEXTURE]);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, MAX_WIDTH, MAX_HEIGHT, 0, GL_RGBA, GL_FLOAT, NULL);
+  glBindTexture(GL_TEXTURE_2D, 0);
+
+  return TRUE;
+}
+
 static bool8 initializeRendererResources()
 {
   glCreateVertexArrays(1, &data.handles[RR_EMPTY_VAO]);
@@ -259,6 +271,7 @@ static bool8 initializeRendererResources()
   INIT(initDistancesMapTexture);
   INIT(initLDRMapTexture);
   INIT(initNormalsMapTexture);
+  INIT(initShadowsMapTexture);
   
   return TRUE;
 }
@@ -274,6 +287,7 @@ static void destroyRendererResources()
   glDeleteTextures(1, &data.handles[RR_GEOIDS_MAP_TEXTURE]);  
   glDeleteTextures(1, &data.handles[RR_DISTANCES_MAP_TEXTURE]);  
   glDeleteTextures(1, &data.handles[RR_LDR_MAP_TEXTURE]);
+  glDeleteTextures(1, &data.handles[RR_SHADOWS_MAP_TEXTURE]);
 }
 
 // ----------------------------------------------------------------------------

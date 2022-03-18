@@ -30,7 +30,7 @@ void main()
   //   3) Additionally offset position by given offset
   //   4) Convert given rectangle vertex position in NDC into Camera Space
   
-  float32 invAspect = float32(params.gapResolution.y) / float32(params.gapResolution.x);
+  float32 invAspect = float32(params.resolution.y) / float32(params.resolution.x);
   float3 vertexPos = rectVertexPos * float3(billboardScale * float2(invAspect, 1.0), 1.0) + float3(billboardOffset.xy * billboardScale, 0.0);
   float4 vertexPosCS = params.camNDCCameraMat * float4(vertexPos, 1.0);
   vertexPosCS /= vertexPosCS.w;

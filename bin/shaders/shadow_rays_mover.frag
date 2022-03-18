@@ -6,6 +6,7 @@
 out float4 outCameraRay;
 
 uniform uint32 curIterIdx;
+uniform uint32 lightIndex;
 
 void main()
 {
@@ -16,7 +17,7 @@ void main()
 
     // If totalDistance is larger than INF_DISTANCE, then we know that this
     // pixel was already processed previously --> do not add distance from
-    // the stack, simply quit
+    // the stack, simply quit    
     if(totalDistance >= INF_DISTANCE)
     {
       gl_FragStencilRefARB = 0;

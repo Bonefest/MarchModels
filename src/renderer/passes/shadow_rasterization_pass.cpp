@@ -11,8 +11,10 @@
 struct ShadowRasterizationPassData
 {
   GLuint raysMapFBO;
+  GLuint shadowsMapFBO;
   
   ShaderProgram* preparingProgram;
+  ShaderProgram* shadowCalculationProgram;
   ShaderProgram* raysMoverProgram;
 };
 
@@ -22,6 +24,7 @@ static void destroyShadowRasterizationPass(RenderPass* pass)
   glDeleteFramebuffers(1, &data->raysMapFBO);
   
   destroyShaderProgram(data->preparingProgram);
+  destroyShaderProgram(data->shadowCalculationProgram);
   destroyShaderProgram(data->raysMoverProgram);
   
   engineFreeObject(data, MEMORY_TYPE_GENERAL);
@@ -51,6 +54,64 @@ static bool8 shadowRasterizationPassPrepareToRasterize(ShadowRasterizationPassDa
 
 static bool8 shadowRasterizationPassRasterize(ShadowRasterizationPassData* data)
 {
+  const RenderingParameters& renderingParams = rendererGetPassedRenderingParameters();  
+  Scene* sceneToRasterize = rendererGetPassedScene();  
+
+  glEnable(GL_STENCIL_TEST);
+
+  glEnable(GL_BLEND);
+  pushBlend(GL_FUNC_ADD, GL_FUNC_ADD, GL_ZERO, GL_ONE, GL_ONE, GL_ONE);
+
+  uint32 culledObjectsCounter = 0;
+  for(uint32 i = 0; i < renderingParams.shadowRasterItersMaxCount; i++)
+  {
+    culledObjectsCounter = 0;
+
+    // ------------------------------------------------------------------------
+    // 1. Calculate distances
+
+    // Render only fragments that weren't culled/haven't yet reached limit
+    glStencilFuncSeparate(GL_FRONT_AND_BACK, GL_EQUAL, 1, 0xFF);
+    glStencilOpSeparate(GL_FRONT_AND_BACK, GL_KEEP, GL_KEEP, GL_KEEP);
+    
+    // TODO: Generate frustum for light (now we're passing nullptr) for further optimization
+    drawGeometryPostorder(nullptr,
+                          sceneGetGeometryRoot(sceneToRasterize),
+                          0, 0,
+                          culledObjectsCounter);
+
+    // ------------------------------------------------------------------------
+    // 2. Calculate soft shadow with parameters calculated at this iteration
+    // (see: https://www.iquilezles.org/www/articles/rmshadows/rmshadows.htm)
+    pushBlend(GL_MIN, GL_MIN, GL_ONE, GL_ONE, GL_ONE, GL_ONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, data->shadowsMapFBO);
+    shaderProgramUse(data->shadowCalculationProgram);
+
+    // attach rays map texture        
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_RAYS_MAP_TEXTURE));
+    glUniform1ui(0, 0);
+
+    drawTriangleNoVAO();
+    
+    popBlend();
+
+    // ------------------------------------------------------------------------
+    // 3. Move per-pixel rays based on calculated distances
+
+    // Move through all rays, shader will export ref value itself -->
+    // replace stencil's value by exported one.
+    glStencilFuncSeparate(GL_FRONT_AND_BACK, GL_ALWAYS, 1, 0xFF);
+    glStencilOpSeparate(GL_FRONT_AND_BACK, GL_KEEP, GL_KEEP, GL_REPLACE);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, data->raysMapFBO);
+    shaderProgramUse(data->raysMoverProgram);
+    glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(data->raysMoverProgram), "curIterIdx"), i);
+    drawTriangleNoVAO();
+
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);        
+  }
+  
   return TRUE;
 }
 
@@ -93,6 +154,24 @@ static GLuint createRayMapFramebuffer()
   return framebuffer;
 }
 
+static GLuint createShadowMapFramebuffer()
+{
+  GLuint framebuffer = 0;
+  
+  glGenFramebuffers(1, &framebuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rendererGetResourceHandle(RR_SHADOWS_MAP_TEXTURE), 0);
+  glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, rendererGetResourceHandle(RR_COVERAGE_MASK_TEXTURE), 0);
+  
+  if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+  {
+    return 0;
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  return framebuffer;  
+}
+
 bool8 createShadowRasterizationPass(RenderPass** outPass)
 {
   RenderPassInterface interface = {};
@@ -111,6 +190,9 @@ bool8 createShadowRasterizationPass(RenderPass** outPass)
   data->raysMapFBO = createRayMapFramebuffer();
   assert(data->raysMapFBO != 0);
 
+  data->shadowsMapFBO = createShadowMapFramebuffer();
+  assert(data->shadowsMapFBO != 0);
+  
   data->preparingProgram = createAndLinkTriangleShadingProgram("shaders/prepare_to_shadow_raster.frag");
   assert(data->preparingProgram != nullptr);
 

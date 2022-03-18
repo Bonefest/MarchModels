@@ -67,23 +67,28 @@ static bool8 rasterizationPassRasterize(RasterizationPassData* data)
   {
     culledObjectsCounter = 0;
 
+    // ------------------------------------------------------------------------
+    // 1. Calculate distances
+
     // Render only fragments that did not intersected something
     // nor moved too far
     glStencilFuncSeparate(GL_FRONT_AND_BACK, GL_EQUAL, 1, 0xFF);
     glStencilOpSeparate(GL_FRONT_AND_BACK, GL_KEEP, GL_KEEP, GL_KEEP);
 
-    // Calculate distances    
+    
     drawGeometryPostorder(rendererGetPassedCamera(),
                           sceneGetGeometryRoot(sceneToRasterize),
                           0, 0,
                           culledObjectsCounter);
+
+    // ------------------------------------------------------------------------
+    // 2. Move per-pixel rays based on calculated distances
     
     // Move through all rays, shader will export ref value itself -->
     // replace stencil's value by exported one.
     glStencilFuncSeparate(GL_FRONT_AND_BACK, GL_ALWAYS, 1, 0xFF);
     glStencilOpSeparate(GL_FRONT_AND_BACK, GL_KEEP, GL_KEEP, GL_REPLACE);
     
-    // Move per-pixel rays based on calculated distances    
     shaderProgramUse(data->raysMoverProgram);
     glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(data->raysMoverProgram), "curIterIdx"), i);
     drawTriangleNoVAO();
