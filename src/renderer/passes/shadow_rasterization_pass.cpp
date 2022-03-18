@@ -54,6 +54,10 @@ static bool8 shadowRasterizationPassPrepareToRasterize(ShadowRasterizationPassDa
 
 static bool8 shadowRasterizationPassRasterize(ShadowRasterizationPassData* data)
 {
+  // TODO: Clear shadows map texture to 1
+  
+  const uint32 lightIndex = 0; // TEMP
+  
   const RenderingParameters& renderingParams = rendererGetPassedRenderingParameters();  
   Scene* sceneToRasterize = rendererGetPassedScene();  
 
@@ -86,11 +90,7 @@ static bool8 shadowRasterizationPassRasterize(ShadowRasterizationPassData* data)
     pushBlend(GL_MIN, GL_MIN, GL_ONE, GL_ONE, GL_ONE, GL_ONE);
     glBindFramebuffer(GL_FRAMEBUFFER, data->shadowsMapFBO);
     shaderProgramUse(data->shadowCalculationProgram);
-
-    // attach rays map texture        
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_RAYS_MAP_TEXTURE));
-    glUniform1ui(0, 0);
+    glUniform1ui(0, lightIndex);
 
     drawTriangleNoVAO();
     
@@ -196,6 +196,9 @@ bool8 createShadowRasterizationPass(RenderPass** outPass)
   data->preparingProgram = createAndLinkTriangleShadingProgram("shaders/prepare_to_shadow_raster.frag");
   assert(data->preparingProgram != nullptr);
 
+  data->shadowCalculationProgram = createAndLinkTriangleShadingProgram("shaders/shadows_estimator.frag");
+  assert(data->shadowCalculationProgram != nullptr);
+  
   data->raysMoverProgram = createAndLinkTriangleShadingProgram("shaders/rays_mover.frag");
   assert(data->raysMoverProgram != nullptr);
   
