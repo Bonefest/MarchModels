@@ -30,6 +30,12 @@
     return float2(fragCoord.x * params.invGapResolution.x, fragCoord.y * params.invGapResolution.y);
   }
 
+  float32 distance2(float3 from, float3 to)
+  {
+    float3 vector = to - from;
+    return dot(vector, vector);
+  }
+
   float3 generateRayDir(float2 uv)
   {
     // uv [(0..1), (0..1)] -> ndc [(1..-1), (-1..1)] - note, we inverse x axis, because
@@ -92,5 +98,12 @@
     return (z * params.camNDCCameraMat[2][2] + params.camNDCCameraMat[3][2]) / w;
   }
 
+  float3 getWorldPos(float2 uv, sampler2D depthMap)
+  {
+    float3 ndcPos = float3(uv * float2(-2.0, 2.0) + float2(1.0, -1.0), texture(depthMap, uv) * 2.0 - 1.0);
+    float4 worldPos = params.camNDCWorldMat * float4(ndcPos, 1.0);
+
+    return worldPos.xyz / worldPos.w;
+  }
 
 #endif

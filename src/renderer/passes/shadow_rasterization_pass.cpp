@@ -106,7 +106,13 @@ static bool8 shadowRasterizationPassRasterize(ShadowRasterizationPassData* data)
 
     glBindFramebuffer(GL_FRAMEBUFFER, data->raysMapFBO);
     shaderProgramUse(data->raysMoverProgram);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE));
+    
+    glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(data->raysMoverProgram), "depthMap"), 0);    
     glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(data->raysMoverProgram), "curIterIdx"), i);
+    glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(data->raysMoverProgram), "lightIndex"), lightIndex); 
     drawTriangleNoVAO();
 
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);        

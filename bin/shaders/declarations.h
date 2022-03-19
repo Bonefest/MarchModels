@@ -15,6 +15,7 @@
   #define MAX_LIGHT_SOURCES_COUNT         4
   #define MAX_STACK_SIZE                  8
   #define INF_DISTANCE                    77777.0
+  #define INT_DISTANCE                    0.0001
   #define UKNOWN_GEOMETRY_ID              65535
 
   // One geometry has two members (see GeometryData declaration)

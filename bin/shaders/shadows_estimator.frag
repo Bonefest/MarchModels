@@ -14,7 +14,9 @@ void main()
     float32 h = stackFront(ifragCoord).distance;
     float32 k = lightParams[lightIndex].shadowFactor;
 
-    float32 shadow = k * h / t;
+    // NOTE: If distance to the nearest surface is smaller than intersection
+    // distance, then texel is in full shadow
+    float32 shadow = mix(k * h / t, 0.0, h < INT_DISTANCE);
 
     // NOTE: Init values to 1, so that during blending, min(...) operation won't
     // affect unused channels

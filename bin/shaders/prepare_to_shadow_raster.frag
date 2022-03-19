@@ -10,14 +10,6 @@ layout(location = 1) uniform sampler2D normalsMap;
 
 layout(location = 2) uniform uint32 lightIndex;
 
-float3 getWorldPos(float2 uv)
-{
-  float3 ndcPos = float3(uv * float2(-2.0, 2.0) + float2(1.0, -1.0), texture(depthMap, uv) * 2.0 - 1.0);
-  float4 worldPos = params.camNDCWorldMat * float4(ndcPos, 1.0);
-
-  return worldPos.xyz / worldPos.w;
-}
-
 void markFragmentAsCulled(int2 ifragCoord)
 {
   gl_FragStencilRefARB = 0;
@@ -31,7 +23,7 @@ void main()
     stackClear(ifragCoord);
 
     float2 uv = fragCoordToUV(gl_FragCoord.xy);
-    float3 worldPos = getWorldPos(uv);
+    float3 worldPos = getWorldPos(uv, depthMap);
     float3 normal = texture(normalsMap, uv).xyz;
 
     const LightSourceParameters light = lightParams[lightIndex];
