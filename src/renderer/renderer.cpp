@@ -5,6 +5,7 @@
 #include "billboard_system.h"
 #include "passes/render_pass.h"
 #include "passes/rasterization_pass.h"
+#include "passes/simple_shading_pass.h"
 #include "passes/ldr_to_film_copy_pass.h"
 #include "passes/ids_visualization_pass.h"
 #include "passes/aabb_visualization_pass.h"
@@ -308,6 +309,7 @@ static bool8 initializeRenderPasses()
   INIT(createLightsVisualizationPass, &data.lightsVisualizationPass);
   INIT(createLDRToFilmCopyPass, &data.ldrToFilmPass);
   INIT(initializeAABBCalculationPass);
+  INIT(createSimpleShadingPass, &data.simpleShadingPass);
 
   data.passes.push_back(data.rasterizationPass);
   data.passes.push_back(data.normalsCalculationPass);
@@ -329,6 +331,7 @@ static void destroyRenderPasses()
   destroyRenderPass(data.aabbVisualizationPass);
   destroyRenderPass(data.lightsVisualizationPass);
   destroyRenderPass(data.ldrToFilmPass);
+  destroyRenderPass(data.simpleShadingPass);
   destroyAABBCalculationPass();
 }
 
@@ -398,6 +401,10 @@ bool8 rendererRenderScene(Film* film,
   else if(params.shadingMode == RS_VISUALIZE_NORMALS)
   {
     assert(renderPassExecute(data.normalsVisualizationPass));
+  }
+  else if(params.shadingMode == RS_SIMPLE_SHADING)
+  {
+    assert(renderPassExecute(data.simpleShadingPass));
   }
 
   if(params.showAABB == TRUE)

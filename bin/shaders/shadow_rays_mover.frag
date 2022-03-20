@@ -12,8 +12,6 @@ uniform uint32 lightIndex;
 void main()
 {
     int2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);
-    float2 uv = fragCoordToUV(gl_FragCoord.xy);
-    float3 worldPos = getWorldPos(uv, depthMap);
     
     float32 distance = stackFront(ifragCoord).distance;
     float32 totalDistance = stackGetTotalDistance(ifragCoord);
@@ -36,11 +34,19 @@ void main()
     else
     {
       float32 movedDistance = totalDistance + distance;
-      float32 distanceToLight = distance2(worldPos, lightParams[lightIndex].position);
+      float32 distanceToLight = INF_DISTANCE;
+      
+      if(lightParams[lightIndex].type != LIGHT_SOURCE_TYPE_DIRECTIONAL)
+      {
+        float2 uv = fragCoordToUV(gl_FragCoord.xy);
+        float3 worldPos = getWorldPos(uv, ifragCoord, depthMap);
+      
+        distanceToLight = distance2(worldPos, lightParams[lightIndex].position);
+      }
 
       // If shadow ray's moved behind the light source, then it's surely's intersected it,
       // thus we can discard it.
-      gl_FragStencilRefARB = movedDistance >= distanceToLight ? 0 : 1;
+      gl_FragStencilRefARB = movedDistance * movedDistance >= distanceToLight ? 0 : 1;
       outCameraRay = float4(0.0f, 0.0f, 0.0f, distance);
       stackAddTotalDistance(ifragCoord, distance);
 

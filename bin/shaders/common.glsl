@@ -98,9 +98,9 @@
     return (z * params.camNDCCameraMat[2][2] + params.camNDCCameraMat[3][2]) / w;
   }
 
-  float3 getWorldPos(float2 uv, sampler2D depthMap)
+  float3 getWorldPos(float2 uv, int2 ifragCoord, sampler2D depthMap)
   {
-    float3 ndcPos = float3(uv * float2(-2.0, 2.0) + float2(1.0, -1.0), texture(depthMap, uv) * 2.0 - 1.0);
+    float3 ndcPos = float3(uv * float2(-2.0, 2.0) + float2(1.0, -1.0), texelFetch(depthMap, ifragCoord, 0) * 2.0 - 1.0);
     float4 worldPos = params.camNDCWorldMat * float4(ndcPos, 1.0);
 
     return worldPos.xyz / worldPos.w;

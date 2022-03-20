@@ -38,6 +38,6 @@ ENGINE_API void lightSourceSetSelected(Asset* lsource, bool8 selected);
 ENGINE_API bool8 lightSourceIsSelected(Asset* lsource);
 
 ENGINE_API void lightSourceSetShadowEnabled(Asset* lsource, bool8 enabled);
-ENGINE_API bool8 lightSourceIsShadowEnabled(Asset* lsource);
+ENGINE_API bool8 lightSourceShadowIsEnabled(Asset* lsource);
 
 ENGINE_API LightSourceParameters& lightSourceGetParameters(Asset* lsource);

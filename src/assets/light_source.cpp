@@ -27,6 +27,7 @@ bool8 createLightSource(const std::string& name,
   LightSource* lsourceData = engineAllocObject<LightSource>(MEMORY_TYPE_GENERAL);
   lsourceData->parameters.type = type;
   lsourceData->parameters.intensity = float4(1.0f, 1.0f, 1.0f, 1.0f);
+  lsourceData->parameters.attenuationDistanceFactors.y = 1.0f;
   
   assetSetInternalData(*lsource, lsourceData);
   
@@ -173,7 +174,7 @@ void lightSourceSetShadowEnabled(Asset* lsource, bool8 enabled)
   lsourceData->parameters.shadowEnabled = enabled;
 }
 
-bool8 lightSourceIsShadowEnabled(Asset* lsource)
+bool8 lightSourceShadowIsEnabled(Asset* lsource)
 {
   LightSource* lsourceData = (LightSource*)assetGetInternalData(lsource);
 

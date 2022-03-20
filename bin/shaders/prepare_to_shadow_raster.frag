@@ -23,7 +23,7 @@ void main()
     stackClear(ifragCoord);
 
     float2 uv = fragCoordToUV(gl_FragCoord.xy);
-    float3 worldPos = getWorldPos(uv, depthMap);
+    float3 worldPos = getWorldPos(uv, ifragCoord, depthMap);
     float3 normal = texture(normalsMap, uv).xyz;
 
     const LightSourceParameters light = lightParams[lightIndex];
