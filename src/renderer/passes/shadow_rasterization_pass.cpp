@@ -52,12 +52,8 @@ static bool8 shadowRasterizationPassPrepareToRasterize(ShadowRasterizationPassDa
   return TRUE;
 }
 
-static bool8 shadowRasterizationPassRasterize(ShadowRasterizationPassData* data)
+static bool8 shadowRasterizationPassRasterize(ShadowRasterizationPassData* data, uint32 lightIndex)
 {
-  // TODO: Clear shadows map texture to 1
-  
-  const uint32 lightIndex = 0; // TEMP
-  
   const RenderingParameters& renderingParams = rendererGetPassedRenderingParameters();  
   Scene* sceneToRasterize = rendererGetPassedScene();  
 
@@ -87,6 +83,7 @@ static bool8 shadowRasterizationPassRasterize(ShadowRasterizationPassData* data)
     // ------------------------------------------------------------------------
     // 2. Calculate soft shadow with parameters calculated at this iteration
     // (see: https://www.iquilezles.org/www/articles/rmshadows/rmshadows.htm)
+    
     pushBlend(GL_MIN, GL_MIN, GL_ONE, GL_ONE, GL_ONE, GL_ONE);
     glBindFramebuffer(GL_FRAMEBUFFER, data->shadowsMapFBO);
     shaderProgramUse(data->shadowCalculationProgram);
@@ -117,6 +114,10 @@ static bool8 shadowRasterizationPassRasterize(ShadowRasterizationPassData* data)
 
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);        
   }
+
+  popBlend();  
+  glDisable(GL_BLEND);
+  glDisable(GL_STENCIL_TEST);
   
   return TRUE;
 }
@@ -129,11 +130,21 @@ static bool8 shadowRasterizationPassExtractResults(ShadowRasterizationPassData* 
 static bool8 shadowRasterizationPassExecute(RenderPass* pass)
 {
   ShadowRasterizationPassData* data = (ShadowRasterizationPassData*)renderPassGetInternalData(pass);
+  std::vector<AssetPtr>& lightSources = sceneGetLightSources(rendererGetPassedScene());
 
-  assert(shadowRasterizationPassPrepareToRasterize(data, 0));
-  assert(shadowRasterizationPassRasterize(data));
-  assert(shadowRasterizationPassExtractResults(data));
+  // NOTE: Clear each channel of shadowmap to 1.0f, meaning that initially lights are not blocked
+  glBindFramebuffer(GL_FRAMEBUFFER, data->shadowsMapFBO);
+  glClearColor(1.0f, 1.0f, 1.0f, 1.0f);  
+  glClear(GL_COLOR_BUFFER_BIT);
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
   
+  for(uint32 lightIndex = 0; lightIndex < lightSources.size(); lightIndex++)
+  {
+    assert(shadowRasterizationPassPrepareToRasterize(data, lightIndex));
+    assert(shadowRasterizationPassRasterize(data, lightIndex));
+  }
+
   return TRUE;
 }
 

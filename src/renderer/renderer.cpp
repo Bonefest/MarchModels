@@ -360,8 +360,6 @@ void shutdownRenderer()
   data = Renderer{};
 }
 
-#include "image_manager.h"
-
 bool8 rendererRenderScene(Film* film,
                           Scene* scene,
                           Camera* camera,
@@ -384,6 +382,11 @@ bool8 rendererRenderScene(Film* film,
     assert(renderPassExecute(data.normalsCalculationPass));
   }
 
+  if(params.enableShadows == TRUE)
+  {
+    assert(renderPassExecute(data.shadowRasterizationPass));
+  }
+  
   if(params.shadingMode == RS_VISUALIZE_DISTANCES)
   {
     assert(renderPassExecute(data.distancesVisualizationPass));
