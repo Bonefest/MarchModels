@@ -428,6 +428,7 @@ static void drawViewSettingsWindow(Window* window, float64 delta)
     ImGui::Combo("Shading mode", (int32*)&params.shadingMode, shadingModeLabels, ARRAY_SIZE(shadingModeLabels));
     ImGui::SliderFloat("Gamma", &params.gamma, 1.0f, 3.0f);
     ImGui::SliderInt("Rasterizations iterations count", (int*)&params.rasterItersMaxCount, 1, 512);
+    ImGui::SliderInt("Shadow rasterizations iterations count", (int*)&params.shadowRasterItersMaxCount, 1, 512);    
     ImGui::SliderFloat("Intersection threshold", &params.intersectionThreshold, 0.0001f, 100.0f);
 
     uint2 minValue = uint2(0, 0), maxValue = uint2(128, 128);

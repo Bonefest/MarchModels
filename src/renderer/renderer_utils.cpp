@@ -20,7 +20,9 @@ struct UtilsData
 static UtilsData data;
 
 static GLuint createFramebuffer(GLuint* colorTextureHandles, uint32 count,
+                                GLuint dTextureHandle = 0,                                
                                 GLuint dsTextureHandle = 0)
+
 {
   GLuint framebuffer = 0;
   
@@ -33,9 +35,14 @@ static GLuint createFramebuffer(GLuint* colorTextureHandles, uint32 count,
   }
 
   bool8 dsTextureIsPassed = dsTextureHandle != 0 ? TRUE : FALSE;
+  bool8 dTextureIsPassed = dTextureHandle != 0 ? TRUE : FALSE;
   if(dsTextureIsPassed == TRUE)
   {
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, dsTextureHandle, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, dsTextureHandle, 0);
+  }
+  else if(dTextureIsPassed == TRUE)
+  {
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, dTextureHandle, 0);
   }
 
   // NOTE: If color attachments are more than 1, then we should explicitly
@@ -74,16 +81,28 @@ GLuint createFramebuffer(GLuint colorTextureHandle0, GLuint colorTextureHandle1)
   return createFramebuffer(handles, 2);
 }
 
+GLuint createFramebufferD(GLuint colorTextureHandle, GLuint dTextureHandle)
+{
+  GLuint handles[] = {colorTextureHandle};
+  return createFramebuffer(handles, 1, dTextureHandle);
+}
+
+GLuint createFramebufferD(GLuint colorTextureHandle0, GLuint colorTextureHandle1, GLuint dTextureHandle)
+{
+  GLuint handles[] = {colorTextureHandle0, colorTextureHandle1};
+  return createFramebuffer(handles, 2, dTextureHandle);
+}
+
 GLuint createFramebufferDS(GLuint colorTextureHandle, GLuint dsTextureHandle)
 {
   GLuint handles[] = {colorTextureHandle};
-  return createFramebuffer(handles, 1, dsTextureHandle);
+  return createFramebuffer(handles, 1, 0, dsTextureHandle);
 }
 
 GLuint createFramebufferDS(GLuint colorTextureHandle0, GLuint colorTextureHandle1, GLuint dsTextureHandle)
 {
   GLuint handles[] = {colorTextureHandle0, colorTextureHandle1};
-  return createFramebuffer(handles, 2, dsTextureHandle);
+  return createFramebuffer(handles, 2, 0, dsTextureHandle);
 }
 
 void pushViewport(GLint x, GLint y, GLint width, GLint height)

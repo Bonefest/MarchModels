@@ -306,8 +306,8 @@ bool8 createAABBVisualizationPass(RenderPass** outPass)
 
   AABBVisualizationPassData* data = engineAllocObject<AABBVisualizationPassData>(MEMORY_TYPE_GENERAL);
   
-  data->ldrFBO = createFramebufferDS(rendererGetResourceHandle(RR_LDR_MAP_TEXTURE),
-                                     rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE));
+  data->ldrFBO = createFramebufferD(rendererGetResourceHandle(RR_LDR_MAP_TEXTURE),
+                                    rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE));
   assert(data->ldrFBO != 0);
 
   data->cubesModel = createCubesModel();

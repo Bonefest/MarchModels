@@ -5,8 +5,12 @@
 ENGINE_API GLuint createFramebuffer(GLuint colorTextureHandle);
 ENGINE_API GLuint createFramebuffer(GLuint colorTextureHandle0, GLuint colorTextureHandle1);
 
+ENGINE_API GLuint createFramebufferD(GLuint colorTextureHandle, GLuint dTextureHandle);
+ENGINE_API GLuint createFramebufferD(GLuint colorTextureHandle0, GLuint colorTextureHandle1, GLuint dTextureHandle);
+
 ENGINE_API GLuint createFramebufferDS(GLuint colorTextureHandle, GLuint dsTextureHandle);
 ENGINE_API GLuint createFramebufferDS(GLuint colorTextureHandle0, GLuint colorTextureHandle1, GLuint dsTextureHandle);
+
 
 ENGINE_API void pushViewport(GLint x, GLint y, GLint width, GLint height);
 ENGINE_API bool8 popViewport();
