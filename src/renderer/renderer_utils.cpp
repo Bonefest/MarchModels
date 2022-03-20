@@ -19,6 +19,73 @@ struct UtilsData
 
 static UtilsData data;
 
+static GLuint createFramebuffer(GLuint* colorTextureHandles, uint32 count,
+                                GLuint dsTextureHandle = 0)
+{
+  GLuint framebuffer = 0;
+  
+  glGenFramebuffers(1, &framebuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+  for(uint32 i = 0; i < count; i++)
+  {
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, colorTextureHandles[i], 0);
+  }
+
+  bool8 dsTextureIsPassed = dsTextureHandle != 0 ? TRUE : FALSE;
+  if(dsTextureIsPassed == TRUE)
+  {
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, dsTextureHandle, 0);
+  }
+
+  // NOTE: If color attachments are more than 1, then we should explicitly
+  // tell that each of the attachments is a draw buffer
+  if(count > 1)
+  {
+    GLenum drawBuffers[count];
+    for(uint32 i = 0; i < count; i++)
+    {
+      // i-th output of shader will be written into i-th texture
+      drawBuffers[i] = GL_COLOR_ATTACHMENT0 + i;
+    }
+
+    glDrawBuffers(count, drawBuffers);
+  }
+  
+  if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+  {
+    return 0;
+  }
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  return framebuffer;  
+}
+
+GLuint createFramebuffer(GLuint colorTextureHandle)
+{
+  GLuint handles[] = {colorTextureHandle};
+  return createFramebuffer(handles, 1);
+}
+
+GLuint createFramebuffer(GLuint colorTextureHandle0, GLuint colorTextureHandle1)
+{
+  GLuint handles[] = {colorTextureHandle0, colorTextureHandle1};
+  return createFramebuffer(handles, 2);
+}
+
+GLuint createFramebufferDS(GLuint colorTextureHandle, GLuint dsTextureHandle)
+{
+  GLuint handles[] = {colorTextureHandle};
+  return createFramebuffer(handles, 1, dsTextureHandle);
+}
+
+GLuint createFramebufferDS(GLuint colorTextureHandle0, GLuint colorTextureHandle1, GLuint dsTextureHandle)
+{
+  GLuint handles[] = {colorTextureHandle0, colorTextureHandle1};
+  return createFramebuffer(handles, 2, dsTextureHandle);
+}
+
 void pushViewport(GLint x, GLint y, GLint width, GLint height)
 {
   ViewportData viewport;

@@ -66,22 +66,6 @@ static const char* distancesVisualizationPassGetName(RenderPass* pass)
   return "DistancesVisualizationPass";
 }
 
-static GLuint createLDRFramebuffer()
-{
-  GLuint framebuffer = 0;
-  
-  glGenFramebuffers(1, &framebuffer);
-  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rendererGetResourceHandle(RR_LDR_MAP_TEXTURE), 0);
-  if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-  {
-    return 0;
-  }
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-  return framebuffer;
-}
-
 bool8 createDistancesVisualizationPass(float2 distancesRange,
                                        float3 closestColor, float3 farthestColor,
                                        RenderPass** outPass)
@@ -103,7 +87,7 @@ bool8 createDistancesVisualizationPass(float2 distancesRange,
   data->closestColor = closestColor;
   data->farthestColor = farthestColor;
   
-  data->ldrFBO = createLDRFramebuffer();
+  data->ldrFBO = createFramebuffer(rendererGetResourceHandle(RR_LDR_MAP_TEXTURE));
   assert(data->ldrFBO != 0);
 
   data->visualizationProgram = createAndLinkTriangleShadingProgram("shaders/visualize_distances.frag");

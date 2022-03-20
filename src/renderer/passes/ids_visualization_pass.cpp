@@ -46,22 +46,6 @@ static const char* idsVisualizationPassGetName(RenderPass* pass)
   return "IDsVisualizationPass";
 }
 
-static GLuint createLDRFramebuffer()
-{
-  GLuint framebuffer = 0;
-  
-  glGenFramebuffers(1, &framebuffer);
-  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rendererGetResourceHandle(RR_LDR_MAP_TEXTURE), 0);
-  if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-  {
-    return 0;
-  }
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-  return framebuffer;
-}
-
 bool8 createIDsVisualizationPass(RenderPass** outPass)
 {
   RenderPassInterface interface = {};
@@ -77,7 +61,7 @@ bool8 createIDsVisualizationPass(RenderPass** outPass)
 
   IDsVisualizationPassData* data = engineAllocObject<IDsVisualizationPassData>(MEMORY_TYPE_GENERAL);
   
-  data->ldrFBO = createLDRFramebuffer();
+  data->ldrFBO = createFramebuffer(rendererGetResourceHandle(RR_LDR_MAP_TEXTURE));
   assert(data->ldrFBO != 0);
 
   data->visualizationProgram = createAndLinkTriangleShadingProgram("shaders/visualize_ids.frag");

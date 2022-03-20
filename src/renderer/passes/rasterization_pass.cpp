@@ -143,47 +143,6 @@ static const char* rasterizationPassGetName(RenderPass* pass)
   return "RasterizationPass";
 }
 
-static GLuint createRayMapFramebuffer()
-{
-  GLuint framebuffer = 0;
-  
-  glGenFramebuffers(1, &framebuffer);
-  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rendererGetResourceHandle(RR_RAYS_MAP_TEXTURE), 0);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, rendererGetResourceHandle(RR_COVERAGE_MASK_TEXTURE), 0);
-   if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-  {
-    return 0;
-  }
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-  return framebuffer;
-}
-
-static GLuint createGeometryAndDistancesFramebuffer()
-{
-  GLuint framebuffer = 0;
-  
-  glGenFramebuffers(1, &framebuffer);
-  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-  
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rendererGetResourceHandle(RR_GEOIDS_MAP_TEXTURE), 0);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE), 0);
-  //glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE), 0);                                                                                      
-
-  GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
-  glNamedFramebufferDrawBuffers(framebuffer, 1, drawBuffers);
-  
-  if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-  {
-    return 0;
-  }
-  
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-  return framebuffer;
-}
-
 bool8 createRasterizationPass(RenderPass** outPass)
 {
   RenderPassInterface interface = {};
@@ -199,10 +158,12 @@ bool8 createRasterizationPass(RenderPass** outPass)
 
   RasterizationPassData* data = engineAllocObject<RasterizationPassData>(MEMORY_TYPE_GENERAL);
 
-  data->raysMapFBO = createRayMapFramebuffer();
+  data->raysMapFBO = createFramebufferDS(rendererGetResourceHandle(RR_RAYS_MAP_TEXTURE),
+                                         rendererGetResourceHandle(RR_COVERAGE_MASK_TEXTURE));
   assert(data->raysMapFBO != 0);
 
-  data->geometryAndDistancesFBO = createGeometryAndDistancesFramebuffer();
+  data->geometryAndDistancesFBO = createFramebufferDS(rendererGetResourceHandle(RR_GEOIDS_MAP_TEXTURE),
+                                                      rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE));
   assert(data->geometryAndDistancesFBO != 0);
 
   data->preparingProgram = createAndLinkTriangleShadingProgram("shaders/prepare_to_raster.frag");

@@ -71,22 +71,6 @@ static ShaderProgram* createNormalsCalculationProgram()
   return program;
 }
 
-static GLuint createNormalsFramebuffer()
-{
-  GLuint framebuffer = 0;
-  
-  glGenFramebuffers(1, &framebuffer);
-  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rendererGetResourceHandle(RR_NORMALS_MAP_TEXTURE), 0);
-  if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-  {
-    return 0;
-  }
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-  return framebuffer;
-}
-
 bool8 createNormalsCalculationPass(RenderPass** outPass)
 {
   RenderPassInterface interface = {};
@@ -102,7 +86,7 @@ bool8 createNormalsCalculationPass(RenderPass** outPass)
 
   NormalsCalculationPassData* data = engineAllocObject<NormalsCalculationPassData>(MEMORY_TYPE_GENERAL);
   
-  data->normalsFBO = createNormalsFramebuffer();
+  data->normalsFBO = createFramebuffer(rendererGetResourceHandle(RR_NORMALS_MAP_TEXTURE));
   assert(data->normalsFBO != 0);
 
   data->normalsCalculationProgram = createNormalsCalculationProgram();

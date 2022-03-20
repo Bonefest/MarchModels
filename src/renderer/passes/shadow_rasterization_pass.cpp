@@ -153,42 +153,6 @@ static const char* shadowRasterizationPassGetName(RenderPass* pass)
   return "ShadowRasterizationPass";
 }
 
-static GLuint createRayMapFramebuffer()
-{
-  GLuint framebuffer = 0;
-  
-  glGenFramebuffers(1, &framebuffer);
-  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rendererGetResourceHandle(RR_RAYS_MAP_TEXTURE), 0);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, rendererGetResourceHandle(RR_COVERAGE_MASK_TEXTURE), 0);
-  
-  if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-  {
-    return 0;
-  }
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-  return framebuffer;
-}
-
-static GLuint createShadowMapFramebuffer()
-{
-  GLuint framebuffer = 0;
-  
-  glGenFramebuffers(1, &framebuffer);
-  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rendererGetResourceHandle(RR_SHADOWS_MAP_TEXTURE), 0);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, rendererGetResourceHandle(RR_COVERAGE_MASK_TEXTURE), 0);
-  
-  if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-  {
-    return 0;
-  }
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-  return framebuffer;  
-}
-
 bool8 createShadowRasterizationPass(RenderPass** outPass)
 {
   RenderPassInterface interface = {};
@@ -204,10 +168,12 @@ bool8 createShadowRasterizationPass(RenderPass** outPass)
 
   ShadowRasterizationPassData* data = engineAllocObject<ShadowRasterizationPassData>(MEMORY_TYPE_GENERAL);
 
-  data->raysMapFBO = createRayMapFramebuffer();
+  data->raysMapFBO = createFramebufferDS(rendererGetResourceHandle(RR_RAYS_MAP_TEXTURE),
+                                         rendererGetResourceHandle(RR_COVERAGE_MASK_TEXTURE));
   assert(data->raysMapFBO != 0);
 
-  data->shadowsMapFBO = createShadowMapFramebuffer();
+  data->shadowsMapFBO = createFramebufferDS(rendererGetResourceHandle(RR_SHADOWS_MAP_TEXTURE),
+                                            rendererGetResourceHandle(RR_COVERAGE_MASK_TEXTURE));
   assert(data->shadowsMapFBO != 0);
   
   data->preparingProgram = createAndLinkTriangleShadingProgram("shaders/prepare_to_shadow_raster.frag");

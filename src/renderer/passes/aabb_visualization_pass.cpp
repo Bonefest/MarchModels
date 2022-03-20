@@ -258,24 +258,6 @@ static ShaderProgram* createFrustumVisualizationProgram()
   return program;
 }
 
-
-static GLuint createLDRFramebuffer()
-{
-  GLuint framebuffer = 0;
-  
-  glGenFramebuffers(1, &framebuffer);
-  glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, rendererGetResourceHandle(RR_LDR_MAP_TEXTURE), 0);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE), 0); 
-  if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-  {
-    return 0;
-  }
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-  return framebuffer;
-}
-
 static Model3DPtr createCubesModel()
 {
   Model3D* model = nullptr;
@@ -324,7 +306,8 @@ bool8 createAABBVisualizationPass(RenderPass** outPass)
 
   AABBVisualizationPassData* data = engineAllocObject<AABBVisualizationPassData>(MEMORY_TYPE_GENERAL);
   
-  data->ldrFBO = createLDRFramebuffer();
+  data->ldrFBO = createFramebufferDS(rendererGetResourceHandle(RR_LDR_MAP_TEXTURE),
+                                     rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE));
   assert(data->ldrFBO != 0);
 
   data->cubesModel = createCubesModel();
