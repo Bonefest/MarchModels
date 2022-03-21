@@ -69,6 +69,7 @@ void lightSettingsWindowDraw(Window* window, float64 delta)
   float32 avalWidth = ImGui::GetContentRegionAvail().x * 0.7;
   
   LightSourceParameters& parameters = lightSourceGetParameters(data->lightSource);
+  float2 orientation = lightSourceGetOrientation(data->lightSource);
 
   static const char* lightSourceTypesLabels[] =
   {
@@ -92,10 +93,13 @@ void lightSettingsWindowDraw(Window* window, float64 delta)
   ImGui::EndDisabled();
   
   ImGui::SliderFloat3("Position", &parameters.position[0], -10.0f, 10.0f);
-  if(ImGui::SliderFloat3("Direction", &parameters.forward[0], -1.0f, 1.0f))
-  {
-    parameters.forward = float4(linalg::normalize(parameters.forward.xyz()), 0.0);
-  }
+
+  ImGui::PushItemWidth(avalWidth * 0.3);
+    ImGui::SliderAngle("Direction Yaw", &orientation.x, 0.0f, 360.0f);
+    ImGui::SameLine();
+    ImGui::SliderAngle("Direction Pitch", &orientation.y, -90.0f, 90.0f);
+    lightSourceSetOrientation(data->lightSource, orientation);
+  ImGui::PopItemWidth();
 
   ImGui::PushItemWidth(avalWidth * 0.5);
     ImGui::SliderFloat("Linear distance attenuation factor",

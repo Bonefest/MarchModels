@@ -56,3 +56,5 @@
 56. local normalized offset in billboard system API, e.g 0.5, 0.5 shift half width + half height
 57. generate lights frustums during shadow rasterization
 58. rename shadow factor to shadow softness factor
+59. square att factor creates banding
+60. visualize light source's direction

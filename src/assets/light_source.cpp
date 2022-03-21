@@ -8,6 +8,7 @@ static uint32 lightSourceGetSize(Asset* asset) { /** TODO */ }
 struct LightSource
 {
   LightSourceParameters parameters;
+  float2 orientation;
   bool8 selected = FALSE;
 };
 
@@ -28,6 +29,7 @@ bool8 createLightSource(const std::string& name,
   lsourceData->parameters.type = type;
   lsourceData->parameters.intensity = float4(1.0f, 1.0f, 1.0f, 1.0f);
   lsourceData->parameters.attenuationDistanceFactors.y = 1.0f;
+  lsourceData->parameters.forward = float4(0.0f, 0.0f, 1.0f, 0.0f);
   
   assetSetInternalData(*lsource, lsourceData);
   
@@ -55,11 +57,24 @@ float3 lightSourceGetPosition(Asset* lsource)
   return lsourceData->parameters.position.xyz();
 }
 
-void lightSourceSetFwdDirection(Asset* lsource, float4 fwdDirection)
+void lightSourceSetOrientation(Asset* lsource, float2 eulerAngles)
 {
   LightSource* lsourceData = (LightSource*)assetGetInternalData(lsource);
+  lsourceData->orientation = eulerAngles;
 
-  lsourceData->parameters.forward = fwdDirection;
+  float32 cosPitch = cos(eulerAngles.y);
+  
+  lsourceData->parameters.forward = float4(cosPitch * sin(eulerAngles.x),
+                                           sin(eulerAngles.y),
+                                           cosPitch * cos(eulerAngles.x),
+                                           0.0f);
+
+}
+
+float2 lightSourceGetOrientation(Asset* lsource)
+{
+  LightSource* lsourceData = (LightSource*)assetGetInternalData(lsource);
+  return lsourceData->orientation;
 }
 
 float4 lightSourceGetFwdDirection(Asset* lsource)

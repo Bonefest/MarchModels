@@ -13,7 +13,8 @@ ENGINE_API bool8 createLightSource(const std::string& name,
 ENGINE_API void lightSourceSetPosition(Asset* lsource, float3 position);
 ENGINE_API float3 lightSourceGetPosition(Asset* lsource);
 
-ENGINE_API void lightSourceSetFwdDirection(Asset* lsource, float4 direction);
+ENGINE_API void lightSourceSetOrientation(Asset* lsource, float2 eulerAngles);
+ENGINE_API float2 lightSourceGetOrientation(Asset* lsource);
 ENGINE_API float4 lightSourceGetFwdDirection(Asset* lsrouce, float4 direction);
 
 ENGINE_API void lightSourceSetAttenuationDistanceFactors(Asset* lsource, float2 attDistance);

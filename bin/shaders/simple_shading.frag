@@ -43,12 +43,12 @@ void main()
     if(lightParams[i].type == LIGHT_SOURCE_TYPE_SPOT)
     {
       float2 angFactors = lightParams[i].attenuationAngleFactors;
-      float32 t = dot(l, lightParams[i].forward.xyz);
+      float32 t = max(dot(-l, lightParams[i].forward.xyz), 0.0);
       
-      attenuation *= mix(1.0f, 0.0f, (t - angFactors.y) / (angFactors.x - angFactors.y));
+      attenuation *= mix(0.0f, 1.0f, clamp((t - angFactors.y) / (angFactors.x - angFactors.y), 0, 1));
     }
     
-    radiance += lightParams[i].intensity.rgb * dot(normal, l) * attenuation * shadows[i % 4];
+    radiance += lightParams[i].intensity.rgb * max(dot(normal, l), 0.0) * attenuation * shadows[i % 4];
   }
   
   outColor = radiance;
