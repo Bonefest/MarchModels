@@ -1,3 +1,5 @@
+#include <imgui/imgui.h>
+
 #include "program.h"
 #include "memory_manager.h"
 #include "shader_manager.h"
@@ -56,6 +58,13 @@ static bool8 simpleShadingPassExecute(RenderPass* pass)
   return TRUE;
 }
 
+static void simpleShadingPassDrawInputView(RenderPass* pass)
+{
+  SimpleShadingPassData* data = (SimpleShadingPassData*)renderPassGetInternalData(pass);
+
+  ImGui::ColorEdit3("Ambient color", &data->ambientColor[0]);
+}
+
 static const char* simpleShadingPassGetName(RenderPass* pass)
 {
   return "SimpleShadingPass";
@@ -64,10 +73,11 @@ static const char* simpleShadingPassGetName(RenderPass* pass)
 bool8 createSimpleShadingPass(RenderPass** outPass)
 {
   RenderPassInterface interface = {};
-  interface.destroy = destroySimpleShadingPass;
-  interface.execute = simpleShadingPassExecute;
-  interface.getName = simpleShadingPassGetName;
-  interface.type = RENDER_PASS_TYPE_SIMPLE_SHADING_PASS;
+  interface.destroy       = destroySimpleShadingPass;
+  interface.execute       = simpleShadingPassExecute;
+  interface.drawInputView = simpleShadingPassDrawInputView;
+  interface.getName       = simpleShadingPassGetName;
+  interface.type          = RENDER_PASS_TYPE_SIMPLE_SHADING_PASS;
 
   if(allocateRenderPass(interface, outPass) == FALSE)
   {

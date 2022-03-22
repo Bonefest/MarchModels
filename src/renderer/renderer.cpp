@@ -312,11 +312,14 @@ static bool8 initializeRenderPasses()
   INIT(createSimpleShadingPass, &data.simpleShadingPass);
 
   data.passes.push_back(data.rasterizationPass);
+  data.passes.push_back(data.shadowRasterizationPass);
   data.passes.push_back(data.normalsCalculationPass);
   data.passes.push_back(data.distancesVisualizationPass);
   data.passes.push_back(data.idsVisualizationPass);
   data.passes.push_back(data.normalsVisualizationPass);
-  data.passes.push_back(data.aabbVisualizationPass);    
+  data.passes.push_back(data.aabbVisualizationPass);
+  data.passes.push_back(data.lightsVisualizationPass);
+  data.passes.push_back(data.simpleShadingPass);
   
   return TRUE;
 }

@@ -42,6 +42,14 @@ static bool8 shadowRasterizationPassPrepareToRasterize(ShadowRasterizationPassDa
   glStencilFuncSeparate(GL_FRONT_AND_BACK, GL_ALWAYS, 1, 0xFF);
   glStencilOpSeparate(GL_FRONT_AND_BACK, GL_KEEP, GL_KEEP, GL_REPLACE);
 
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE));
+  
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_NORMALS_MAP_TEXTURE));
+
+  glUniform1i(0, 0);
+  glUniform1i(1, 1);  
   glUniform1ui(2, lightIndex);
   drawTriangleNoVAO();
 
@@ -119,11 +127,6 @@ static bool8 shadowRasterizationPassRasterize(ShadowRasterizationPassData* data,
   glDisable(GL_BLEND);
   glDisable(GL_STENCIL_TEST);
   
-  return TRUE;
-}
-
-static bool8 shadowRasterizationPassExtractResults(ShadowRasterizationPassData* data)
-{
   return TRUE;
 }
 

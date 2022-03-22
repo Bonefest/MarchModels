@@ -58,3 +58,5 @@
 58. rename shadow factor to shadow softness factor
 59. square att factor creates banding
 60. visualize light source's direction
+61. discard fragments with 0s id during shadows generation
+62. add two paths to geometry rasterization: NORMAL_PASS and SHADOW_PASS, both passes will be pregenerated. SHADOW_PASS additionally uses depthmap for generating correct ray origin.

@@ -74,6 +74,6 @@ void main()
     }
 
     gl_FragStencilRefARB = 1;        
-    outCameraRay = float4(l, 0.0);
+    outCameraRay = float4(l, 0.1);
 
 }
