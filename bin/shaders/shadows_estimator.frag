@@ -10,13 +10,13 @@ layout(location = 0) uniform uint32 lightIndex;
 void main()
 {
     int2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);
-    float32 t = stackGetTotalDistance(ifragCoord);
+    float32 t = stackGetTotalDistance(ifragCoord) + 0.1;
     float32 h = stackFront(ifragCoord).distance;
     float32 k = lightParams[lightIndex].shadowFactor;
 
     // NOTE: If distance to the nearest surface is smaller than intersection
     // distance, then texel is in full shadow
-    float32 shadow = mix(k * h / t, 0.0, h < INT_DISTANCE);
+    float32 shadow = t < INF_DISTANCE ? mix(k * h / t, 0.0, h < INT_DISTANCE) : 1.0f;
 
     // NOTE: Init values to 1, so that during blending, min(...) operation won't
     // affect unused channels

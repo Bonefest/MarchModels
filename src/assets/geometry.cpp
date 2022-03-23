@@ -1,3 +1,5 @@
+#include <cstring>
+
 #include <string>
 #include <vector>
 
@@ -45,6 +47,7 @@ struct Geometry
   AABB finalAABB;
   
   ShaderProgram* drawProgram;
+  ShaderProgram* shadowProgram;
   ShaderProgram* aabbProgram;
 
   bool8 bounded;
@@ -324,7 +327,13 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   
   // 1. Extract point p from ray map
   shaderBuildAddCode(build, "\tfloat4 ray = texelFetch(raysMap, ifragCoord, 0);");
-  shaderBuildAddCode(build, "\tfloat3 p = ray.xyz * ray.w + params.camPosition.xyz;");
+  shaderBuildAddCode(build, "\t#if NORMAL_PATH");
+  shaderBuildAddCode(build, "\t\tfloat3 p = ray.xyz * ray.w + params.camPosition.xyz;");
+  shaderBuildAddCode(build, "\t#elif SHADOW_PATH");
+  shaderBuildAddCode(build, "\t\tfloat2 uv = fragCoordToUV(gl_FragCoord.xy);");
+  shaderBuildAddCode(build, "\t\tfloat3 ro = getWorldPos(uv, ifragCoord, depthMap);");
+  shaderBuildAddCode(build, "\t\tfloat3 p = ro + ray.xyz * ray.w;");
+  shaderBuildAddCode(build, "\t#endif");
 
   // 2. Transform point into geometry data (distance, id)
   shaderBuildAddCode(build, "\tGeometryData geometry = createGeometryData(transform(p), geometryID);");
@@ -332,7 +341,7 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   // 3. Combine distance with last distance on stack (if needed)
   geometryGenerateDistancesCombinationCode(geometry, build);
 
-  shaderBuildAddCode(build, "\toutColor = 0.0f.xxxx;");
+  shaderBuildAddCode(build, "\toutColor = float4(0.0f, 0.0f, 0.0f, 0.0f);");
   
   shaderBuildAddCode(build, "}");
 }
@@ -380,6 +389,7 @@ static bool8 geometryRebuildDrawProgram(Asset* geometry)
 
   shaderBuildAddVersion(build, 430, "core");
   shaderBuildAddCode(build, "layout(early_fragment_tests) in;");
+  shaderBuildAddCode(build, "%s");
   
   assert(shaderBuildIncludeFile(build, "shaders/common.glsl") == TRUE);  
   assert(shaderBuildIncludeFile(build, "shaders/geometry_common.glsl") == TRUE);
@@ -401,13 +411,6 @@ static bool8 geometryRebuildDrawProgram(Asset* geometry)
     geometryGenerateBranchCode(geometry, build);
   }
 
-  ShaderPtr fragmentShader = shaderBuildGenerateShader(build, GL_FRAGMENT_SHADER);
-  if(fragmentShader == nullptr)
-  {
-    LOG_ERROR("Cannot generate a shader for geometry!");
-    return FALSE;
-  }
-
   ShaderPtr vertexShader = shaderManagerGetShader("triangle.vert");
   if(vertexShader == nullptr)
   {
@@ -415,15 +418,28 @@ static bool8 geometryRebuildDrawProgram(Asset* geometry)
     return FALSE;
   }
   
+  string unformattedCode = shaderBuildGetCode(build);
   destroyShaderBuild(build);
+  
+  // Normal path program generation
+  char normalPathCode[32 * KIBIBYTE];
+  sprintf(normalPathCode, unformattedCode.c_str(), "#define NORMAL_PATH 1");
+  
+  Shader* normalPathShader = nullptr;
+  assert(createShaderFromMemory(GL_FRAGMENT_SHADER, normalPathCode, &normalPathShader));
+  if(compileShader(normalPathShader) == FALSE)
+  {
+    LOG_ERROR("Cannot generate a normal path shader for geometry!");
+    return FALSE;
+  }
 
-  ShaderProgram* shaderProgram = nullptr;
-  assert(createShaderProgram(&shaderProgram));
+  ShaderProgram* normalPathShaderProgram = nullptr;
+  assert(createShaderProgram(&normalPathShaderProgram));
 
-  shaderProgramAttachShader(shaderProgram, vertexShader);  
-  shaderProgramAttachShader(shaderProgram, fragmentShader);
+  shaderProgramAttachShader(normalPathShaderProgram, vertexShader);  
+  shaderProgramAttachShader(normalPathShaderProgram, ShaderPtr(normalPathShader));
 
-  if(linkShaderProgram(shaderProgram) == FALSE)
+  if(linkShaderProgram(normalPathShaderProgram) == FALSE)
   {
     return FALSE;
   }
@@ -433,8 +449,38 @@ static bool8 geometryRebuildDrawProgram(Asset* geometry)
     destroyShaderProgram(geometryData->drawProgram);
   }
   
-  geometryData->drawProgram = shaderProgram;
+  geometryData->drawProgram = normalPathShaderProgram;
 
+  // Shadow path program generation
+  char shadowPathCode[32 * KIBIBYTE];
+  sprintf(shadowPathCode, unformattedCode.c_str(), "#define SHADOW_PATH 1");
+  
+  Shader* shadowPathShader = nullptr;
+  assert(createShaderFromMemory(GL_FRAGMENT_SHADER, shadowPathCode, &shadowPathShader));
+  if(compileShader(shadowPathShader) == FALSE)
+  {
+    LOG_ERROR("Cannot generate a shadow path shader for geometry!");
+    return FALSE;
+  }
+
+  ShaderProgram* shadowPathShaderProgram = nullptr;
+  assert(createShaderProgram(&shadowPathShaderProgram));
+
+  shaderProgramAttachShader(shadowPathShaderProgram, vertexShader);  
+  shaderProgramAttachShader(shadowPathShaderProgram, ShaderPtr(shadowPathShader));
+
+  if(linkShaderProgram(shadowPathShaderProgram) == FALSE)
+  {
+    return FALSE;
+  }
+
+  if(geometryData->shadowProgram != nullptr)
+  {
+    destroyShaderProgram(geometryData->shadowProgram);
+  }
+  
+  geometryData->shadowProgram = shadowPathShaderProgram;
+  
   return TRUE;
 }
 
@@ -577,6 +623,7 @@ bool8 createGeometry(const string& name, Asset** outGeometry)
   geometryData->dynamicAABB = AABB::createUnbounded();
   geometryData->finalAABB = AABB::createUnbounded();  
   geometryData->drawProgram = nullptr;
+  geometryData->shadowProgram = nullptr;
   geometryData->aabbProgram = nullptr;  
   
   assetSetInternalData(*outGeometry, geometryData);
@@ -600,6 +647,12 @@ void geometryDestroy(Asset* geometry)
     geometryData->drawProgram = nullptr;
   }
 
+  if(geometryData->shadowProgram != nullptr)
+  {
+    destroyShaderProgram(geometryData->shadowProgram);
+    geometryData->shadowProgram = nullptr;
+  }
+  
   if(geometryData->aabbProgram != nullptr)
   {
     destroyShaderProgram(geometryData->aabbProgram);
@@ -641,6 +694,12 @@ static void geometryUpdateChild(Asset* geometry, float64 delta)
       {
         destroyShaderProgram(geometryData->drawProgram);
         geometryData->drawProgram = nullptr;
+      }
+
+      if(geometryData->shadowProgram != nullptr)
+      {
+        destroyShaderProgram(geometryData->shadowProgram);
+        geometryData->shadowProgram = nullptr;
       }
     }
   }
@@ -1250,6 +1309,12 @@ ShaderProgram* geometryGetDrawProgram(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   return geometryData->drawProgram;
+}
+
+ShaderProgram* geometryGetShadowProgram(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  return geometryData->shadowProgram;  
 }
 
 ShaderProgram* geometryGetAABBProgram(Asset* geometry)

@@ -4,6 +4,9 @@
 #include stack.glsl
 
 layout(location = 0) uniform sampler2D raysMap;
+#if SHADOW_PATH
+  layout(location = 1) uniform sampler2D depthMap;
+#endif
 
 layout(std140, binding = GEOMETRY_TRANSFORMS_UBO_BINDING) uniform GeometryTransformParametersUBO
 {

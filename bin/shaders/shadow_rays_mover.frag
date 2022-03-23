@@ -41,7 +41,7 @@ void main()
         float2 uv = fragCoordToUV(gl_FragCoord.xy);
         float3 worldPos = getWorldPos(uv, ifragCoord, depthMap);
       
-        distanceToLight = distance2(worldPos, lightParams[lightIndex].position);
+        distanceToLight = distance2(worldPos, lightParams[lightIndex].position.xyz);
       }
 
       // If shadow ray's moved behind the light source, then it's surely's intersected it,

@@ -25,7 +25,8 @@ bool8 drawGeometryPostorder(Camera* camera,
                             AssetPtr geometry,
                             uint32 indexInBranch,
                             uint32 culledSiblingsCount,
-                            uint32& culledObjCounter)
+                            uint32& culledObjCounter,
+                            bool8 shadowPath)
 {
   const AABB& geometryAABB = geometryGetFinalAABB(geometry);
   if(camera != nullptr && cameraGetFrustum(camera).intersects(geometryAABB) == FALSE)
@@ -43,7 +44,7 @@ bool8 drawGeometryPostorder(Camera* camera,
   uint32 culledChildrenCount = 0;
   for(uint32 i = 0; i < children.size(); i++)
   {
-    if(drawGeometryPostorder(camera, children[i], i, culledChildrenCount, culledObjCounter) == FALSE)
+    if(drawGeometryPostorder(camera, children[i], i, culledChildrenCount, culledObjCounter, shadowPath) == FALSE)
     {
       culledChildrenCount++;
     }
@@ -68,7 +69,7 @@ bool8 drawGeometryPostorder(Camera* camera,
     return TRUE;
   }
   
-  ShaderProgram* geometryProgram = geometryGetDrawProgram(geometry);
+  ShaderProgram* geometryProgram = shadowPath == TRUE ? geometryGetShadowProgram(geometry) : geometryGetDrawProgram(geometry);
   if(geometryProgram == nullptr)
   {
     return FALSE;
@@ -96,6 +97,14 @@ bool8 drawGeometryPostorder(Camera* camera,
   
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_RAYS_MAP_TEXTURE));
+  glUniform1i(0, 0);
+
+  if(shadowPath == TRUE)
+  {
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE));
+    glUniform1i(1, 1);
+  }
   
   drawTriangleNoVAO();
   

@@ -85,6 +85,7 @@ ENGINE_API bool8 geometryNeedAABBRecalculation(Asset* geometry);
 ENGINE_API bool8 geometryNeedRebuild(Asset* geometry);
 
 ENGINE_API ShaderProgram* geometryGetDrawProgram(Asset* geometry);
+ENGINE_API ShaderProgram* geometryGetShadowProgram(Asset* geometry);
 ENGINE_API ShaderProgram* geometryGetAABBProgram(Asset* geometry);
 
 ENGINE_API PCFNativeType geometryGetPCFNativeType(Asset* geometry);

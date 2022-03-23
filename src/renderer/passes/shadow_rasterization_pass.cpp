@@ -86,7 +86,8 @@ static bool8 shadowRasterizationPassRasterize(ShadowRasterizationPassData* data,
     drawGeometryPostorder(nullptr,
                           sceneGetGeometryRoot(sceneToRasterize),
                           0, 0,
-                          culledObjectsCounter);
+                          culledObjectsCounter,
+                          TRUE);
 
     // ------------------------------------------------------------------------
     // 2. Calculate soft shadow with parameters calculated at this iteration
@@ -115,7 +116,7 @@ static bool8 shadowRasterizationPassRasterize(ShadowRasterizationPassData* data,
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE));
     
-    glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(data->raysMoverProgram), "depthMap"), 0);    
+    glUniform1i(glGetUniformLocation(shaderProgramGetGLHandle(data->raysMoverProgram), "depthMap"), 0);    
     glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(data->raysMoverProgram), "curIterIdx"), i);
     glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(data->raysMoverProgram), "lightIndex"), lightIndex); 
     drawTriangleNoVAO();
@@ -188,7 +189,7 @@ bool8 createShadowRasterizationPass(RenderPass** outPass)
   data->shadowCalculationProgram = createAndLinkTriangleShadingProgram("shaders/shadows_estimator.frag");
   assert(data->shadowCalculationProgram != nullptr);
   
-  data->raysMoverProgram = createAndLinkTriangleShadingProgram("shaders/rays_mover.frag");
+  data->raysMoverProgram = createAndLinkTriangleShadingProgram("shaders/shadow_rays_mover.frag");
   assert(data->raysMoverProgram != nullptr);
   
   renderPassSetInternalData(*outPass, data);
