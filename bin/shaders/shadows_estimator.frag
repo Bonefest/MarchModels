@@ -10,8 +10,8 @@ layout(location = 0) uniform uint32 lightIndex;
 void main()
 {
     int2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);
-    float32 t = stackGetTotalDistance(ifragCoord) + 0.1;
-    float32 h = stackFront(ifragCoord).distance;
+    float32 t = stackGetTotalDistance(ifragCoord);
+    float32 h = stackEmpty(ifragCoord) ? INF_DISTANCE : stackFront(ifragCoord).distance;
     float32 k = lightParams[lightIndex].shadowFactor;
 
     // NOTE: If distance to the nearest surface is smaller than intersection

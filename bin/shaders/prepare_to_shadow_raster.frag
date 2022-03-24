@@ -19,60 +19,71 @@ void markFragmentAsCulled(int2 ifragCoord)
 
 void main()
 {
-    int2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);
-    stackClear(ifragCoord);
+  const float32 tOffset = 0.1;
 
-    float2 uv = fragCoordToUV(gl_FragCoord.xy);
-    float3 worldPos = getWorldPos(uv, ifragCoord, depthMap);
-    float3 normal = texture(normalsMap, uv).xyz;
+  int2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);
+  stackClear(ifragCoord);
+  stackAddTotalDistance(ifragCoord, tOffset);
 
-    const LightSourceParameters light = lightParams[lightIndex];
+  float2 uv = fragCoordToUV(gl_FragCoord.xy);
+  float3 worldPos = getWorldPos(uv, ifragCoord, depthMap);
+  float3 normal = texelFetch(normalsMap, ifragCoord, 0).xyz;
 
-    // Based on light type, precalculate light direction. Additionally perform early-quit tests:
-    //   1) Check if light source is too far (based on its attenuation) to be kicked
-    //   2) Check if point is out of light source cone (based on angle between light and light forward axis)
-    //   3) Check if source is below horizon (i.e lambert factor is negative)
-    float3 l;
-    switch(light.type)
+  // If length of a normal is smaller than some value, then this fragment doesn't have normal -->
+  // this fragment doesn't represent a surface --> it can be safely culled.
+  if(dot(normal, normal) < 0.1)
+  {
+    markFragmentAsCulled(ifragCoord);
+    return;
+  }
+  
+  const LightSourceParameters light = lightParams[lightIndex];
+  
+  // Based on light type, precalculate light direction. Additionally perform early-quit tests:
+  //   1) Check if light source is too far (based on its attenuation) to be kicked
+  //   2) Check if point is out of light source cone (based on angle between light and light forward axis)
+  //   3) Check if source is below horizon (i.e lambert factor is negative)
+  float3 l;
+  switch(light.type)
+  {
+    case LIGHT_SOURCE_TYPE_DIRECTIONAL:
     {
-      case LIGHT_SOURCE_TYPE_DIRECTIONAL:
-      {
-        l = light.forward.xyz;
+      l = light.forward.xyz;
 
-        if(dot(l, normal) < 0.0)
-        {
-          markFragmentAsCulled(ifragCoord);
-          return;
-        }
-      } break;
-      
-      case LIGHT_SOURCE_TYPE_SPOT:
+      if(dot(l, normal) < 0.0)
       {
-        l = light.position.xyz - worldPos;
-        float32 lDistance = normalizeAndGetLength(l);
-        float32 attRadius = calculateAttenuationRadius(light.attenuationDistanceFactors, LIGHT_MIN_ATTENUATION);
-        
-        if(lDistance > attRadius || dot(l, light.forward.xyz) < light.attenuationAngleFactors.y || dot(l, normal) < 0)
-        {
-          markFragmentAsCulled(ifragCoord);
-          return;
-        }
-      } break;
-      
-      case LIGHT_SOURCE_TYPE_POINT:
-      {
-        l = light.position.xyz - worldPos;
-        float32 lDistance = normalizeAndGetLength(l);
-        float32 attRadius = calculateAttenuationRadius(light.attenuationDistanceFactors, LIGHT_MIN_ATTENUATION);        
-        if(lDistance > attRadius || dot(l, normal) < 0.0)
-        {
-          markFragmentAsCulled(ifragCoord);
-          return;
-        }
-        
-      } break;
-    }
+        markFragmentAsCulled(ifragCoord);
+        return;
+      }
+    } break;
 
-    gl_FragStencilRefARB = 1;        
-    outCameraRay = float4(l, 0.1);
+    case LIGHT_SOURCE_TYPE_SPOT:
+    {
+      l = light.position.xyz - worldPos;
+      float32 lDistance = normalizeAndGetLength(l);
+      float32 attRadius = calculateAttenuationRadius(light.attenuationDistanceFactors, LIGHT_MIN_ATTENUATION);
+
+      if(lDistance > attRadius || dot(l, light.forward.xyz) < light.attenuationAngleFactors.y || dot(l, normal) < 0)
+      {
+        markFragmentAsCulled(ifragCoord);
+        return;
+      }
+    } break;
+
+    case LIGHT_SOURCE_TYPE_POINT:
+    {
+      l = light.position.xyz - worldPos;
+      float32 lDistance = normalizeAndGetLength(l);
+      float32 attRadius = calculateAttenuationRadius(light.attenuationDistanceFactors, LIGHT_MIN_ATTENUATION);        
+      if(lDistance > attRadius || dot(l, normal) < 0.0)
+      {
+        markFragmentAsCulled(ifragCoord);
+        return;
+      }
+
+    } break;
+  }
+
+  gl_FragStencilRefARB = 1;        
+  outCameraRay = float4(l, tOffset);
 }

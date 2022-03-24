@@ -60,3 +60,5 @@
 60. visualize light source's direction
 61. discard fragments with 0s id during shadows generation
 62. add two paths to geometry rasterization: NORMAL_PASS and SHADOW_PASS, both passes will be pregenerated. SHADOW_PASS additionally uses depthmap for generating correct ray origin.
+63. ambient color shouldn't affect background
+64. do not show pcfs for leafs

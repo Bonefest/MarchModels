@@ -29,7 +29,9 @@ void main()
     {
       gl_FragStencilRefARB = 0;
       outCameraRay = float4(0.0f, 0.0f, 0.0f, distance);
-      stackAddTotalDistance(ifragCoord, distance);
+      
+      stackAddTotalDistance(ifragCoord, INF_DISTANCE);
+      stackClearSize(ifragCoord);
     }
     else
     {
@@ -48,13 +50,9 @@ void main()
       // thus we can discard it.
       gl_FragStencilRefARB = movedDistance * movedDistance >= distanceToLight ? 0 : 1;
       outCameraRay = float4(0.0f, 0.0f, 0.0f, distance);
+      
       stackAddTotalDistance(ifragCoord, distance);
-
-      bool notLastIteration = (curIterIdx + 1 < params.rasterItersMaxCount);    
-      if(notLastIteration)
-      {
-        stackClearSize(ifragCoord);
-      }
+      stackClearSize(ifragCoord);
     }
 
 }

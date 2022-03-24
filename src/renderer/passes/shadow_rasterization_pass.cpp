@@ -34,7 +34,10 @@ static bool8 shadowRasterizationPassPrepareToRasterize(ShadowRasterizationPassDa
 {
   shaderProgramUse(data->preparingProgram);
   glBindFramebuffer(GL_FRAMEBUFFER, data->raysMapFBO);
-  
+
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+  glClear(GL_COLOR_BUFFER_BIT);
+
   glClearStencil(1);
   glClear(GL_STENCIL_BUFFER_BIT);
   glEnable(GL_STENCIL_TEST);
@@ -70,6 +73,8 @@ static bool8 shadowRasterizationPassRasterize(ShadowRasterizationPassData* data,
   glEnable(GL_BLEND);
   pushBlend(GL_FUNC_ADD, GL_FUNC_ADD, GL_ZERO, GL_ONE, GL_ONE, GL_ONE);
 
+  glBindFramebuffer(GL_FRAMEBUFFER, data->raysMapFBO);
+  
   uint32 culledObjectsCounter = 0;
   for(uint32 i = 0; i < renderingParams.shadowRasterItersMaxCount; i++)
   {
