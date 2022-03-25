@@ -121,6 +121,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
   
   ImGui::PushID(geometryGetID(geometry));
 
+    
   bool treeSelected = geometryIsSelected(geometry);
   ImGuiTreeNodeFlags treeFlags = ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;
   if(treeSelected)
@@ -243,19 +244,34 @@ static bool8 sceneHierarchyDrawLightSourceData(Window* window,
                                                SceneHierarchyData* data,
                                                Scene* currentScene)
 {
+  ImGuiStyle& style = ImGui::GetStyle();
+  
   const char* lightSourceName = assetGetName(lightSource).c_str();
   bool8 removeIsPressed = FALSE;
   
   ImGui::PushID(lightSource.raw());
-
+  ImGui::Indent();
+  
+    pushIconSmallButtonStyle();
+      bool8 enabled = lightSourceIsEnabled(lightSource);
+      if(ImGui::SmallButton(enabled == TRUE ? ICON_KI_EYE : ICON_KI_EYE_DIS))
+      {
+        lightSourceSetEnabled(lightSource, enabled == TRUE ? FALSE : TRUE);
+      }
+    popIconSmallButtonStyle();
+    ImGui::SameLine();
+  
     bool treeSelected = lightSourceIsSelected(lightSource);
     ImGuiTreeNodeFlags treeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
     if(treeSelected)
     {
       treeFlags |= ImGuiTreeNodeFlags_Selected;
     }
+
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, float2(0.0f, style.FramePadding.y));
+      ImGui::TreeNodeEx(lightSourceName, treeFlags);
+    ImGui::PopStyleVar();
     
-    ImGui::TreeNodeEx(lightSourceName, treeFlags);
     bool treeClicked = ImGui::IsItemClicked();
     bool ctrlPressed = ImGui::GetIO().KeyCtrl;
     
@@ -271,7 +287,8 @@ static bool8 sceneHierarchyDrawLightSourceData(Window* window,
 
       lightSourceSetSelected(lightSource, treeSelected ? FALSE : TRUE);
     }
-    
+
+  ImGui::Unindent();
   ImGui::PopID();
 
   return removeIsPressed;

@@ -21,3 +21,4 @@ ENGINE_API const std::set<AssetPtr>& sceneGetAllChildren(Scene* scene);
 ENGINE_API bool8 sceneAddLightSource(Scene* scene, AssetPtr lightSource);
 ENGINE_API bool8 sceneRemoveLightSource(Scene* scene, AssetPtr lightSource);
 ENGINE_API std::vector<AssetPtr>& sceneGetLightSources(Scene* scene);
+ENGINE_API std::vector<AssetPtr> sceneGetEnabledLightSources(Scene* scene);

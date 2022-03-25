@@ -30,6 +30,7 @@ bool8 createLightSource(const std::string& name,
   lsourceData->parameters.intensity = float4(1.0f, 1.0f, 1.0f, 1.0f);
   lsourceData->parameters.attenuationDistanceFactors.y = 1.0f;
   lsourceData->parameters.forward = float4(0.0f, 0.0f, 1.0f, 0.0f);
+  lsourceData->parameters.enabled = 1;
   
   assetSetInternalData(*lsource, lsourceData);
   

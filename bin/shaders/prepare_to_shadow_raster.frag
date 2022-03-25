@@ -63,7 +63,7 @@ void main()
       float32 lDistance = normalizeAndGetLength(l);
       float32 attRadius = calculateAttenuationRadius(light.attenuationDistanceFactors, LIGHT_MIN_ATTENUATION);
 
-      if(lDistance > attRadius || dot(l, light.forward.xyz) < light.attenuationAngleFactors.y || dot(l, normal) < 0)
+      if(lDistance > attRadius || dot(-l, light.forward.xyz) < light.attenuationAngleFactors.y || dot(l, normal) < 0)
       {
         markFragmentAsCulled(ifragCoord);
         return;

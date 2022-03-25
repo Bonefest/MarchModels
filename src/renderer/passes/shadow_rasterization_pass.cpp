@@ -139,7 +139,7 @@ static bool8 shadowRasterizationPassRasterize(ShadowRasterizationPassData* data,
 static bool8 shadowRasterizationPassExecute(RenderPass* pass)
 {
   ShadowRasterizationPassData* data = (ShadowRasterizationPassData*)renderPassGetInternalData(pass);
-  const std::vector<AssetPtr>& lightSources = sceneGetLightSources(rendererGetPassedScene());
+  const std::vector<AssetPtr> lightSources = sceneGetEnabledLightSources(rendererGetPassedScene());
 
   // NOTE: Clear each channel of shadowmap to 1.0f, meaning that initially lights are not blocked
   glBindFramebuffer(GL_FRAMEBUFFER, data->shadowsMapFBO);

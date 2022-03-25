@@ -97,3 +97,16 @@ std::vector<AssetPtr>& sceneGetLightSources(Scene* scene)
   return scene->lightSources;
 }
 
+std::vector<AssetPtr> sceneGetEnabledLightSources(Scene* scene)
+{
+  std::vector<AssetPtr> result;
+  for(AssetPtr lsource: scene->lightSources)
+  {
+    if(lightSourceIsEnabled(lsource) == TRUE)
+    {
+      result.push_back(lsource);
+    }
+  }
+
+  return result;
+}

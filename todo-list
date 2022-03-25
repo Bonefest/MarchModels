@@ -62,3 +62,5 @@
 62. add two paths to geometry rasterization: NORMAL_PASS and SHADOW_PASS, both passes will be pregenerated. SHADOW_PASS additionally uses depthmap for generating correct ray origin.
 63. ambient color shouldn't affect background
 64. do not show pcfs for leafs
+65. add ability to disable scene elements
+66. disabling light disabled all other lights too (probably we need to add an id to the button)

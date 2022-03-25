@@ -115,24 +115,22 @@ static void rendererSetupGlobalParameters(Film* film,
 
 static void rendererSetupGlobalLightParameters(Scene* scene)
 {
-  std::vector<AssetPtr>& lightSources = sceneGetLightSources(scene);  
-  std::vector<LightSourceParameters> parameters;
+  std::vector<AssetPtr> lightSources = sceneGetEnabledLightSources(scene);  
+  std::vector<LightSourceParameters> parameters(MAX_LIGHT_SOURCES_COUNT);
 
   for(uint32 i = 0; i < std::min<uint32>(MAX_LIGHT_SOURCES_COUNT, lightSources.size()); i++)
   {
-    parameters.push_back(lightSourceGetParameters(lightSources[i]));
+    parameters[i] = lightSourceGetParameters(lightSources[i]);
   }
 
   uint32 offset = sizeof(GlobalParameters);
 
-  if(!parameters.empty())
-  {
-    glBindBuffer(GL_UNIFORM_BUFFER, rendererGetResourceHandle(RR_GLOBAL_PARAMS_UBO));
-    glBufferSubData(GL_UNIFORM_BUFFER, offset,
-                    sizeof(LightSourceParameters) * parameters.size(),
-                    &parameters[0]);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
-  }
+  glBindBuffer(GL_UNIFORM_BUFFER, rendererGetResourceHandle(RR_GLOBAL_PARAMS_UBO));
+  glBufferSubData(GL_UNIFORM_BUFFER, offset,
+                  sizeof(LightSourceParameters) * parameters.size(),
+                  &parameters[0]);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 }
 
 // ----------------------------------------------------------------------------

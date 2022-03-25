@@ -6,7 +6,7 @@
 #define FONT_ICON_FILE_NAME_KI "kenney-icon-font.ttf"
 
 #define ICON_MIN_KI 0xe900
-#define ICON_MAX_KI 0xe9e3
+#define ICON_MAX_KI 0xebce
 #define ICON_KI_HOME "\xee\xa4\x80"	// U+e900
 #define ICON_KI_ADJUST "\xee\xa4\x81"	// U+e901
 #define ICON_KI_WRENCH "\xee\xa4\x82"	// U+e902
@@ -235,3 +235,5 @@
 #define ICON_KI_WE_HEART "\xee\xa7\xa3"	// U+e9e3
 #define ICON_KI_WOLFCMS "\xee\xa7\xa0"	// U+e9e0
 #define ICON_KI_WOLFCMS_ALT "\xee\xa7\xa1"	// U+e9e1
+#define ICON_KI_EYE "\uE9CE"
+#define ICON_KI_EYE_DIS "\uE9D1"
