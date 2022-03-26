@@ -72,6 +72,9 @@ ENGINE_API const float4x4& geometryGetGeoParentMat(Asset* geometry);
 ENGINE_API void geometrySetBounded(Asset* geometry, bool8 bounded);
 ENGINE_API bool8 geometryIsBounded(Asset* geometry);
 
+ENGINE_API void geometrySetEnabled(Asset* geometry, bool8 enabled);
+ENGINE_API bool8 geometryIsEnabled(Asset* geometry);
+
 ENGINE_API void geometrySetAABBAutomaticallyCalculated(Asset* geometry, bool8 automatically);
 ENGINE_API bool8 geometryAABBIsAutomaticallyCalculated(Asset* geometry);
 
@@ -80,7 +83,7 @@ ENGINE_API const AABB& geometryGetNativeAABB(Asset* geometry);
 ENGINE_API const AABB& geometryGetDynamicAABB(Asset* geometry);
 ENGINE_API const AABB& geometryGetFinalAABB(Asset* geometry);
 
-ENGINE_API void geometryMarkAsNeedAABBRecalculation(Asset* geometry);
+ENGINE_API void geometryMarkNeedAABBRecalculation(Asset* geometry);
 ENGINE_API bool8 geometryNeedAABBRecalculation(Asset* geometry);
 ENGINE_API bool8 geometryNeedRebuild(Asset* geometry);
 

@@ -247,7 +247,7 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
     ImGui::SameLine();
     if(ImGui::Button("Force recalculation"))
     {
-      geometryMarkAsNeedAABBRecalculation(data->geometry);
+      geometryMarkNeedAABBRecalculation(data->geometry);
     }
 
     ImGui::BeginDisabled(automatic);

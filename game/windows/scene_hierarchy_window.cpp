@@ -121,6 +121,15 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
   
   ImGui::PushID(geometryGetID(geometry));
 
+  pushIconSmallButtonStyle();
+    bool8 enabled = geometryIsEnabled(geometry);
+    if(ImGui::SmallButton(enabled == TRUE ? ICON_KI_EYE : ICON_KI_EYE_DIS))
+    {
+      geometrySetEnabled(geometry, enabled == TRUE ? FALSE : TRUE);
+    }
+    popIconSmallButtonStyle();
+  ImGui::SameLine();
+  
     
   bool treeSelected = geometryIsSelected(geometry);
   ImGuiTreeNodeFlags treeFlags = ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_OpenOnArrow;

@@ -56,6 +56,7 @@ struct Geometry
   bool8 needRebuild;
   bool8 dirty;
   bool8 selected;
+  bool8 enabled;
 
   // Root geometry data
   set<AssetPtr> allChildren;
@@ -163,11 +164,16 @@ static uint32 geometryGetIndexInBranch(Asset* geometry)
   
   const std::vector<AssetPtr>& children = geometryGetChildren(parent);
 
+  uint32 disabledSiblingsCount = 0;
   for(uint32 i = 0; i < children.size(); i++)
   {
     if(children[i] == geometry)
     {
-      return i;
+      return i - disabledSiblingsCount;
+    }
+    else if(geometryIsEnabled(children[i]) == FALSE)
+    {
+      disabledSiblingsCount++;
     }
   }
 
@@ -177,35 +183,36 @@ static uint32 geometryGetIndexInBranch(Asset* geometry)
 
 static void geometryGenerateDistancesCombinationCode(Asset* geometry, ShaderBuild* build)
 {
-  // Detect its number in parent's branch
-  bool8 firstInBranch = geometryGetIndexInBranch(geometry) == 0 ? TRUE : FALSE;
+  // NOTE: We can eliminate if(indexInBrach == 0) condition, i.e precalculate here and
+  // hence make code a bit faster. It works OK but is less flexible -- in case we want
+  // to disable first geometry in group, we would need to recalculate all shaders
+  // (because 2nd geometry would become first and so on).
   
-  // This is the first leaf/branch in group - just push geometry to the stack
-  if(firstInBranch == TRUE)
-  {
-    shaderBuildAddCode(build, "\tstackPushGeometry(ifragCoord, geometry);");
-  }
-  // This is not the first leaf/branch in group
-  else
-  {
+  // This is the first leaf/branch in group - just push geometry to the stack  
+  shaderBuildAddCode(build, "\tif(indexInBranch == 0)");
+  shaderBuildAddCode(build, "\t{");
+    shaderBuildAddCode(build, "\t\tstackPushGeometry(ifragCoord, geometry);");
+  shaderBuildAddCode(build, "\t}");
 
+  // This is not the first leaf/branch in group  
+  shaderBuildAddCode(build, "\telse");
+  shaderBuildAddCode(build, "\t{");
     // If at least one previous sibling weren't culled - pop previous geometry from stack,
     // combine, push new geometry back
-    shaderBuildAddCode(build, "\tif(prevCulledSiblingsCount < indexInBranch)");
-    shaderBuildAddCode(build, "\t{");
-      shaderBuildAddCode(build, "\t\tGeometryData prevGeometry = stackPopGeometry(ifragCoord);");
+    shaderBuildAddCode(build, "\t\tif(prevCulledSiblingsCount < indexInBranch)");
+    shaderBuildAddCode(build, "\t\t{");
+      shaderBuildAddCode(build, "\t\t\tGeometryData prevGeometry = stackPopGeometry(ifragCoord);");
       // Order of combination is important
-      shaderBuildAddCode(build, "\t\tfloat2 pcfResult = PCF(prevGeometry.distance, geometry.distance);");
-      shaderBuildAddCode(build, "\t\tstackPushGeometry(ifragCoord, createGeometryData(pcfResult.x, int32(mix(prevGeometry.id, geometry.id, int32(pcfResult.y)))));");
-    shaderBuildAddCode(build, "\t}");    
+      shaderBuildAddCode(build, "\t\t\tfloat2 pcfResult = PCF(prevGeometry.distance, geometry.distance);");
+      shaderBuildAddCode(build, "\t\t\tstackPushGeometry(ifragCoord, createGeometryData(pcfResult.x, int32(mix(prevGeometry.id, geometry.id, int32(pcfResult.y)))));");
+    shaderBuildAddCode(build, "\t\t}");    
 
     // Else - simply push geometry to the stack
-    shaderBuildAddCode(build, "\telse");
-    shaderBuildAddCode(build, "\t{");
-      shaderBuildAddCode(build, "\t\tstackPushGeometry(ifragCoord, geometry);");
-    shaderBuildAddCode(build, "\t}");    
-  }
-
+    shaderBuildAddCode(build, "\t\telse");
+    shaderBuildAddCode(build, "\t\t{");
+      shaderBuildAddCode(build, "\t\t\tstackPushGeometry(ifragCoord, geometry);");
+    shaderBuildAddCode(build, "\t\t}");
+  shaderBuildAddCode(build, "\t}");
 
 }
 
@@ -619,6 +626,7 @@ bool8 createGeometry(const string& name, Asset** outGeometry)
   geometryData->needAABBRecalculation = TRUE;    
   geometryData->needRebuild = TRUE;
   geometryData->dirty = TRUE;
+  geometryData->enabled = TRUE;
   geometryData->nativeAABB = AABB::createUnbounded();
   geometryData->dynamicAABB = AABB::createUnbounded();
   geometryData->finalAABB = AABB::createUnbounded();  
@@ -884,26 +892,26 @@ void geometryAddFunction(Asset* geometry, AssetPtr function)
   {
     geometryData->sdf = function;
     geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);
-    geometryMarkAsNeedAABBRecalculation(geometry);
+    geometryMarkNeedAABBRecalculation(geometry);
   }
   else if(type == SCRIPT_FUNCTION_TYPE_IDF)
   {
     geometryData->idfs.push_back(function);
     // NOTE: Children also should be marked, because IDFs are integrated into leafs
     geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);
-    geometryMarkAsNeedAABBRecalculation(geometry);    
+    geometryMarkNeedAABBRecalculation(geometry);    
   }
   else if(type == SCRIPT_FUNCTION_TYPE_ODF)
   {
     geometryData->odfs.push_back(function);
     geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);
-    geometryMarkAsNeedAABBRecalculation(geometry);    
+    geometryMarkNeedAABBRecalculation(geometry);    
   }
   else if(type == SCRIPT_FUNCTION_TYPE_PCF)
   {
     geometryData->pcf = function;
     geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);    
-    geometryMarkAsNeedAABBRecalculation(geometry);
+    geometryMarkNeedAABBRecalculation(geometry);
   }
 }
 
@@ -918,7 +926,7 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
     {
       geometryData->sdf = AssetPtr(nullptr);
       geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);
-      geometryMarkAsNeedAABBRecalculation(geometry);      
+      geometryMarkNeedAABBRecalculation(geometry);      
       return TRUE;
     }
   }
@@ -929,7 +937,7 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
     {
       geometryData->idfs.erase(idfIt);
       geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);
-      geometryMarkAsNeedAABBRecalculation(geometry);      
+      geometryMarkNeedAABBRecalculation(geometry);      
       return TRUE;
     }
   }
@@ -940,7 +948,7 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
     {
       geometryData->odfs.erase(odfIt);
       geometryMarkNeedRebuild(geometry, /** Mark children */ FALSE);
-      geometryMarkAsNeedAABBRecalculation(geometry);      
+      geometryMarkNeedAABBRecalculation(geometry);      
       return TRUE;
     }
   }
@@ -950,7 +958,7 @@ bool8 geometryRemoveFunction(Asset* geometry, Asset* function)
     {
       geometryData->pcf = AssetPtr(nullptr);
       geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);
-      geometryMarkAsNeedAABBRecalculation(geometry);      
+      geometryMarkNeedAABBRecalculation(geometry);      
       return TRUE;      
     }
   }
@@ -963,7 +971,7 @@ void geometryNotifyFunctionHasChanged(Asset* geometry, Asset* function)
   ScriptFunctionType type = scriptFunctionGetType(function);
   bool8 markChildren = (type == SCRIPT_FUNCTION_TYPE_IDF || type == SCRIPT_FUNCTION_TYPE_PCF) ? TRUE : FALSE;
   geometryMarkNeedRebuild(geometry, markChildren);
-  geometryMarkAsNeedAABBRecalculation(geometry);  
+  geometryMarkNeedAABBRecalculation(geometry);  
 }
 
 uint32 geometryGetID(Asset* geometry)
@@ -1241,13 +1249,25 @@ bool8 geometryIsBounded(Asset* geometry)
   return geometryData->bounded;
 }
 
+void geometrySetEnabled(Asset* geometry, bool8 enabled)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  geometryData->enabled = enabled;
+}
+
+bool8 geometryIsEnabled(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  return geometryData->enabled;
+}
+
 void geometrySetAABBAutomaticallyCalculated(Asset* geometry, bool8 automatically)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   geometryData->aabbAutomaticallyCalculated = automatically;
   if(automatically == TRUE)
   {
-    geometryMarkAsNeedAABBRecalculation(geometry);
+    geometryMarkNeedAABBRecalculation(geometry);
   }
 }
 
@@ -1287,7 +1307,7 @@ const AABB& geometryGetFinalAABB(Asset* geometry)
   return geometryData->finalAABB;
 }
 
-void geometryMarkAsNeedAABBRecalculation(Asset* geometry)
+void geometryMarkNeedAABBRecalculation(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   geometryData->needAABBRecalculation = TRUE;
@@ -1394,7 +1414,7 @@ bool8 geometryRemoveChild(Asset* geometry, Asset* child)
   geometryData->children.erase(childIt);
 
   geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);
-  geometryMarkAsNeedAABBRecalculation(geometry);  
+  geometryMarkNeedAABBRecalculation(geometry);  
 
   geometryRecalculateIDs(geometry);
   

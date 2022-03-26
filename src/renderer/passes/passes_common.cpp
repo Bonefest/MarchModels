@@ -37,14 +37,21 @@ bool8 drawGeometryPostorder(Camera* camera,
   }
 
   std::vector<AssetPtr>& children = geometryGetChildren(geometry);
-
+  
   // NOTE: This counter stores number of culled objects on the current level, this number is crucial for
   // some optimizations (e.g knowing that all previous siblings were culled, we know
   // that we must not read the stack)
   uint32 culledChildrenCount = 0;
+  uint32 disabledSiblingsCount = 0;
   for(uint32 i = 0; i < children.size(); i++)
   {
-    if(drawGeometryPostorder(camera, children[i], i, culledChildrenCount, culledObjCounter, shadowPath) == FALSE)
+    if(geometryIsEnabled(children[i]) == FALSE)
+    {
+      disabledSiblingsCount++;
+      continue;
+    }
+    
+    if(drawGeometryPostorder(camera, children[i], i - disabledSiblingsCount, culledChildrenCount, culledObjCounter, shadowPath) == FALSE)
     {
       culledChildrenCount++;
     }
