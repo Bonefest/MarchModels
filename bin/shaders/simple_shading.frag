@@ -15,7 +15,7 @@ float3 getLightDirection(uint32 lightIndex, float3 p, inout float32 lpDistance)
 {
   if(lightParams[lightIndex].type == LIGHT_SOURCE_TYPE_DIRECTIONAL)
   {
-    return lightParams[lightIndex].forward;
+    return -lightParams[lightIndex].forward;
   }
 
   lpDistance = distance(p, lightParams[lightIndex].position.xyz);
@@ -31,7 +31,7 @@ void main()
   float3 normal = texelFetch(normalsTexture, ifragCoord, 0).xyz;
   float4 shadows = texelFetch(shadowsTexture, ifragCoord, 0);
 
-  float3 radiance = ambientColor;
+  float3 radiance = dot(normal, normal) > 0.1 ? ambientColor : 0.0f.xxx;
   for(uint32 i = 0; i < lightsCount; i++)
   {
     float32 lpDistance = 1.0f;

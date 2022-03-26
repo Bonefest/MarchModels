@@ -48,7 +48,7 @@ void main()
   {
     case LIGHT_SOURCE_TYPE_DIRECTIONAL:
     {
-      l = light.forward.xyz;
+      l = -light.forward.xyz;
 
       if(dot(l, normal) < 0.0)
       {

@@ -30,7 +30,7 @@ static void destroySimpleShadingPass(RenderPass* pass)
 static bool8 simpleShadingPassExecute(RenderPass* pass)
 {
   SimpleShadingPassData* data = (SimpleShadingPassData*)renderPassGetInternalData(pass);
-  const std::vector<AssetPtr>& lightSources = sceneGetLightSources(rendererGetPassedScene());
+  const std::vector<AssetPtr>& lightSources = sceneGetEnabledLightSources(rendererGetPassedScene());
   
   glBindFramebuffer(GL_FRAMEBUFFER, data->ldrFBO);
   shaderProgramUse(data->shadingProgram);

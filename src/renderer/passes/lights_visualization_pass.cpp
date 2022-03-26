@@ -32,6 +32,18 @@ static bool8 lightsVisualizationPassExecute(RenderPass* pass)
                                 float3(),
                                 TRUE);
 
+    if(lightSourceIsEnabled(light) == FALSE)
+    {
+      billboardSystemDrawImagePix(lightsImagesAtlas,
+                                  position,
+                                  uint2(64, 64),
+                                  uint2(832, 64),
+                                  float4(1, 0, 0, 1.0),
+                                  float2(10.0f, 10.0f),
+                                  float3(),
+                                  TRUE);
+    }
+    
     if(lightSourceIsSelected(light) == TRUE)
     {
       billboardSystemDrawImagePix(lightsImagesAtlas,
@@ -42,7 +54,7 @@ static bool8 lightsVisualizationPassExecute(RenderPass* pass)
                                   float2(12.5f, 12.5f),
                                   float3(0.0f, 0.0f, 0.0f),
                                   TRUE);
-    }    
+    }  
   }
 
   
