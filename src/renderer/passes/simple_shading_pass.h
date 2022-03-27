@@ -6,3 +6,7 @@ ENGINE_API bool8 createSimpleShadingPass(RenderPass** outPass);
 
 ENGINE_API void simpleShadingPassSetAmbientColor(RenderPass* pass, float3 ambientColor);
 ENGINE_API float3 simpleShadingPassGetAmbinetColor(RenderPass* pass);
+
+ENGINE_API void simpleShadingPassSetBackgroundColors(RenderPass* pass,
+                                                     float3 bottomColor, float3 topColor);
+

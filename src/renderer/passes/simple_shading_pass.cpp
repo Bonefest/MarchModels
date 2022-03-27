@@ -13,6 +13,8 @@ struct SimpleShadingPassData
 {
   GLuint ldrFBO;
   float3 ambientColor;
+  float3 bottomColor;
+  float3 topColor;
   
   ShaderProgram* shadingProgram;
 };
@@ -45,10 +47,12 @@ static bool8 simpleShadingPassExecute(RenderPass* pass)
   glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_SHADOWS_MAP_TEXTURE));
 
   glUniform1ui(0, lightSources.size());
-  glUniform3fv(1, 1, (float32*)&data->ambientColor);
-  glUniform1i(2, 0);
-  glUniform1i(3, 1);
-  glUniform1i(4, 2);  
+  glUniform3fv(1, 1, &data->ambientColor[0]);
+  glUniform3fv(2, 1, &data->topColor[0]);
+  glUniform3fv(3, 1, &data->bottomColor[0]);    
+  glUniform1i(4, 0);
+  glUniform1i(5, 1);
+  glUniform1i(6, 2);  
   
   drawTriangleNoVAO();
 
@@ -63,6 +67,8 @@ static void simpleShadingPassDrawInputView(RenderPass* pass)
   SimpleShadingPassData* data = (SimpleShadingPassData*)renderPassGetInternalData(pass);
 
   ImGui::ColorEdit3("Ambient color", &data->ambientColor[0]);
+  ImGui::ColorEdit3("Top background color", &data->topColor[0]);
+  ImGui::ColorEdit3("Bottom background color", &data->bottomColor[0]);  
 }
 
 static const char* simpleShadingPassGetName(RenderPass* pass)
@@ -85,6 +91,9 @@ bool8 createSimpleShadingPass(RenderPass** outPass)
   }
 
   SimpleShadingPassData* data = engineAllocObject<SimpleShadingPassData>(MEMORY_TYPE_GENERAL);
+  data->ambientColor = float3(0.09f, 0.13f, 0.16f);
+  data->bottomColor = float3(0.5f, 0.5f, 1.0f);
+  data->topColor = float3(0.45f, 0.45f, 0.45f);  
   
   data->ldrFBO = createFramebuffer(rendererGetResourceHandle(RR_LDR_MAP_TEXTURE));
   assert(data->ldrFBO != 0);

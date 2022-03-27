@@ -102,15 +102,24 @@ static void gatherAABBs(AABBVisualizationPassData* data,
     AABBVisualizationPassInstanceData instanceData = {};
     instanceData.position = aabb.getCenter();
     instanceData.size = aabb.getDimensions();
-
-    if(geometryIsSelected(geometry) == TRUE)
+    
+    if(geometryIsEnabled(geometry))
     {
       instanceData.color = float3(0.0, 1.0, 0.0);
+    }
+    else
+    {
+      instanceData.color = float3(1.0, 0.0, 0.0);
+    }
+    
+    if(geometryIsSelected(geometry) == TRUE)
+    {
+
       unselectedInstances.push_back(instanceData);
     }
     else
     {
-      instanceData.color = float3(0.0, 0.6, 0.0);
+      instanceData.color *= 0.6f;
       selectedInstances.push_back(instanceData);
     }
   }
