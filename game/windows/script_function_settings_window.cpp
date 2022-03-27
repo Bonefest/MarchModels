@@ -72,7 +72,7 @@ struct ScriptFunctionSettingsWindowData
   
   AssetPtr owner;
   AssetPtr function;
-
+  
   AssetPtr dummyRootGeometry;
   AssetPtr dummyGeometry;
 };
@@ -116,10 +116,11 @@ bool8 createScriptFunctionSettingsWindow(AssetPtr owner, AssetPtr function, Wind
   strcpy(data->codeBuf, scriptFunctionGetRawCode(function).c_str());
   windowSetInternalData(*outWindow, data);
 
-  Asset* dummyRootGeometry;
+  Asset* dummyRootGeometry; 
   createGeometry("dummyRoot", &dummyRootGeometry);
+  geometrySetAABBAutomaticallyCalculated(dummyRootGeometry, FALSE);     
   data->dummyRootGeometry = AssetPtr(dummyRootGeometry);
-  
+
   Asset* dummyGeometry;
   createGeometry("dummy1", &dummyGeometry);
   geometrySetAABBAutomaticallyCalculated(dummyGeometry, FALSE);
@@ -351,8 +352,10 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
     geometryRemoveFunction(targetGeometry, data->function);
     geometryAddFunction(targetGeometry, data->function);
 
+    LOG_INFO("%u", geometryGetChildren(data->dummyRootGeometry).size());
+    
     geometryUpdate(data->dummyRootGeometry, 0.0f);
-    bool8 compilationSucceeded = geometryGetDrawProgram(targetGeometry) != nullptr ? TRUE : FALSE;
+    bool8 compilationSucceeded = geometryGetDrawProgram(data->dummyGeometry) != nullptr ? TRUE : FALSE;
     
     if(compilationSucceeded == TRUE)
     {
