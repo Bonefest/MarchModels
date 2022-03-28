@@ -38,7 +38,7 @@ ImGuiUtilsButtonsFlags textInputPopupCustom(const char* name,
 
 void openScriptFunctionSettingsWindow(AssetPtr geometryOwner, AssetPtr function);
 
-void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function);
+void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function, uint32 index);
 bool8 drawGeometryItemActionButtons(Scene* scene, AssetPtr geometry);
 bool8 drawLightSourceItemActionButtons(AssetPtr lightSource);
 

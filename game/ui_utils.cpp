@@ -129,12 +129,12 @@ void openScriptFunctionSettingsWindow(AssetPtr geometryOwner, AssetPtr function)
   }
 }
 
-void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function)
+void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function, uint32 index)
 {
   ScriptFunctionType type = scriptFunctionGetType(function);  
   
   pushIconSmallButtonStyle();
-  ImGui::PushID(function);
+  ImGui::PushID(index);
   ImGui::BeginDisabled(type == SCRIPT_FUNCTION_TYPE_SDF && geometryIsLeaf(geometry) == FALSE);
 
     const char* functionTypeLabel = scriptFunctionTypeLabel(type);

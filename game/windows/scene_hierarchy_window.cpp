@@ -198,8 +198,9 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
       
         std::vector<AssetPtr> functions = geometryGetScriptFunctions(geometry);
 
-        for(AssetPtr function: functions)
+        for(uint32 i = 0; i < functions.size(); i++)
         {
+          AssetPtr function = functions[i];
           ScriptFunctionType type = scriptFunctionGetType(function);
 
           if(type == SCRIPT_FUNCTION_TYPE_SDF && !data->listGeometrySDF)
@@ -219,7 +220,7 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
             continue;
           }
           
-          drawScriptFunctionItem(geometry, function);
+          drawScriptFunctionItem(geometry, function, i);
         }
 
       // Children geometry ----------------------------------------------------

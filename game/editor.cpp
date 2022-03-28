@@ -69,12 +69,12 @@ static void declareDefaultScriptFunctions()
   createScriptFunction(SCRIPT_FUNCTION_TYPE_IDF,
                        "emptyIDF",
                        &emptyIDFPrototype);  
-  scriptFunctionSetCode(emptyIDFPrototype, "return float3(0, 0, 0); ");
+  scriptFunctionSetCode(emptyIDFPrototype, "return p; ");
   
   createScriptFunction(SCRIPT_FUNCTION_TYPE_ODF,
                        "emptyODF", 
                        &emptyODFPrototype);
-  scriptFunctionSetCode(emptyODFPrototype, "return 0;");
+  scriptFunctionSetCode(emptyODFPrototype, "return d;");
 
   createPCF("intersectionPCF", PCF_NATIVE_TYPE_INTERSECTION, &intersectionPCFPrototype);
   scriptFunctionSetCode(intersectionPCFPrototype, "return (d1 > d2 ? float2(d1, 0.0) : float2(d2, 1.0));");

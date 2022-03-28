@@ -64,3 +64,4 @@
 64. do not show pcfs for leafs
 65. add ability to disable scene elements
 66. disabling light disabled all other lights too (probably we need to add an id to the button)
+67. possibly shaders are recreated too often (shaderid after some time is too big)

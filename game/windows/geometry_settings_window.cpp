@@ -305,9 +305,9 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
     popIconSmallButtonStyle();
       
     std::vector<AssetPtr> functions = geometryGetScriptFunctions(data->geometry);
-    for(AssetPtr asset: functions)
+    for(uint32 i = 0; i < functions.size(); i++)
     {
-      drawScriptFunctionItem(data->geometry, asset);
+      drawScriptFunctionItem(data->geometry, functions[i], i);
     }
 
     ImGui::TreePop();
