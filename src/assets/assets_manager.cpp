@@ -1,11 +1,17 @@
 #include <string>
 #include <vector>
+#include <fstream>
 #include <algorithm>
 #include <unordered_map>
+
+#include <nlohmann/json.hpp>
 
 using std::string;
 using std::vector;
 using std::unordered_map;
+using namespace nlohmann;
+
+#include <logging.h>
 
 #include "assets_manager.h"
 
@@ -18,6 +24,11 @@ static AssetsManager manager;
 
 bool8 initAssetsManager()
 {
+  if(assetsManagerLoadFromFile("saved_assets.json") == FALSE)
+  {
+    LOG_WARNING("No saved assets were discovered, either they were deleted or moved.");
+  }
+  
   return TRUE;
 }
 
@@ -27,6 +38,23 @@ void shutdownAssetsManager()
   {
     destroyAsset(asset);
   }
+}
+
+bool8 assetsManagerLoadFromFile(const std::string& fileName)
+{
+  std::ifstream file(fileName);
+  if(file.is_open())
+  {
+    json jsonData;
+    file >> jsonData;
+
+    for(json assetJson: jsonData["assets"])
+    {
+      
+    }
+  }
+
+  return FALSE;
 }
 
 bool8 assetsManagerAddAsset(AssetPtr asset)

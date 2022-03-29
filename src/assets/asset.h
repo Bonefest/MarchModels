@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include <nlohmann/json.hpp>
+
 #include "ptr.h"
 #include "defines.h"
 
@@ -13,8 +15,8 @@ struct AssetInterface
 {
   void (*destroy)(Asset*);
   
-  bool8(*serialize)(Asset*);
-  bool8(*deserialize)(Asset*);
+  bool8(*serialize)(Asset*, nlohmann::json&);
+  bool8(*deserialize)(Asset*, nlohmann::json&);
   uint32(*getSize)(Asset*);
   
   void (*onNameChanged)(Asset*, const std::string&, const std::string&);
@@ -25,8 +27,8 @@ struct AssetInterface
 ENGINE_API bool8 allocateAsset(AssetInterface interface, const std::string& name, Asset** outAsset);
 ENGINE_API void destroyAsset(Asset* asset);
 
-ENGINE_API bool8 assetSerialize();
-ENGINE_API bool8 assetDeserialize();
+ENGINE_API bool8 assetSerialize(Asset* asset, nlohmann::json& jsonData);
+ENGINE_API bool8 assetDeserialize(Asset* asset, nlohmann::json& jsonData);
 
 // WARNING: Be careful with name changing. When an asset from asset manager is changing a name,
 // asset manger should be informed immediately!

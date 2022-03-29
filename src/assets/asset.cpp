@@ -33,6 +33,30 @@ void destroyAsset(Asset* asset)
   engineFreeObject(asset, MEMORY_TYPE_GENERAL);
 }
 
+bool8 assetSerialize(Asset* asset, nlohmann::json& jsonData)
+{
+  if(asset->interface.deserialize != nullptr)
+  {
+    jsonData["name"] = asset->name;
+
+    return asset->interface.deserialize(asset, jsonData);
+  }
+
+  return FALSE;
+}
+
+bool8 assetDeserialize(Asset* asset, nlohmann::json& jsonData)
+{
+  if(asset->interface.serialize != nullptr)
+  {
+    asset->name = jsonData["name"];
+    
+    return asset->interface.serialize(asset, jsonData);
+  }
+
+  return FALSE;  
+}
+
 void assetSetName(Asset* asset, const std::string& newName)
 {
   std::string prevName = asset->name;
