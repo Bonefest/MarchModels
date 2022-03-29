@@ -132,10 +132,13 @@ void openScriptFunctionSettingsWindow(AssetPtr geometryOwner, AssetPtr function)
 void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function, uint32 index)
 {
   ScriptFunctionType type = scriptFunctionGetType(function);  
+  bool8 isLeaf = geometryIsLeaf(geometry);
   
   pushIconSmallButtonStyle();
   ImGui::PushID(index);
-  ImGui::BeginDisabled(type == SCRIPT_FUNCTION_TYPE_SDF && geometryIsLeaf(geometry) == FALSE);
+  ImGui::BeginDisabled((isLeaf == TRUE && type == SCRIPT_FUNCTION_TYPE_PCF) ||
+                       (isLeaf == FALSE && type == SCRIPT_FUNCTION_TYPE_SDF));
+                       
 
     const char* functionTypeLabel = scriptFunctionTypeLabel(type);
 
@@ -213,8 +216,8 @@ void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function, uint32 index)
   // NOTE: We do not want to disable removing button, so we end disabling here
   ImGui::EndDisabled();
 
-  // NOTE: PCF function cannot be removed
-  ImGui::BeginDisabled(type == SCRIPT_FUNCTION_TYPE_PCF);
+  // NOTE: PCF and SDF functions cannot be removed
+  ImGui::BeginDisabled(type == SCRIPT_FUNCTION_TYPE_PCF || type == SCRIPT_FUNCTION_TYPE_SDF);
     // NOTE: Script function removing button
     ImGui::PushStyleColor(ImGuiCol_Text, (float4)DeleteClr);
       if(ImGui::SmallButton(ICON_KI_TRASH))

@@ -971,7 +971,7 @@ void geometryNotifyFunctionHasChanged(Asset* geometry, Asset* function)
   ScriptFunctionType type = scriptFunctionGetType(function);
   bool8 markChildren = (type == SCRIPT_FUNCTION_TYPE_IDF || type == SCRIPT_FUNCTION_TYPE_PCF) ? TRUE : FALSE;
   geometryMarkNeedRebuild(geometry, markChildren);
-  geometryMarkNeedAABBRecalculation(geometry);  
+  geometryMarkNeedAABBRecalculation(geometry, markChildren);  
 }
 
 uint32 geometryGetID(Asset* geometry)
@@ -1307,10 +1307,21 @@ const AABB& geometryGetFinalAABB(Asset* geometry)
   return geometryData->finalAABB;
 }
 
-void geometryMarkNeedAABBRecalculation(Asset* geometry)
+void geometryMarkNeedAABBRecalculation(Asset* geometry, bool8 markChildren)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   geometryData->needAABBRecalculation = TRUE;
+
+  if(markChildren == TRUE)
+  {
+    if(geometryData->children.size() > 0)
+    {
+      for(AssetPtr child: geometryData->children)
+      {
+        geometryMarkNeedAABBRecalculation(child, markChildren);
+      }
+    }
+  }
 }
 
 bool8 geometryNeedAABBRecalculation(Asset* geometry)

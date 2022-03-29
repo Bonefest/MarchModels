@@ -83,7 +83,7 @@ ENGINE_API const AABB& geometryGetNativeAABB(Asset* geometry);
 ENGINE_API const AABB& geometryGetDynamicAABB(Asset* geometry);
 ENGINE_API const AABB& geometryGetFinalAABB(Asset* geometry);
 
-ENGINE_API void geometryMarkNeedAABBRecalculation(Asset* geometry);
+ENGINE_API void geometryMarkNeedAABBRecalculation(Asset* geometry, bool8 markChildren = FALSE);
 ENGINE_API bool8 geometryNeedAABBRecalculation(Asset* geometry);
 ENGINE_API bool8 geometryNeedRebuild(Asset* geometry);
 

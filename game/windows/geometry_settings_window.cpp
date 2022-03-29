@@ -10,7 +10,8 @@ struct GeometrySettingsWindowData
 {
   Scene* scene;
   AssetPtr geometry;
-  
+
+  bool8 recalculateChildren = FALSE;
   bool8 positionRelativeToParent = TRUE;
   bool8 orientationRelativeToParent = TRUE;
 };
@@ -245,10 +246,15 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
     ImGui::EndDisabled();
     
     ImGui::SameLine();
+    
+    ImGui::Checkbox("Affect children", (bool*)&data->recalculateChildren);
+    ImGui::SameLine();
+    
     if(ImGui::Button("Force recalculation"))
     {
-      geometryMarkNeedAABBRecalculation(data->geometry);
+      geometryMarkNeedAABBRecalculation(data->geometry, data->recalculateChildren);
     }
+
 
     ImGui::BeginDisabled(automatic);
     
