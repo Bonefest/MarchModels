@@ -56,11 +56,31 @@ static void copyPCF(Asset* dst, Asset* src)
   *dstData = *srcData;
 }
 
+static bool8 serializePCF(Asset* pcf, nlohmann::json& jsonData)
+{
+  PCFData* data = (PCFData*)scriptFunctionGetInternalData(pcf);
+  jsonData["pcf_native_type"] = data->nativeType;
+  jsonData["multiplier"] = data->multiplier;
+
+  return TRUE;
+}
+
+static bool8 deserializePCF(Asset* pcf, nlohmann::json& jsonData)
+{
+  PCFData* data = (PCFData*)scriptFunctionGetInternalData(pcf);
+  data->nativeType = jsonData.value("pcf_native_type", PCF_NATIVE_TYPE_INTERSECTION);
+  data->multiplier = jsonData.value("multiplier", 0.0f);
+
+  return TRUE;
+}
+
 bool8 createPCF(const std::string& name, PCFNativeType nativeType, Asset** outAsset)
 {
   ScriptFunctionInterface interface = {};
   interface.destroy = destroyPCF;
   interface.copy = copyPCF;
+  interface.serialize = serializePCF;
+  interface.deserialize = deserializePCF;
 
   if(createScriptFunctionExt(SCRIPT_FUNCTION_TYPE_PCF,
                              name,

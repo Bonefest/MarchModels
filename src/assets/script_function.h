@@ -38,6 +38,8 @@ struct ScriptFunctionInterface
 {
   void(*destroy)(Asset* scriptFunction);
   void(*copy)(Asset* dst, Asset* src);
+  bool8(*serialize)(Asset* asset, nlohmann::json& jsonData);
+  bool8(*deserialize)(Asset* asset, nlohmann::json& jsonData);  
 };
 
 ENGINE_API const char* scriptFunctionTypeLabel(ScriptFunctionType type);

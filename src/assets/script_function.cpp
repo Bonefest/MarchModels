@@ -5,6 +5,7 @@
 
 using std::string;
 using std::vector;
+using nlohmann::json;
 
 struct ScriptFunction
 {
@@ -17,8 +18,8 @@ struct ScriptFunction
 };
 
 static void scriptFunctionDestroy(Asset* asset);
-static bool8 scriptFunctionSerialize(Asset* asset) { /** TODO */ }
-static bool8 scriptFunctionDeserialize(Asset* asset) { /** TODO */ }
+static bool8 scriptFunctionSerialize(Asset* asset, json& jsonData);
+static bool8 scriptFunctionDeserialize(Asset* asset, json& jsonData);
 static uint32 scriptFunctionGetSize(Asset* asset) { /** TODO */ }
 static void scriptFunctionOnNameChanged(Asset* asset, const std::string& prevName, const std::string& newName);
 
@@ -107,6 +108,43 @@ void scriptFunctionDestroy(Asset* asset)
   }
   
   engineFreeObject<ScriptFunction>(data, MEMORY_TYPE_GENERAL);
+}
+
+bool8 scriptFunctionSerialize(Asset* asset, json& jsonData)
+{
+  ScriptFunction* data = (ScriptFunction*)assetGetInternalData(asset);
+
+  jsonData["code"] = data->code;
+  jsonData["sf_type"] = data->type;  
+  for(const auto& arg: data->args)
+  {
+    jsonData["args"][arg.first] = arg.second;
+  }
+
+  if(data->interface.serialize != nullptr)
+  {
+    return data->interface.serialize(asset, jsonData);
+  }
+
+  return TRUE;
+}
+
+bool8 scriptFunctionDeserialize(Asset* asset, json& jsonData)
+{
+  ScriptFunction* data = (ScriptFunction*)assetGetInternalData(asset);
+  data->code = jsonData.at("code");
+  data->type = jsonData.at("sf_type");
+  for(const auto& arg: jsonData["args"].items())
+  {
+    data->args[arg.key()] = arg.value();
+  }
+
+  if(data->interface.deserialize != nullptr)
+  {
+    return data->interface.deserialize(asset, jsonData);
+  }
+
+  return TRUE;
 }
 
 void scriptFunctionSetArgValue(Asset* asset, const string& argName, float32 value)
