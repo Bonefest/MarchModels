@@ -1,8 +1,11 @@
+#include "maths/json_serializers.h"
 #include "light_source.h"
 
+using nlohmann::json;
+
 static void lightSourceDestroy(Asset* asset);
-static bool8 lightSourceSerialize(Asset* asset) { /** TODO */ }
-static bool8 lightSourceDeserialize(Asset* asset) { /** TODO */ }
+static bool8 lightSourceSerialize(Asset* asset, json& jsonData);
+static bool8 lightSourceDeserialize(Asset* asset, json& jsonData);
 static uint32 lightSourceGetSize(Asset* asset) { /** TODO */ }
 
 struct LightSource
@@ -31,6 +34,7 @@ bool8 createLightSource(const std::string& name,
   lsourceData->parameters.attenuationDistanceFactors.y = 1.0f;
   lsourceData->parameters.forward = float4(0.0f, 0.0f, 1.0f, 0.0f);
   lsourceData->parameters.enabled = 1;
+  lsourceData->parameters.shadowFactor = 1.0f;
   
   assetSetInternalData(*lsource, lsourceData);
   
@@ -42,6 +46,42 @@ void lightSourceDestroy(Asset* lsource)
   LightSource* lsourceData = (LightSource*)assetGetInternalData(lsource);
 
   engineFreeObject(lsourceData, MEMORY_TYPE_GENERAL);
+}
+
+bool8 lightSourceSerialize(Asset* lsource, json& jsonData)
+{
+  LightSource* data = (LightSource*)assetGetInternalData(lsource);
+  const LightSourceParameters& parameters = data->parameters;
+  
+  jsonData["light_type"] = parameters.type;
+  jsonData["enabled"] = parameters.enabled;
+  jsonData["shadow_enabled"] = parameters.shadowEnabled;
+  jsonData["shadow_factor"] = parameters.shadowFactor;
+  jsonData["att_distance"] = vecToJson(parameters.attenuationDistanceFactors);  
+  jsonData["att_angle"] = vecToJson(parameters.attenuationAngleFactors);
+  jsonData["position"] = vecToJson(parameters.position);
+  jsonData["forward"] = vecToJson(parameters.forward);
+  jsonData["intensity"] = vecToJson(parameters.intensity);    
+  
+  return TRUE;
+}
+
+bool8 lightSourceDeserialize(Asset* lsource, json& jsonData)
+{
+  LightSource* data = (LightSource*)assetGetInternalData(lsource);  
+  LightSourceParameters& parameters = data->parameters;
+
+  parameters.type = jsonData.value("light_type", LIGHT_SOURCE_TYPE_DIRECTIONAL);
+  parameters.enabled = jsonData.value("enabled", 0);
+  parameters.shadowEnabled = jsonData.value("shadow_enabled", 0);
+  parameters.shadowFactor = jsonData.value("shadow_factor", 0.0f);
+  parameters.attenuationDistanceFactors = jsonToVec<float32, 2>(jsonData["att_distance"]);
+  parameters.attenuationAngleFactors = jsonToVec<float32, 2>(jsonData["att_angle"]);
+  parameters.position = jsonToVec<float32, 4>(jsonData["position"]);
+  parameters.forward = jsonToVec<float32, 4>(jsonData["forward"]);
+  parameters.intensity = jsonToVec<float32, 4>(jsonData["intensity"]);
+  
+  return TRUE;
 }
 
 void lightSourceSetPosition(Asset* lsource, float3 position)

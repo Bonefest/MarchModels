@@ -88,7 +88,7 @@ void lightSettingsWindowDraw(Window* window, float64 delta)
   
   ImGui::BeginDisabled(parameters.shadowEnabled != TRUE);
   ImGui::PushItemWidth(avalWidth * 0.8);
-    ImGui::SliderFloat("Shadow sharpness factor", &parameters.shadowFactor, 0.0f, 200.0f);
+    ImGui::SliderFloat("Shadow sharpness factor", &parameters.shadowFactor, 0.1f, 200.0f);
   ImGui::PopItemWidth();
   ImGui::EndDisabled();
   
