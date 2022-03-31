@@ -18,8 +18,8 @@ struct ScriptFunction
 };
 
 static void scriptFunctionDestroy(Asset* asset);
-static bool8 scriptFunctionSerialize(Asset* asset, json& jsonData);
-static bool8 scriptFunctionDeserialize(Asset* asset, json& jsonData);
+static bool8 scriptFunctionSerialize(AssetPtr asset, json& jsonData);
+static bool8 scriptFunctionDeserialize(AssetPtr asset, json& jsonData);
 static uint32 scriptFunctionGetSize(Asset* asset) { /** TODO */ }
 static void scriptFunctionOnNameChanged(Asset* asset, const std::string& prevName, const std::string& newName);
 
@@ -110,7 +110,7 @@ void scriptFunctionDestroy(Asset* asset)
   engineFreeObject<ScriptFunction>(data, MEMORY_TYPE_GENERAL);
 }
 
-bool8 scriptFunctionSerialize(Asset* asset, json& jsonData)
+bool8 scriptFunctionSerialize(AssetPtr asset, json& jsonData)
 {
   ScriptFunction* data = (ScriptFunction*)assetGetInternalData(asset);
 
@@ -129,7 +129,7 @@ bool8 scriptFunctionSerialize(Asset* asset, json& jsonData)
   return TRUE;
 }
 
-bool8 scriptFunctionDeserialize(Asset* asset, json& jsonData)
+bool8 scriptFunctionDeserialize(AssetPtr asset, json& jsonData)
 {
   ScriptFunction* data = (ScriptFunction*)assetGetInternalData(asset);
   data->code = jsonData.at("code");

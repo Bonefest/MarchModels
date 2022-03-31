@@ -33,25 +33,26 @@ void destroyAsset(Asset* asset)
   engineFreeObject(asset, MEMORY_TYPE_GENERAL);
 }
 
-bool8 assetSerialize(Asset* asset, nlohmann::json& jsonData)
+bool8 assetSerialize(AssetPtr asset, nlohmann::json& jsonData)
 {
-  if(asset->interface.deserialize != nullptr)
+  if(asset->interface.serialize != nullptr)
   {
     jsonData["name"] = asset->name;
+    jsonData["type_id"] = asset->interface.type;
 
-    return asset->interface.deserialize(asset, jsonData);
+    return asset->interface.serialize(asset, jsonData);
   }
 
   return FALSE;
 }
 
-bool8 assetDeserialize(Asset* asset, nlohmann::json& jsonData)
+bool8 assetDeserialize(AssetPtr asset, nlohmann::json& jsonData)
 {
-  if(asset->interface.serialize != nullptr)
+  if(asset->interface.deserialize != nullptr)
   {
     asset->name = jsonData["name"];
     
-    return asset->interface.serialize(asset, jsonData);
+    return asset->interface.deserialize(asset, jsonData);
   }
 
   return FALSE;  

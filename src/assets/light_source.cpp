@@ -4,8 +4,8 @@
 using nlohmann::json;
 
 static void lightSourceDestroy(Asset* asset);
-static bool8 lightSourceSerialize(Asset* asset, json& jsonData);
-static bool8 lightSourceDeserialize(Asset* asset, json& jsonData);
+static bool8 lightSourceSerialize(AssetPtr asset, json& jsonData);
+static bool8 lightSourceDeserialize(AssetPtr asset, json& jsonData);
 static uint32 lightSourceGetSize(Asset* asset) { /** TODO */ }
 
 struct LightSource
@@ -48,7 +48,7 @@ void lightSourceDestroy(Asset* lsource)
   engineFreeObject(lsourceData, MEMORY_TYPE_GENERAL);
 }
 
-bool8 lightSourceSerialize(Asset* lsource, json& jsonData)
+bool8 lightSourceSerialize(AssetPtr lsource, json& jsonData)
 {
   LightSource* data = (LightSource*)assetGetInternalData(lsource);
   const LightSourceParameters& parameters = data->parameters;
@@ -66,7 +66,7 @@ bool8 lightSourceSerialize(Asset* lsource, json& jsonData)
   return TRUE;
 }
 
-bool8 lightSourceDeserialize(Asset* lsource, json& jsonData)
+bool8 lightSourceDeserialize(AssetPtr lsource, json& jsonData)
 {
   LightSource* data = (LightSource*)assetGetInternalData(lsource);  
   LightSourceParameters& parameters = data->parameters;

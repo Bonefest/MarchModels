@@ -7,6 +7,9 @@
 #include "shader_build.h"
 #include "shader_manager.h"
 #include "memory_manager.h"
+#include "assets_manager.h"
+#include "assets_factory.h"
+#include "maths/json_serializers.h"
 #include "renderer/passes/geometry_native_aabb_calculation_pass.h"
 
 #include "geometry.h"
@@ -14,6 +17,7 @@
 using std::set;
 using std::string;
 using std::vector;
+using nlohmann::json;
 
 DECLARE_CVAR(engine_AABBCalculation_IterationsCount, 12u);
 DECLARE_CVAR(engine_AABBCalculation_RaysPerIteration, 1024u);
@@ -70,8 +74,8 @@ struct Geometry
 };
 
 static void geometryDestroy(Asset* geometry);
-static bool8 geometrySerialize(Asset* geometry) { /** TODO */ }
-static bool8 geometryDeserialize(Asset* geometry) { /** TODO */ }
+static bool8 geometrySerialize(AssetPtr geometry, json& jsonData);
+static bool8 geometryDeserialize(AssetPtr geometry, json& jsonData);
 static uint32 geometryGetSize(Asset* geometry) { /** TODO */ }
 
 // ----------------------------------------------------------------------------
@@ -596,6 +600,7 @@ static void geometryChildWasRemoved(Asset* parent, AssetPtr child)
     geometryChildWasRemoved(child, childOfChild);
   }
   childData->parent = AssetPtr(nullptr);
+  childData->children.clear();
 
   
   Asset* root = geometryGetRoot(parent);
@@ -668,6 +673,144 @@ void geometryDestroy(Asset* geometry)
   }
   
   engineFreeObject(geometryData, MEMORY_TYPE_GENERAL);
+}
+
+static json serializeScriptFunction(AssetPtr scriptFunction)
+{
+  json result;
+  bool8 isPrototype = assetsManagerHasAsset(scriptFunction);
+  result["is_prototype"] = isPrototype;
+  result["name"] = assetGetName(scriptFunction);
+  
+  if(isPrototype == FALSE)
+  {
+    assetSerialize(scriptFunction, result);
+  }
+
+  return result;
+}
+
+static AssetPtr deserializeScriptFunction(json& jsonData)
+{
+  bool8 isPrototype = jsonData.value("is_prototype", FALSE);
+  AssetPtr result = AssetPtr(nullptr);
+  
+  if(isPrototype == TRUE)
+  {
+    result = assetsManagerFindAsset(jsonData["name"]);
+  }
+  else
+  {
+    result = createAssetFromJson(jsonData);
+  }
+
+  assert(result != nullptr && "Geometry contains invalid forked script function!");
+
+  return result;
+}
+
+bool8 geometrySerialize(AssetPtr geometry, json& jsonData)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+
+  for(uint32 i = 0; i < geometryData->idfs.size(); i++)
+  {
+    jsonData["idfs"][i] = serializeScriptFunction(geometryData->idfs[i]);
+  }
+
+  for(uint32 i = 0; i < geometryData->odfs.size(); i++)
+  {
+    jsonData["odfs"][i] = serializeScriptFunction(geometryData->odfs[i]);
+  }
+
+  jsonData["pcf"] = serializeScriptFunction(geometryData->pcf);
+  if(geometryData->sdf != nullptr)
+  {
+    jsonData["sdf"] = serializeScriptFunction(geometryData->sdf);
+  }
+
+  jsonData["scale"] = geometryData->scale;
+  jsonData["origin"] = vecToJson(geometryData->origin);
+  jsonData["position"] = vecToJson(geometryData->position);
+  jsonData["orientation"] = vecToJson(geometryData->orientation);
+
+  jsonData["native_aabb"]["min"] = vecToJson(geometryData->nativeAABB.min);
+  jsonData["native_aabb"]["max"] = vecToJson(geometryData->nativeAABB.max);
+
+  jsonData["dynamic_aabb"]["min"] = vecToJson(geometryData->dynamicAABB.min);
+  jsonData["dynamic_aabb"]["max"] = vecToJson(geometryData->dynamicAABB.max);
+
+  jsonData["bounded"] = geometryData->bounded;
+  jsonData["aabb_automatically_calculated"] = geometryData->aabbAutomaticallyCalculated;
+
+  for(uint32 i = 0; i < geometryData->children.size(); i++)
+  {
+    if(assetSerialize(geometryData->children[i], jsonData["children"][i]) == FALSE)
+    {
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+bool8 geometryDeserialize(AssetPtr geometry, json& jsonData)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+
+  if(jsonData.contains("idfs"))
+  {
+    for(auto& idf: jsonData["idfs"])
+    {
+      geometryData->idfs.push_back(deserializeScriptFunction(idf));
+    }
+  }
+
+  if(jsonData.contains("odfs"))
+  {
+    for(auto& odf: jsonData["odfs"])
+    {
+      geometryData->odfs.push_back(deserializeScriptFunction(odf));
+    }
+  }
+
+  geometryData->pcf = deserializeScriptFunction(jsonData.at("pcf"));
+  if(jsonData.contains("sdf"))
+  {
+    geometryData->sdf = deserializeScriptFunction(jsonData.at("sdf"));
+  }
+
+  geometryData->scale = geometryData->scale;
+  geometryData->origin = jsonToVec<float32, 3>(jsonData["origin"]);
+  geometryData->position = jsonToVec<float32, 3>(jsonData["position"]);
+  geometryData->orientation = jsonToVec<float32, 4>(jsonData["orientation"]);
+  
+  geometryData->nativeAABB.min = jsonToVec<float32, 3>(jsonData["native_aabb"]["min"]);
+  geometryData->nativeAABB.max = jsonToVec<float32, 3>(jsonData["native_aabb"]["max"]);
+  geometryData->dynamicAABB.min = jsonToVec<float32, 3>(jsonData["dynamic_aabb"]["min"]);
+  geometryData->dynamicAABB.max = jsonToVec<float32, 3>(jsonData["dynamic_aabb"]["max"]);  
+
+  geometryData->bounded = jsonData.value("bounded", FALSE);
+  geometryData->aabbAutomaticallyCalculated = jsonData.value("aabb_automatically_calculated", FALSE);
+
+  // NOTE: Remove previous children
+  for(AssetPtr child: geometryData->children)
+  {
+    geometryChildWasRemoved(geometry, child);
+  }
+  geometryData->children.clear();
+
+  // NOTE: Generate new children
+  if(jsonData.contains("children"))
+  {
+    for(auto& childJson: jsonData["children"])
+    {
+      AssetPtr child = createAssetFromJson(childJson);
+      geometryAddChild(geometry, child);
+    }
+  }
+
+  return TRUE;
 }
 
 static void geometryUpdateChild(Asset* geometry, float64 delta)

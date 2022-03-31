@@ -56,7 +56,7 @@ static void copyPCF(Asset* dst, Asset* src)
   *dstData = *srcData;
 }
 
-static bool8 serializePCF(Asset* pcf, nlohmann::json& jsonData)
+static bool8 serializePCF(AssetPtr pcf, nlohmann::json& jsonData)
 {
   PCFData* data = (PCFData*)scriptFunctionGetInternalData(pcf);
   jsonData["pcf_native_type"] = data->nativeType;
@@ -65,7 +65,7 @@ static bool8 serializePCF(Asset* pcf, nlohmann::json& jsonData)
   return TRUE;
 }
 
-static bool8 deserializePCF(Asset* pcf, nlohmann::json& jsonData)
+static bool8 deserializePCF(AssetPtr pcf, nlohmann::json& jsonData)
 {
   PCFData* data = (PCFData*)scriptFunctionGetInternalData(pcf);
   data->nativeType = jsonData.value("pcf_native_type", PCF_NATIVE_TYPE_INTERSECTION);
