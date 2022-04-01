@@ -3,12 +3,14 @@
 #include <imgui/backends/imgui_impl_opengl3.h>
 
 #include "stopwatch.h"
+#include "scheduler.h"
 #include "event_system.h"
 #include "image_manager.h"
 #include "shader_manager.h"
 #include "memory_manager.h"
 #include "lua/lua_system.h"
 #include "renderer/renderer.h"
+#include "assets/assets_manager.h"
 
 #include "application.h"
 #include "game_framework.h"
@@ -248,6 +250,18 @@ static bool8 initApplication()
     LOG_ERROR("Failed to extract initialize data from a game!");
     return FALSE;
   }
+
+  /** --- Scheduler system initialization ----------------------------------- */
+  if(initSchedulerSystem() == FALSE)
+  {
+    LOG_ERROR("Cannot initialize scheduler system!");
+    return FALSE;
+  }
+  else
+  {
+    LOG_SUCCESS("Scheduler system has been initialize successfully!");
+  }
+  
   /** --- Event system initialization -------------------------------------- */
   if(initEventSystem() == FALSE)
   {
@@ -313,6 +327,17 @@ static bool8 initApplication()
     LOG_SUCCESS("Lua system has been initialized successfully!");
   }
 
+  /** --- Assets manager initialization ------------------------------------ */
+  if(initAssetsManager() == FALSE)
+  {
+    LOG_ERROR("Cannot initialize assets manager!");
+    return FALSE;
+  }
+  else
+  {
+    LOG_SUCCESS("Assets manager has been initialized successfully!");
+  }
+  
   /** --- Rendering system initialization ---------------------------------- */  
   if(initializeRenderer() == FALSE)
   {
@@ -361,9 +386,15 @@ static void shutdownApplication()
   }
      
   game.shutdown(&application);
+  shutdownImageManager();
+  shutdownRenderer();
+  shutdownAssetsManager();
   shutdownLuaSystem();
+  shutdownShaderManager();
   shutdownImGUI();
   shutdownGLFW();
+  shutdownEventSystem();
+  shutdownSchedulerSystem();
 
   application.initialized = FALSE;
 }
@@ -382,6 +413,7 @@ static void processInputApplication()
 
 static void updateApplication(float64 delta)
 {
+  schedulerUpdate(delta);
   game.update(&application, delta);
 }
 

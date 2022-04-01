@@ -12,6 +12,8 @@ using std::unordered_map;
 using namespace nlohmann;
 
 #include <logging.h>
+#include <scheduler.h>
+#include <assets/assets_factory.h>
 
 #include "assets_manager.h"
 
@@ -22,22 +24,27 @@ struct AssetsManager
 
 static AssetsManager manager;
 
+
+static void assetsManagerSaveToFile(float32 time, const std::string& fileName, void* owner, void* data)
+{
+  LOG_INFO("Assets have been successfully saved!");
+}
+
 bool8 initAssetsManager()
 {
   if(assetsManagerLoadFromFile("saved_assets.json") == FALSE)
   {
     LOG_WARNING("No saved assets were discovered, either they were deleted or moved.");
   }
+
+  schedulerRegisterFunctionT1(assetsManagerSaveToFile, 1.0f, "saved_assets.json");
   
   return TRUE;
 }
 
 void shutdownAssetsManager()
 {
-  for(Asset* asset: manager.assets)
-  {
-    destroyAsset(asset);
-  }
+  manager.assets.clear();
 }
 
 bool8 assetsManagerLoadFromFile(const std::string& fileName)
@@ -50,7 +57,19 @@ bool8 assetsManagerLoadFromFile(const std::string& fileName)
 
     for(json assetJson: jsonData["assets"])
     {
-      
+      AssetPtr asset = createAssetFromJson(assetJson);
+      if(asset == AssetPtr(nullptr))
+      {
+        LOG_ERROR("Asset manager cannot load an asset from '%s'!", fileName.c_str());
+      }
+      else
+      {
+        if(assetsManagerAddAsset(asset) == FALSE)
+        {
+          LOG_WARNING("File '%s' contains asset '%s', which is already registered!",
+                      fileName.c_str(), assetJson.at("name").get<std::string>().c_str());
+        }
+      }
     }
   }
 
