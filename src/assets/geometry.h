@@ -93,6 +93,9 @@ ENGINE_API ShaderProgram* geometryGetAABBProgram(Asset* geometry);
 
 ENGINE_API PCFNativeType geometryGetPCFNativeType(Asset* geometry);
 
+ENGINE_API Asset* geometryClone(Asset* geometry);
+ENGINE_API void geometryCopy(Asset* geometryDst, Asset* geometrySrc);
+
 typedef bool8(*fpTraverseFunction)(Asset* geometry, void* userData);
 ENGINE_API bool8 geometryTraversePostorder(Asset* geometry,
                                            fpTraverseFunction traverseFunction,

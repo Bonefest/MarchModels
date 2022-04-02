@@ -1513,6 +1513,21 @@ PCFNativeType geometryGetPCFNativeType(Asset* geometry)
   return pcfGetNativeType(geometryData->pcf);
 }
 
+Asset* geometryClone(Asset* geometry)
+{
+  // allocate new geometry
+  // copy to new geometry from current
+  return nullptr;
+}
+
+void geometryCopy(Asset* geometryDst, Asset* geometrySrc)
+{
+  // clear children
+  // clone children, insert children
+  // clone non-prototypes script functions, the rest simply insert
+  // clone version doesn't have a parent
+}
+
 bool8 geometryTraversePostorder(Asset* geometry, fpTraverseFunction traverseFunction, void* userData)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);

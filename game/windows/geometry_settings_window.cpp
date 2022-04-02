@@ -1,3 +1,5 @@
+#include <assets/assets_manager.h>
+
 #include "utils.h"
 #include "ui_utils.h"
 #include "ui_styles.h"
@@ -73,6 +75,7 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
 {
   GeometrySettingsWindowData* data = (GeometrySettingsWindowData*)windowGetInternalData(window);
 
+  std::string geometryName = assetGetName(data->geometry);
   const char* geometryTypeLabel = geometryIsRoot(data->geometry)   ? "root" :
                                   geometryIsBranch(data->geometry) ? "branch" :
                                                                      "leaf";
@@ -89,7 +92,7 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
                          revbytes((uint32)PrimaryClr),
                          geometryTypeLabel,
                          revbytes((uint32)SecondaryClr),
-                         assetGetName(data->geometry).c_str(),
+                         geometryName.c_str(),
                          revbytes((uint32)SecondaryClr));
 
       ImGui::EndTooltip();
@@ -99,20 +102,36 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
   ImGui::PopStyleColor();
 
   ImGui::PushStyleColor(ImGuiCol_Text, (float4)NewClr);
-    ImGui::SmallButton("[Rename]");
+    if(ImGui::SmallButton("[" ICON_KI_PENCIL " Rename]"))
+    {
+      ImGui::OpenPopup("Change geometry name");
+      strcpy(textInputPopupGetBuffer(), geometryName.c_str());
+    }
     ImGui::SameLine();
-    ImGui::SmallButton("[Export]");
+    
+    if(ImGui::SmallButton("[" ICON_KI_UPLOAD " Save prototype]"))
+    {
+      AssetPtr registeredAsset = assetsManagerFindAsset(geometryName);
+      bool8 assetWithSameNameRegistered = registeredAsset != AssetPtr(nullptr);
+
+      if(assetWithSameNameRegistered == TRUE)
+      {
+        LOG_ERROR("Asset with name '%s' is already registered!", geometryName.c_str());
+      }
+      else
+      {
+        // geometryClone
+        // asset manager add
+      }
+    }
+    
     ImGui::SameLine();
-    ImGui::SmallButton("[Import]");
-    ImGui::SameLine();
-    ImGui::SmallButton("[Load]");
-    ImGui::SameLine();
-    ImGui::SmallButton("[Save as]");
+    ImGui::SmallButton("[" ICON_KI_DOWNLOAD " Load prototype]");
     ImGui::SameLine();
   ImGui::PopStyleColor();
   
   ImGui::PushStyleColor(ImGuiCol_Text, (float4)BrightDeleteClr);  
-    if(ImGui::SmallButton("[Delete]"))
+    if(ImGui::SmallButton("[" ICON_KI_TRASH " Delete]"))
     {
       if(geometryHasParent(data->geometry))
       {
@@ -421,8 +440,19 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
     ImGui::TreePop();
   }
 
-  // new child
-  // new sdf, new odf, new idf
+  // Popups
+  
+  ImGuiUtilsButtonsFlags pressedButton = textInputPopup("Change geometry name", "Enter a new name");
+  if(pressedButton == ImGuiUtilsButtonsFlags_Accept)
+  {
+    const std::string& prevName = geometryName;
+    char* input = textInputPopupGetBuffer();
+    if(strlen(input) > 0 && strcmp(input, prevName.c_str()) != 0)
+    {
+      LOG_INFO("Geometry '%s' was renamed to '%s'", prevName.c_str(), input);      
+      assetSetName(data->geometry, input);
+    }
+  }
 }
 
 void geometrySettingsWindowProcessInput(Window* window, const EventData& eventData, void* sender)

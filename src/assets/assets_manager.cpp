@@ -27,6 +27,17 @@ static AssetsManager manager;
 
 static void assetsManagerSaveToFile(float32 time, const std::string& fileName, void* owner, void* data)
 {
+  json jsonData;
+  for(uint32 i = 0; i < manager.assets.size(); i++)
+  {
+    assetSerialize(manager.assets[i], jsonData["assets"][i]);
+  }
+  
+  jsonData.dump(4);
+  
+  std::ofstream file(fileName);
+  file << jsonData;
+  
   LOG_INFO("Assets have been successfully saved!");
 }
 
@@ -37,7 +48,7 @@ bool8 initAssetsManager()
     LOG_WARNING("No saved assets were discovered, either they were deleted or moved.");
   }
 
-  schedulerRegisterFunctionT1(assetsManagerSaveToFile, 1.0f, "saved_assets.json");
+  schedulerRegisterFunctionT1(assetsManagerSaveToFile, 30.0f, "saved_assets.json");
   
   return TRUE;
 }
@@ -71,6 +82,8 @@ bool8 assetsManagerLoadFromFile(const std::string& fileName)
         }
       }
     }
+
+    return TRUE;
   }
 
   return FALSE;
