@@ -114,14 +114,16 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
       AssetPtr registeredAsset = assetsManagerFindAsset(geometryName);
       bool8 assetWithSameNameRegistered = registeredAsset != AssetPtr(nullptr);
 
-      if(assetWithSameNameRegistered == TRUE)
+      if(assetWithSameNameRegistered == TRUE && assetGetType(registeredAsset) != ASSET_TYPE_GEOMETRY)
       {
         LOG_ERROR("Asset with name '%s' is already registered!", geometryName.c_str());
       }
       else
       {
-        // geometryClone
-        // asset manager add
+        assetsManagerRemoveAsset(geometryName);
+        assetsManagerAddAsset(geometryClone(data->geometry));
+        
+        LOG_INFO("Registered new asset with name '%s'", geometryName.c_str());        
       }
     }
     

@@ -618,6 +618,10 @@ bool8 createGeometry(const string& name, Asset** outGeometry)
   assert(allocateAsset(interface, name, outGeometry));
 
   Geometry* geometryData = engineAllocObject<Geometry>(MEMORY_TYPE_GENERAL);
+  geometryData->pcf = AssetPtr(nullptr);
+  geometryData->sdf = AssetPtr(nullptr);
+  geometryData->parent = AssetPtr(nullptr);
+  
   geometryData->scale = 1.0f;
   geometryData->position = float3(0.0f, 0.0f, 0.0f);
   geometryData->orientation = quat(0.0f, 0.0f, 0.0f, 1.0f);
@@ -846,7 +850,8 @@ static void geometryUpdateChild(Asset* geometry, float64 delta)
     }
   }
 
-  if(geometryData->needAABBRecalculation == TRUE && geometryData->aabbAutomaticallyCalculated == TRUE)
+  if(geometryData->needAABBRecalculation == TRUE && geometryData->aabbAutomaticallyCalculated == TRUE &&
+     geometryIsLeaf(geometry))
   {
     geometryData->nativeAABB = AABBCalculationPassCalculateAABB(geometry);
     if(geometryData->nativeAABB.getWidth() > 40.0 ||
@@ -1533,8 +1538,25 @@ void geometryCopy(AssetPtr geometryDst, Asset* geometrySrc)
 {
   Geometry* dstData = (Geometry*)assetGetInternalData(geometryDst);
   Geometry* srcData = (Geometry*)assetGetInternalData(geometrySrc);
+  
   AssetPtr dstParent = dstData->parent;
+  geometryClearChildren(geometryDst);
 
+  if(dstData->drawProgram != nullptr)
+  {
+    destroyShaderProgram(dstData->drawProgram);
+  }
+
+  if(dstData->shadowProgram != nullptr)
+  {
+    destroyShaderProgram(dstData->shadowProgram);
+  }
+
+  if(dstData->aabbProgram != nullptr)
+  {
+    destroyShaderProgram(dstData->aabbProgram);
+  }
+  
   *dstData = *srcData;
   dstData->parent = dstParent;
   dstData->ID = 0;
