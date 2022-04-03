@@ -1,4 +1,4 @@
-#include "program.h"
+#include "shader_program.h"
 #include "memory_manager.h"
 #include "shader_manager.h"
 #include "renderer/renderer.h"
@@ -11,15 +11,15 @@ struct IDsVisualizationPassData
 {
   GLuint ldrFBO;
   
-  ShaderProgram* visualizationProgram;
+  ShaderProgramPtr visualizationProgram;
 };
 
 static void destroyIDsVisualizationPass(RenderPass* pass)
 {
   IDsVisualizationPassData* data = (IDsVisualizationPassData*)renderPassGetInternalData(pass);
   glDeleteFramebuffers(1, &data->ldrFBO);
-  
-  destroyShaderProgram(data->visualizationProgram);
+
+  data->visualizationProgram = ShaderProgramPtr(nullptr);
   
   engineFreeObject(data, MEMORY_TYPE_GENERAL);
 }
@@ -64,7 +64,7 @@ bool8 createIDsVisualizationPass(RenderPass** outPass)
   data->ldrFBO = createFramebuffer(rendererGetResourceHandle(RR_LDR_MAP_TEXTURE));
   assert(data->ldrFBO != 0);
 
-  data->visualizationProgram = createAndLinkTriangleShadingProgram("shaders/visualize_ids.frag");
+  data->visualizationProgram = ShaderProgramPtr(createAndLinkTriangleShadingProgram("shaders/visualize_ids.frag"));
   assert(data->visualizationProgram != nullptr);
 
   renderPassSetInternalData(*outPass, data);

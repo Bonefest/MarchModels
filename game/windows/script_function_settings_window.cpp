@@ -29,7 +29,7 @@ struct ArgumentDesc
 
 static const vector<ArgumentDesc> builtinArgsDescs =
 {
-  {"p", "(IDF/SDF only) incoming point in world space"},
+  {"p", "(ODF/IDF/SDF only) incoming point in world space"},
   {"d", "(ODF only) outcoming distance"},
   {"d1, d2", "(PCF only) outcoming distances to combine"},
   
@@ -57,6 +57,7 @@ static const vector<ArgumentDesc> builtinArgsDescs =
 
   {"geometryID", "Geometry ID"},
   {"geo.position", "Geometry position"},
+  {"geo.scale", "Geometry scale"},
   {"geo.geoWorldMat", "Geometry->World space transformation matrix"},
   {"geo.worldGeoMat", "World->Geometry space transformation matrix"},
   {"geo.geoParentMat", "Geometry->Parent space transformation matrix"},
@@ -355,7 +356,7 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
     LOG_INFO("%u", geometryGetChildren(data->dummyRootGeometry).size());
     
     geometryUpdate(data->dummyRootGeometry, 0.0f);
-    bool8 compilationSucceeded = geometryGetDrawProgram(data->dummyGeometry) != nullptr ? TRUE : FALSE;
+    bool8 compilationSucceeded = geometryGetDrawProgram(data->dummyGeometry) != ShaderProgramPtr(nullptr) ? TRUE : FALSE;
     
     if(compilationSucceeded == TRUE)
     {

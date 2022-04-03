@@ -1,7 +1,7 @@
 #pragma once
 
 #include <camera.h>
-#include <program.h>
+#include <shader_program.h>
 #include <assets/geometry.h>
 
 ShaderProgram* createAndLinkTriangleShadingProgram(const char* fragmentShaderPath);

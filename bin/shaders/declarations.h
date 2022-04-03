@@ -96,6 +96,7 @@
   struct GeometryTransformParameters
   {
     float4   position;
+    float4   scale;
     float4x4 geoWorldMat;
     float4x4 worldGeoMat;
     float4x4 geoParentMat;

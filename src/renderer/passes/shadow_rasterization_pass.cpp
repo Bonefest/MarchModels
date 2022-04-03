@@ -1,4 +1,4 @@
-#include "program.h"
+#include "shader_program.h"
 #include "memory_manager.h"
 #include "shader_manager.h"
 #include "renderer/renderer.h"
@@ -13,19 +13,19 @@ struct ShadowRasterizationPassData
   GLuint raysMapFBO;
   GLuint shadowsMapFBO;
   
-  ShaderProgram* preparingProgram;
-  ShaderProgram* shadowCalculationProgram;
-  ShaderProgram* raysMoverProgram;
+  ShaderProgramPtr preparingProgram;
+  ShaderProgramPtr shadowCalculationProgram;
+  ShaderProgramPtr raysMoverProgram;
 };
 
 static void destroyShadowRasterizationPass(RenderPass* pass)
 {
   ShadowRasterizationPassData* data = (ShadowRasterizationPassData*)renderPassGetInternalData(pass);
   glDeleteFramebuffers(1, &data->raysMapFBO);
-  
-  destroyShaderProgram(data->preparingProgram);
-  destroyShaderProgram(data->shadowCalculationProgram);
-  destroyShaderProgram(data->raysMoverProgram);
+
+  data->preparingProgram = ShaderProgramPtr(nullptr);
+  data->shadowCalculationProgram = ShaderProgramPtr(nullptr);
+  data->raysMoverProgram = ShaderProgramPtr(nullptr);
   
   engineFreeObject(data, MEMORY_TYPE_GENERAL);
 }
@@ -188,13 +188,13 @@ bool8 createShadowRasterizationPass(RenderPass** outPass)
                                             rendererGetResourceHandle(RR_COVERAGE_MASK_TEXTURE));
   assert(data->shadowsMapFBO != 0);
   
-  data->preparingProgram = createAndLinkTriangleShadingProgram("shaders/prepare_to_shadow_raster.frag");
+  data->preparingProgram = ShaderProgramPtr(createAndLinkTriangleShadingProgram("shaders/prepare_to_shadow_raster.frag"));
   assert(data->preparingProgram != nullptr);
 
-  data->shadowCalculationProgram = createAndLinkTriangleShadingProgram("shaders/shadows_estimator.frag");
+  data->shadowCalculationProgram = ShaderProgramPtr(createAndLinkTriangleShadingProgram("shaders/shadows_estimator.frag"));
   assert(data->shadowCalculationProgram != nullptr);
   
-  data->raysMoverProgram = createAndLinkTriangleShadingProgram("shaders/shadow_rays_mover.frag");
+  data->raysMoverProgram = ShaderProgramPtr(createAndLinkTriangleShadingProgram("shaders/shadow_rays_mover.frag"));
   assert(data->raysMoverProgram != nullptr);
   
   renderPassSetInternalData(*outPass, data);

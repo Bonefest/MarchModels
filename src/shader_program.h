@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ptr.h"
 #include "shader.h"
 
 struct ShaderProgram;
@@ -16,3 +17,5 @@ ENGINE_API bool8 shaderProgramIsLinked(ShaderProgram* program);
 
 ENGINE_API void shaderProgramUse(ShaderProgram* program);
 ENGINE_API GLuint shaderProgramGetGLHandle(ShaderProgram* program);
+
+using ShaderProgramPtr = SharedPtr<ShaderProgram, destroyShaderProgram>;

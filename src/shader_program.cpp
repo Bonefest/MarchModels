@@ -4,7 +4,7 @@ using std::vector;
 #include "logging.h"
 #include "memory_manager.h"
 
-#include "program.h"
+#include "shader_program.h"
 
 struct ShaderProgram
 {

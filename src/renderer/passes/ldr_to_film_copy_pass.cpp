@@ -1,4 +1,4 @@
-#include "program.h"
+#include "shader_program.h"
 #include "memory_manager.h"
 #include "shader_manager.h"
 #include "renderer/renderer.h"
@@ -9,13 +9,13 @@
 
 struct LDRToFilmCopyPassData
 {
-  ShaderProgram* copyProgram;
+  ShaderProgramPtr copyProgram;
 };
 
 static void destroyLDRToFilmCopyPass(RenderPass* pass)
 {
   LDRToFilmCopyPassData* data = (LDRToFilmCopyPassData*)renderPassGetInternalData(pass);
-  destroyShaderProgram(data->copyProgram);
+  data->copyProgram = ShaderProgramPtr(nullptr);
   
   engineFreeObject(data, MEMORY_TYPE_GENERAL);
 }
@@ -61,7 +61,7 @@ bool8 createLDRToFilmCopyPass(RenderPass** outPass)
 
   LDRToFilmCopyPassData* data = engineAllocObject<LDRToFilmCopyPassData>(MEMORY_TYPE_GENERAL);
   
-  data->copyProgram = createAndLinkTriangleShadingProgram("shaders/ldr_passthrough.frag");
+  data->copyProgram = ShaderProgramPtr(createAndLinkTriangleShadingProgram("shaders/ldr_passthrough.frag"));
   assert(data->copyProgram != nullptr);
 
   renderPassSetInternalData(*outPass, data);

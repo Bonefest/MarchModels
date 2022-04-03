@@ -62,7 +62,7 @@ AABB AABBCalculationPassCalculateAABB(Asset* geometry)
                   
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);  
   
-  ShaderProgram* aabbProgram = geometryGetAABBProgram(geometry);
+  ShaderProgramPtr aabbProgram = geometryGetAABBProgram(geometry);
   shaderProgramUse(aabbProgram);
 
   glUniform2ui(1, viewportSize, viewportSize);    

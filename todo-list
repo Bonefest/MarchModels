@@ -67,3 +67,4 @@
 67. possibly shaders are recreated too often (shaderid after some time is too big)
 68. shader program ptr
 69. if aabb is disabled - sometimes lags are hapening
+70. fog setup for simple/pbr shading

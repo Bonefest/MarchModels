@@ -44,7 +44,7 @@ struct BillboardSystemData
   
   GLuint ldrFramebuffer;
   Model3DPtr rectangleModel;
-  ShaderProgram* program;
+  ShaderProgramPtr program;
   
   vector<pair<GLuint, BillboardData>> painterOrderedBatches;
   unordered_map<GLuint, vector<BillboardData>> zOrderedBatches;
@@ -73,16 +73,19 @@ static bool8 createLDRFramebuffer()
 
 static bool8 createProgram()
 {
-  createShaderProgram(&data.program);
-  shaderProgramAttachShader(data.program, shaderManagerLoadShader(GL_VERTEX_SHADER, "shaders/billboard.vert"));
-  shaderProgramAttachShader(data.program, shaderManagerLoadShader(GL_FRAGMENT_SHADER, "shaders/billboard.frag"));
+  ShaderProgram* program = nullptr;
+  createShaderProgram(&program);
+  shaderProgramAttachShader(program, shaderManagerLoadShader(GL_VERTEX_SHADER, "shaders/billboard.vert"));
+  shaderProgramAttachShader(program, shaderManagerLoadShader(GL_FRAGMENT_SHADER, "shaders/billboard.frag"));
 
-  if(linkShaderProgram(data.program) == FALSE)
+  if(linkShaderProgram(program) == FALSE)
   {
-    destroyShaderProgram(data.program);
+    destroyShaderProgram(program);
     return FALSE;
   }
 
+  data.program = ShaderProgramPtr(program);
+  
   return TRUE;
 }
 
@@ -134,6 +137,7 @@ void shutdownBillboardSystem()
 {
   assert(data.initiailized == TRUE);
 
+  data.program = ShaderProgramPtr(nullptr);
   data.initiailized = FALSE;
 }
 

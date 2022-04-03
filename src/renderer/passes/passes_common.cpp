@@ -76,7 +76,7 @@ bool8 drawGeometryPostorder(Camera* camera,
     return TRUE;
   }
   
-  ShaderProgram* geometryProgram = shadowPath == TRUE ? geometryGetShadowProgram(geometry) : geometryGetDrawProgram(geometry);
+  ShaderProgramPtr geometryProgram = shadowPath == TRUE ? geometryGetShadowProgram(geometry) : geometryGetDrawProgram(geometry);
   if(geometryProgram == nullptr)
   {
     return FALSE;
@@ -84,6 +84,7 @@ bool8 drawGeometryPostorder(Camera* camera,
 
   GeometryTransformParameters geoTransforms = {};
   geoTransforms.position = float4(geometryGetPosition(geometry), 1.0);
+  geoTransforms.scale = float4(geometryGetFullScale(geometry), 1.0);
   geoTransforms.geoWorldMat = geometryGetGeoWorldMat(geometry);
   geoTransforms.worldGeoMat = geometryGetWorldGeoMat(geometry);
   geoTransforms.geoParentMat = geometryGetGeoParentMat(geometry);

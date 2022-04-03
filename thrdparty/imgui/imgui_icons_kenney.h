@@ -237,3 +237,5 @@
 #define ICON_KI_WOLFCMS_ALT "\xee\xa7\xa1"	// U+e9e1
 #define ICON_KI_EYE "\uE9CE"
 #define ICON_KI_EYE_DIS "\uE9D1"
+#define ICON_KI_NLOCK "\uEA75"
+#define ICON_KI_NUNLOCK "\uEA76"

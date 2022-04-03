@@ -1,4 +1,4 @@
-#include "program.h"
+#include "shader_program.h"
 #include "memory_manager.h"
 #include "shader_manager.h"
 #include "renderer/renderer.h"
@@ -15,9 +15,9 @@ struct RasterizationPassData
   GLuint raysMapFBO;
   GLuint geometryAndDistancesFBO;
   
-  ShaderProgram* preparingProgram;
-  ShaderProgram* raysMoverProgram;
-  ShaderProgram* resultsExtractionProgram;
+  ShaderProgramPtr preparingProgram;
+  ShaderProgramPtr raysMoverProgram;
+  ShaderProgramPtr resultsExtractionProgram;
 };
 
 static void destroyRasterizationPass(RenderPass* pass)
@@ -25,10 +25,10 @@ static void destroyRasterizationPass(RenderPass* pass)
   RasterizationPassData* data = (RasterizationPassData*)renderPassGetInternalData(pass);
   glDeleteFramebuffers(1, &data->raysMapFBO);
   glDeleteFramebuffers(1, &data->geometryAndDistancesFBO);
-  
-  destroyShaderProgram(data->preparingProgram);
-  destroyShaderProgram(data->raysMoverProgram);
-  destroyShaderProgram(data->resultsExtractionProgram);
+
+  data->preparingProgram = ShaderProgramPtr(nullptr);
+  data->raysMoverProgram = ShaderProgramPtr(nullptr);
+  data->resultsExtractionProgram = ShaderProgramPtr(nullptr);
   
   engineFreeObject(data, MEMORY_TYPE_GENERAL);
 }
@@ -166,13 +166,13 @@ bool8 createRasterizationPass(RenderPass** outPass)
                                                      rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE));
   assert(data->geometryAndDistancesFBO != 0);
 
-  data->preparingProgram = createAndLinkTriangleShadingProgram("shaders/prepare_to_raster.frag");
+  data->preparingProgram = ShaderProgramPtr(createAndLinkTriangleShadingProgram("shaders/prepare_to_raster.frag"));
   assert(data->preparingProgram != nullptr);
 
-  data->raysMoverProgram = createAndLinkTriangleShadingProgram("shaders/rays_mover.frag");
+  data->raysMoverProgram = ShaderProgramPtr(createAndLinkTriangleShadingProgram("shaders/rays_mover.frag"));
   assert(data->raysMoverProgram != nullptr);
 
-  data->resultsExtractionProgram = createAndLinkTriangleShadingProgram("shaders/extract_raster_results.frag");
+  data->resultsExtractionProgram = ShaderProgramPtr(createAndLinkTriangleShadingProgram("shaders/extract_raster_results.frag"));
   assert(data->resultsExtractionProgram != nullptr);
   
   renderPassSetInternalData(*outPass, data);

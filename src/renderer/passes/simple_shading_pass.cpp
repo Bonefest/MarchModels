@@ -1,6 +1,6 @@
 #include <imgui/imgui.h>
 
-#include "program.h"
+#include "shader_program.h"
 #include "memory_manager.h"
 #include "shader_manager.h"
 #include "renderer/renderer.h"
@@ -16,15 +16,15 @@ struct SimpleShadingPassData
   float3 bottomColor;
   float3 topColor;
   
-  ShaderProgram* shadingProgram;
+  ShaderProgramPtr shadingProgram;
 };
 
 static void destroySimpleShadingPass(RenderPass* pass)
 {
   SimpleShadingPassData* data = (SimpleShadingPassData*)renderPassGetInternalData(pass);
   glDeleteFramebuffers(1, &data->ldrFBO);
-  
-  destroyShaderProgram(data->shadingProgram);
+
+  data->shadingProgram = ShaderProgramPtr(nullptr);
   
   engineFreeObject(data, MEMORY_TYPE_GENERAL);
 }
@@ -98,7 +98,7 @@ bool8 createSimpleShadingPass(RenderPass** outPass)
   data->ldrFBO = createFramebuffer(rendererGetResourceHandle(RR_LDR_MAP_TEXTURE));
   assert(data->ldrFBO != 0);
 
-  data->shadingProgram = createAndLinkTriangleShadingProgram("shaders/simple_shading.frag");
+  data->shadingProgram = ShaderProgramPtr(createAndLinkTriangleShadingProgram("shaders/simple_shading.frag"));
   assert(data->shadingProgram != nullptr);
 
   renderPassSetInternalData(*outPass, data);

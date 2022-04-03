@@ -6,9 +6,9 @@
 #include <string>
 #include <vector>
 
-#include "program.h"
 #include "cvar_system.h"
 #include "maths/common.h"
+#include "shader_program.h"
 #include "maths/primitives.h"
 #include "assets/script_function.h"
 #include "assets/pcf_script_function.h"
@@ -25,8 +25,9 @@ ENGINE_API bool8 createGeometry(const std::string& name, Asset** outGeometry);
 // WARNING: Assumes that given geometry is a root
 ENGINE_API void geometryUpdate(Asset* geometry, float64 delta);
 
-ENGINE_API void geometrySetScale(Asset* geometry, float32 scale);
-ENGINE_API float32 geometryGetScale(Asset* geometry);
+ENGINE_API void geometrySetScale(Asset* geometry, float3 scale);
+ENGINE_API float3 geometryGetScale(Asset* geometry);
+ENGINE_API float3 geometryGetFullScale(Asset* geometry);
 
 ENGINE_API void geometrySetPosition(Asset* geometry, float3 position);
 ENGINE_API float3 geometryGetPosition(Asset* geometry);
@@ -87,9 +88,9 @@ ENGINE_API void geometryMarkNeedAABBRecalculation(Asset* geometry, bool8 markChi
 ENGINE_API bool8 geometryNeedAABBRecalculation(Asset* geometry);
 ENGINE_API bool8 geometryNeedRebuild(Asset* geometry);
 
-ENGINE_API ShaderProgram* geometryGetDrawProgram(Asset* geometry);
-ENGINE_API ShaderProgram* geometryGetShadowProgram(Asset* geometry);
-ENGINE_API ShaderProgram* geometryGetAABBProgram(Asset* geometry);
+ENGINE_API ShaderProgramPtr geometryGetDrawProgram(Asset* geometry);
+ENGINE_API ShaderProgramPtr geometryGetShadowProgram(Asset* geometry);
+ENGINE_API ShaderProgramPtr geometryGetAABBProgram(Asset* geometry);
 
 ENGINE_API PCFNativeType geometryGetPCFNativeType(Asset* geometry);
 

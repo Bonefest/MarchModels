@@ -16,6 +16,7 @@ struct GeometrySettingsWindowData
   bool8 recalculateChildren = FALSE;
   bool8 positionRelativeToParent = TRUE;
   bool8 orientationRelativeToParent = TRUE;
+  bool8 uniformScaling = TRUE;
 };
 
 static bool8 geometrySettingsWindowInitialize(Window*);
@@ -242,6 +243,41 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
   
   geometrySetOrientation(data->geometry, normalize(geometryOrientation));
 
+  // Scale input
+  float3 geometryScale = geometryGetScale(data->geometry);
+
+  const char* scaleModeIcon = data->uniformScaling == TRUE ?
+    ICON_KI_LOCK"##ScalingMode" : ICON_KI_UNLOCK"##ScalingMode";
+
+  pushIconButtonStyle();  
+    if(ImGui::Button(scaleModeIcon))
+    {
+      data->uniformScaling = !data->uniformScaling;
+      geometryScale[1] = geometryScale[2] = geometryScale[0];
+      geometrySetScale(data->geometry, geometryScale);
+    }
+
+    ImGui::SameLine();
+
+
+    if(ImGui::Button(ICON_KI_RELOAD_INVERSE"##ReloadScale"))
+    {
+      geometryScale = float3(1.0f, 1.0f, 1.0f);
+      geometrySetScale(data->geometry, geometryScale);      
+    }
+
+    ImGui::SameLine();
+  popIconButtonStyle();
+  
+  if(ImGui::SliderFloat3("Scale", &geometryScale[0], 0.01f, 10.0f))
+  {
+    if(data->uniformScaling == TRUE)
+    {
+      geometryScale[1] = geometryScale[2] = geometryScale[0];
+    }
+    geometrySetScale(data->geometry, geometryScale);
+  }
+  
   // AABB Settings
   if(ImGui::TreeNode("AABB settings"))
   {

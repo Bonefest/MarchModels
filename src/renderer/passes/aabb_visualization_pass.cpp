@@ -1,7 +1,7 @@
 #include <imgui/imgui.h>
 
 #include "utils.h"
-#include "program.h"
+#include "shader_program.h"
 #include "memory_manager.h"
 #include "shader_manager.h"
 #include "renderer/model3d.h"
@@ -55,8 +55,8 @@ struct AABBVisualizationPassData
   
   GLuint ldrFBO;
   
-  ShaderProgram* aabbVisualizationProgram;
-  ShaderProgram* frustumVisualizationProgram;
+  ShaderProgramPtr aabbVisualizationProgram;
+  ShaderProgramPtr frustumVisualizationProgram;
 
   AABBVisualizationMode visualizationMode;
   bool8 showParents = TRUE;
@@ -69,9 +69,9 @@ static void destroyAABBVisualizationPass(RenderPass* pass)
   data->cubesModel = Model3DPtr(nullptr);
   data->frustumModel = Model3DPtr(nullptr);
   glDeleteFramebuffers(1, &data->ldrFBO);
-  
-  destroyShaderProgram(data->aabbVisualizationProgram);
-  destroyShaderProgram(data->frustumVisualizationProgram);
+
+  data->aabbVisualizationProgram = ShaderProgramPtr(nullptr);
+  data->frustumVisualizationProgram = ShaderProgramPtr(nullptr);
   
   engineFreeObject(data, MEMORY_TYPE_GENERAL);
 }
@@ -322,10 +322,10 @@ bool8 createAABBVisualizationPass(RenderPass** outPass)
   data->cubesModel = createCubesModel();
   data->frustumModel = createFrustumModel();
   
-  data->aabbVisualizationProgram = createAABBVisualizationProgram();
+  data->aabbVisualizationProgram = ShaderProgramPtr(createAABBVisualizationProgram());
   assert(data->aabbVisualizationProgram != nullptr);
 
-  data->frustumVisualizationProgram = createFrustumVisualizationProgram();
+  data->frustumVisualizationProgram = ShaderProgramPtr(createFrustumVisualizationProgram());
   assert(data->frustumVisualizationProgram != nullptr);
   
   renderPassSetInternalData(*outPass, data);

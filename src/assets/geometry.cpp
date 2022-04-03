@@ -35,11 +35,13 @@ struct Geometry
 
   AssetPtr parent;
   
-  float32 scale;
+  float3 scale;
   float3 origin;
   float3 position;
   quat orientation;
 
+  float3 fullScale;
+  
   float4x4 transformToLocal;
   float4x4 transformToWorld;
   
@@ -50,9 +52,9 @@ struct Geometry
   AABB dynamicAABB;
   AABB finalAABB;
   
-  ShaderProgram* drawProgram;
-  ShaderProgram* shadowProgram;
-  ShaderProgram* aabbProgram;
+  ShaderProgramPtr drawProgram;
+  ShaderProgramPtr shadowProgram;
+  ShaderProgramPtr aabbProgram;
 
   bool8 bounded;
   bool8 aabbAutomaticallyCalculated;
@@ -91,10 +93,7 @@ static void geometryRecalculateFullTransforms(Asset* geometry, bool8 parentWasDi
   if(geometryData->dirty == TRUE || parentWasDirty == TRUE)
   {
     float4x4 transformFromLocal = mul(translation_matrix(geometryData->position),
-                                      rotation_matrix(geometryData->orientation),
-                                      scaling_matrix(float3(geometryData->scale,
-                                                            geometryData->scale,
-                                                            geometryData->scale)));
+                                      rotation_matrix(geometryData->orientation));
 
     float4x4 transformToLocal = inverse(transformFromLocal);
   
@@ -107,6 +106,8 @@ static void geometryRecalculateFullTransforms(Asset* geometry, bool8 parentWasDi
 
       geometryData->transformToLocal = transformToLocal;
       geometryData->transformToWorld = transformFromLocal;
+
+      geometryData->fullScale = geometryData->scale;
     }
     else
     {
@@ -121,12 +122,23 @@ static void geometryRecalculateFullTransforms(Asset* geometry, bool8 parentWasDi
       // NOTE: To convert from local to world, first convert to the parent space, for which transformation
       // from local space to world is known and use that.
       geometryData->transformToWorld = mul(parentData->transformToWorld, transformFromLocal);
+
+      geometryData->fullScale = float3(geometryData->scale.x * parentData->fullScale.x,
+                                       geometryData->scale.y * parentData->fullScale.y,
+                                       geometryData->scale.z * parentData->fullScale.z);
     }
 
     // NOTE: Recalculate dynamic AABB, if it's a leaf, based on the new transformations
     if(geometryIsLeaf(geometry) == TRUE)
     {
-      geometryData->dynamicAABB = geometryData->nativeAABB.genTransformed(geometryData->transformToWorld);
+      float32 maxScale = std::max(geometryData->fullScale.x,
+                                  std::max(geometryData->fullScale.y,
+                                           geometryData->fullScale.z));
+      
+      geometryData->dynamicAABB = geometryData->nativeAABB.genTransformed(mul(geometryData->transformToWorld,
+                                                                              scaling_matrix(float3(maxScale,
+                                                                                                    maxScale,
+                                                                                                    maxScale))));
     }
   }
 
@@ -265,7 +277,7 @@ static void geometryGenerateTransformCode(Asset* geometry, ShaderBuild* build, b
   {
     string functionName = "ODF" + std::to_string(i);
     string functionBody = scriptFunctionGetGLSLCode(odfs[i]);
-    shaderBuildAddFunction(build, "float32", functionName.c_str(), "float32 d", functionBody.c_str());
+    shaderBuildAddFunction(build, "float32", functionName.c_str(), "float32 d, float3 p", functionBody.c_str());
   }
 
   // register PCF
@@ -305,19 +317,19 @@ static void geometryGenerateTransformCode(Asset* geometry, ShaderBuild* build, b
   // e.g during AABB calculation)
   if(applyGeometryTransform == TRUE)
   {
-    shaderBuildAddCode(build, "\tfloat4 tp = geo.worldGeoMat * float4(p, 1.0);");
+    shaderBuildAddCode(build, "\tfloat4 tp = geo.worldGeoMat * float4(p / geo.scale.xyz, 1.0);");
+    shaderBuildAddCode(build, "\tfloat32 d = SDF(tp.xyz) * geo.scale.x;");    
   }
   else
   {
     shaderBuildAddCode(build, "\tfloat4 tp = float4(p, 1.0);");
+    shaderBuildAddCode(build, "\tfloat32 d = SDF(tp.xyz);");
   }
-  
-  shaderBuildAddCode(build, "\tfloat32 d = SDF(tp.xyz);");
   
   // 3. Transform distance via ODFs
   for(uint32 i = 0; i < odfs.size(); i++)
   {
-    shaderBuildAddCodefln(build, "\td = ODF%u(d);", i);
+    shaderBuildAddCodefln(build, "\td = ODF%d(d, tp.xyz);", i);
   }
   
   // 4. return distance
@@ -362,12 +374,12 @@ static void geometryGenerateBranchCode(Asset* geometry, ShaderBuild* build)
 {
   // register ODFs (only of the geometry)
   const std::vector<AssetPtr>& odfs = geometryGetODFs(geometry);
-  for(uint32 i = 0; i < odfs.size(); i++)
-  {
-    string functionName = "ODF" + std::to_string(i);
-    string functionBody = scriptFunctionGetGLSLCode(odfs[i]);
-    shaderBuildAddFunction(build, "float32", functionName.c_str(), "float32 d", functionBody.c_str());
-  }
+  // for(uint32 i = 0; i < odfs.size(); i++)
+  // {
+  //   string functionName = "ODF" + std::to_string(i);
+  //   string functionBody = scriptFunctionGetGLSLCode(odfs[i]);
+  //   shaderBuildAddFunction(build, "float32", functionName.c_str(), "float32 d, float3 p", functionBody.c_str());
+  // }
 
   // generate a main function:
   shaderBuildAddCode(build, "void main() {");
@@ -380,7 +392,7 @@ static void geometryGenerateBranchCode(Asset* geometry, ShaderBuild* build)
   // 2. Apply ODFs to the distance  
   for(uint32 i = 0; i < odfs.size(); i++)
   {
-    shaderBuildAddCode(build, "\tgeometry.distance = ODF%u(geometry.distance);");
+    shaderBuildAddCodefln(build, "\tgeometry.distance = ODF%d(geometry.distance, 0.0f.xxx);", i);
   }
 
   // 3. Combine distance with last distance on stack (if needed)
@@ -411,8 +423,8 @@ static bool8 geometryRebuildDrawProgram(Asset* geometry)
 
   shaderBuildAddCode(build, "layout(location = 0) out float4 outColor;");
 
-  geometryGenerateTransformCode(geometry, build, /** Use transformation of geometry */ TRUE);
-  
+  geometryGenerateTransformCode(geometry, build, /** Use transformation of geometry */ TRUE);      
+
   if(geometryIsLeaf(geometry))
   {
     geometryGenerateLeafCode(geometry, build);
@@ -455,12 +467,7 @@ static bool8 geometryRebuildDrawProgram(Asset* geometry)
     return FALSE;
   }
 
-  if(geometryData->drawProgram != nullptr)
-  {
-    destroyShaderProgram(geometryData->drawProgram);
-  }
-  
-  geometryData->drawProgram = normalPathShaderProgram;
+  geometryData->drawProgram = ShaderProgramPtr(normalPathShaderProgram);
 
   // Shadow path program generation
   char shadowPathCode[32 * KIBIBYTE];
@@ -485,12 +492,7 @@ static bool8 geometryRebuildDrawProgram(Asset* geometry)
     return FALSE;
   }
 
-  if(geometryData->shadowProgram != nullptr)
-  {
-    destroyShaderProgram(geometryData->shadowProgram);
-  }
-  
-  geometryData->shadowProgram = shadowPathShaderProgram;
+  geometryData->shadowProgram = ShaderProgramPtr(shadowPathShaderProgram);
   
   return TRUE;
 }
@@ -532,13 +534,8 @@ static bool8 geometryRebuildAABBCalculationProgram(Asset* geometry)
   {
     return FALSE;
   }
-
-  if(geometryData->aabbProgram != nullptr)
-  {
-    destroyShaderProgram(geometryData->aabbProgram);
-  }
   
-  geometryData->aabbProgram = shaderProgram;
+  geometryData->aabbProgram = ShaderProgramPtr(shaderProgram);
 
   return TRUE;
 }
@@ -622,7 +619,8 @@ bool8 createGeometry(const string& name, Asset** outGeometry)
   geometryData->sdf = AssetPtr(nullptr);
   geometryData->parent = AssetPtr(nullptr);
   
-  geometryData->scale = 1.0f;
+  geometryData->scale = float3(1.0f, 1.0f, 1.0f);
+  geometryData->fullScale = float3(1.0f, 1.0f, 1.0f);  
   geometryData->position = float3(0.0f, 0.0f, 0.0f);
   geometryData->orientation = quat(0.0f, 0.0f, 0.0f, 1.0f);
   geometryData->bounded = TRUE;  
@@ -634,9 +632,9 @@ bool8 createGeometry(const string& name, Asset** outGeometry)
   geometryData->nativeAABB = AABB::createUnbounded();
   geometryData->dynamicAABB = AABB::createUnbounded();
   geometryData->finalAABB = AABB::createUnbounded();  
-  geometryData->drawProgram = nullptr;
-  geometryData->shadowProgram = nullptr;
-  geometryData->aabbProgram = nullptr;  
+  geometryData->drawProgram = ShaderProgramPtr(nullptr);
+  geometryData->shadowProgram = ShaderProgramPtr(nullptr);
+  geometryData->aabbProgram = ShaderProgramPtr(nullptr);
   
   assetSetInternalData(*outGeometry, geometryData);
   
@@ -653,23 +651,9 @@ void geometryDestroy(Asset* geometry)
   geometryData->odfs.clear();
   geometryData->sdf = AssetPtr(nullptr);
 
-  if(geometryData->drawProgram != nullptr)
-  {
-    destroyShaderProgram(geometryData->drawProgram);
-    geometryData->drawProgram = nullptr;
-  }
-
-  if(geometryData->shadowProgram != nullptr)
-  {
-    destroyShaderProgram(geometryData->shadowProgram);
-    geometryData->shadowProgram = nullptr;
-  }
-  
-  if(geometryData->aabbProgram != nullptr)
-  {
-    destroyShaderProgram(geometryData->aabbProgram);
-    geometryData->aabbProgram = nullptr;
-  }
+  geometryData->drawProgram = ShaderProgramPtr(nullptr);
+  geometryData->shadowProgram = ShaderProgramPtr(nullptr);
+  geometryData->aabbProgram = ShaderProgramPtr(nullptr);
   
   engineFreeObject(geometryData, MEMORY_TYPE_GENERAL);
 }
@@ -728,7 +712,7 @@ bool8 geometrySerialize(AssetPtr geometry, json& jsonData)
     jsonData["sdf"] = serializeScriptFunction(geometryData->sdf);
   }
 
-  jsonData["scale"] = geometryData->scale;
+  jsonData["scale"] = vecToJson(geometryData->scale);
   jsonData["origin"] = vecToJson(geometryData->origin);
   jsonData["position"] = vecToJson(geometryData->position);
   jsonData["orientation"] = vecToJson(geometryData->orientation);
@@ -779,7 +763,16 @@ bool8 geometryDeserialize(AssetPtr geometry, json& jsonData)
     geometryData->sdf = deserializeScriptFunction(jsonData.at("sdf"));
   }
 
-  geometryData->scale = geometryData->scale;
+  if(jsonData["scale"].is_number())
+  {
+    float32 scale = jsonData["scale"];
+    geometryData->scale = float3(scale, scale, scale);
+  }
+  else
+  {
+    geometryData->scale = jsonToVec<float32, 3>(jsonData["scale"]);
+  }
+  
   geometryData->origin = jsonToVec<float32, 3>(jsonData["origin"]);
   geometryData->position = jsonToVec<float32, 3>(jsonData["position"]);
   geometryData->orientation = jsonToVec<float32, 4>(jsonData["orientation"]);
@@ -822,11 +815,7 @@ static void geometryUpdateChild(Asset* geometry, float64 delta)
         {
           LOG_ERROR("Geometry rebuild of AABB calculation program has failed!");
 
-          if(geometryData->aabbProgram != nullptr)
-          {
-            destroyShaderProgram(geometryData->aabbProgram);
-            geometryData->aabbProgram = nullptr;
-          }          
+          geometryData->aabbProgram = ShaderProgramPtr(nullptr);
         }
       }
 
@@ -836,17 +825,8 @@ static void geometryUpdateChild(Asset* geometry, float64 delta)
     {
       LOG_ERROR("Geometry rebuild of draw program has failed!");
 
-      if(geometryData->drawProgram != nullptr)
-      {
-        destroyShaderProgram(geometryData->drawProgram);
-        geometryData->drawProgram = nullptr;
-      }
-
-      if(geometryData->shadowProgram != nullptr)
-      {
-        destroyShaderProgram(geometryData->shadowProgram);
-        geometryData->shadowProgram = nullptr;
-      }
+      geometryData->drawProgram = ShaderProgramPtr(nullptr);
+      geometryData->shadowProgram = ShaderProgramPtr(nullptr);
     }
   }
 
@@ -978,7 +958,7 @@ void geometryUpdate(Asset* geometry, float64 delta)
   }
 }
 
-void geometrySetScale(Asset* geometry, float32 scale)
+void geometrySetScale(Asset* geometry, float3 scale)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   
@@ -986,11 +966,18 @@ void geometrySetScale(Asset* geometry, float32 scale)
   geometryData->scale = scale;
 }
 
-float32 geometryGetScale(Asset* geometry)
+float3 geometryGetScale(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   
   return geometryData->scale;
+}
+
+float3 geometryGetFullScale(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);  
+
+  return geometryData->fullScale;  
 }
 
 void geometrySetPosition(Asset* geometry, float3 position)
@@ -1475,19 +1462,19 @@ bool8 geometryNeedRebuild(Asset* geometry)
   return geometryData->needRebuild;
 }
 
-ShaderProgram* geometryGetDrawProgram(Asset* geometry)
+ShaderProgramPtr geometryGetDrawProgram(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   return geometryData->drawProgram;
 }
 
-ShaderProgram* geometryGetShadowProgram(Asset* geometry)
+ShaderProgramPtr geometryGetShadowProgram(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   return geometryData->shadowProgram;  
 }
 
-ShaderProgram* geometryGetAABBProgram(Asset* geometry)
+ShaderProgramPtr geometryGetAABBProgram(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
   return geometryData->aabbProgram;
@@ -1541,28 +1528,13 @@ void geometryCopy(AssetPtr geometryDst, Asset* geometrySrc)
   
   AssetPtr dstParent = dstData->parent;
   geometryClearChildren(geometryDst);
-
-  if(dstData->drawProgram != nullptr)
-  {
-    destroyShaderProgram(dstData->drawProgram);
-  }
-
-  if(dstData->shadowProgram != nullptr)
-  {
-    destroyShaderProgram(dstData->shadowProgram);
-  }
-
-  if(dstData->aabbProgram != nullptr)
-  {
-    destroyShaderProgram(dstData->aabbProgram);
-  }
   
   *dstData = *srcData;
   dstData->parent = dstParent;
   dstData->ID = 0;
-  dstData->drawProgram = nullptr;
-  dstData->shadowProgram = nullptr;
-  dstData->aabbProgram = nullptr;
+  dstData->drawProgram = ShaderProgramPtr(nullptr);
+  dstData->shadowProgram = ShaderProgramPtr(nullptr);
+  dstData->aabbProgram = ShaderProgramPtr(nullptr);
 
   assetSetName(geometryDst, assetGetName(geometrySrc));
   

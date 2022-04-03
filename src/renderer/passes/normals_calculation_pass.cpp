@@ -1,4 +1,4 @@
-#include "program.h"
+#include "shader_program.h"
 #include "memory_manager.h"
 #include "shader_manager.h"
 #include "renderer/renderer.h"
@@ -10,7 +10,7 @@ struct NormalsCalculationPassData
 {
   GLuint normalsFBO;
   
-  ShaderProgram* normalsCalculationProgram;
+  ShaderProgramPtr normalsCalculationProgram;
 };
 
 static void destroyNormalsCalculationPass(RenderPass* pass)
@@ -18,7 +18,7 @@ static void destroyNormalsCalculationPass(RenderPass* pass)
   NormalsCalculationPassData* data = (NormalsCalculationPassData*)renderPassGetInternalData(pass);
   glDeleteFramebuffers(1, &data->normalsFBO);
   
-  destroyShaderProgram(data->normalsCalculationProgram);
+  data->normalsCalculationProgram = ShaderProgramPtr(nullptr);
   
   engineFreeObject(data, MEMORY_TYPE_GENERAL);
 }
@@ -89,7 +89,7 @@ bool8 createNormalsCalculationPass(RenderPass** outPass)
   data->normalsFBO = createFramebuffer(rendererGetResourceHandle(RR_NORMALS_MAP_TEXTURE));
   assert(data->normalsFBO != 0);
 
-  data->normalsCalculationProgram = createNormalsCalculationProgram();
+  data->normalsCalculationProgram = ShaderProgramPtr(createNormalsCalculationProgram());
   assert(data->normalsCalculationProgram != nullptr);
 
   renderPassSetInternalData(*outPass, data);
