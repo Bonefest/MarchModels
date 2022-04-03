@@ -93,8 +93,8 @@ ENGINE_API ShaderProgram* geometryGetAABBProgram(Asset* geometry);
 
 ENGINE_API PCFNativeType geometryGetPCFNativeType(Asset* geometry);
 
-ENGINE_API Asset* geometryClone(Asset* geometry);
-ENGINE_API void geometryCopy(Asset* geometryDst, Asset* geometrySrc);
+ENGINE_API AssetPtr geometryClone(Asset* geometry);
+ENGINE_API void geometryCopy(AssetPtr geometryDst, Asset* geometrySrc);
 
 typedef bool8(*fpTraverseFunction)(Asset* geometry, void* userData);
 ENGINE_API bool8 geometryTraversePostorder(Asset* geometry,
@@ -111,6 +111,7 @@ const std::set<AssetPtr>& geometryRootGetAllChildren(Asset* root);
 // we cannot use a raw pointer as a parent ptr.
 ENGINE_API void geometryAddChild(AssetPtr geometry, AssetPtr child);
 ENGINE_API bool8 geometryRemoveChild(Asset* geometry, Asset* child);
+ENGINE_API void geometryClearChildren(Asset* geometry);
 ENGINE_API std::vector<AssetPtr>& geometryGetChildren(Asset* geometry);
 ENGINE_API uint32 geometryGetTotalChildrenCount(Asset* geometry);
 

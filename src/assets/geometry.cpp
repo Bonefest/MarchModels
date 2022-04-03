@@ -595,13 +595,8 @@ static void geometryChildWasAdded(Asset* parent, AssetPtr child)
 static void geometryChildWasRemoved(Asset* parent, AssetPtr child)
 {
   Geometry* childData = (Geometry*)assetGetInternalData(child);
-  for(AssetPtr childOfChild: childData->children)
-  {
-    geometryChildWasRemoved(child, childOfChild);
-  }
+  geometryClearChildren(child);
   childData->parent = AssetPtr(nullptr);
-  childData->children.clear();
-
   
   Asset* root = geometryGetRoot(parent);
   Geometry* rootData = (Geometry*)assetGetInternalData(root);
@@ -793,14 +788,10 @@ bool8 geometryDeserialize(AssetPtr geometry, json& jsonData)
   geometryData->bounded = jsonData.value("bounded", FALSE);
   geometryData->aabbAutomaticallyCalculated = jsonData.value("aabb_automatically_calculated", FALSE);
 
-  // NOTE: Remove previous children
-  for(AssetPtr child: geometryData->children)
-  {
-    geometryChildWasRemoved(geometry, child);
-  }
-  geometryData->children.clear();
+  // Remove previous children
+  geometryClearChildren(geometry);
 
-  // NOTE: Generate new children
+  // Generate new children
   if(jsonData.contains("children"))
   {
     for(auto& childJson: jsonData["children"])
@@ -1513,19 +1504,79 @@ PCFNativeType geometryGetPCFNativeType(Asset* geometry)
   return pcfGetNativeType(geometryData->pcf);
 }
 
-Asset* geometryClone(Asset* geometry)
+static AssetPtr cloneScriptFunction(AssetPtr scriptFunction)
 {
-  // allocate new geometry
-  // copy to new geometry from current
-  return nullptr;
+  bool8 isPrototype = assetsManagerHasAsset(scriptFunction);
+
+  // Prototype has only a single instance
+  if(isPrototype == TRUE)
+  {
+    return scriptFunction;
+  }
+
+  return AssetPtr(scriptFunctionClone(scriptFunction));
 }
 
-void geometryCopy(Asset* geometryDst, Asset* geometrySrc)
+AssetPtr geometryClone(Asset* geometry)
 {
-  // clear children
-  // clone children, insert children
-  // clone non-prototypes script functions, the rest simply insert
-  // clone version doesn't have a parent
+  Asset* clone = nullptr;
+  assert(createGeometry(assetGetName(geometry), &clone));
+  AssetPtr clonePtr = AssetPtr(clone);
+  
+  geometryCopy(clonePtr, geometry);
+  
+  return clonePtr;
+}
+
+
+void geometryCopy(AssetPtr geometryDst, Asset* geometrySrc)
+{
+  Geometry* dstData = (Geometry*)assetGetInternalData(geometryDst);
+  Geometry* srcData = (Geometry*)assetGetInternalData(geometrySrc);
+  AssetPtr dstParent = dstData->parent;
+
+  *dstData = *srcData;
+  dstData->parent = dstParent;
+  dstData->ID = 0;
+  dstData->drawProgram = nullptr;
+  dstData->shadowProgram = nullptr;
+  dstData->aabbProgram = nullptr;
+
+  assetSetName(geometryDst, assetGetName(geometrySrc));
+  
+  // Clone children
+  dstData->totalChildrenCount = 0;
+  dstData->allChildren.clear();
+  dstData->children.clear();  
+  for(AssetPtr child: srcData->children)
+  {
+    geometryAddChild(geometryDst, AssetPtr(geometryClone(child)));
+  }
+
+  // Clone script functions
+  dstData->idfs.clear();
+  for(AssetPtr idf: srcData->idfs)
+  {
+    dstData->idfs.push_back(cloneScriptFunction(idf));
+  }
+
+  dstData->odfs.clear();
+  for(AssetPtr odf: srcData->odfs)
+  {
+    dstData->odfs.push_back(cloneScriptFunction(odf));
+  }
+
+  dstData->pcf = cloneScriptFunction(srcData->pcf);
+
+  if(srcData->sdf != AssetPtr(nullptr))
+  {
+    dstData->sdf = cloneScriptFunction(srcData->sdf);
+  }
+
+
+  dstData->needRebuild = TRUE;  
+  dstData->needAABBRecalculation = TRUE;
+  dstData->dirty = TRUE;
 }
 
 bool8 geometryTraversePostorder(Asset* geometry, fpTraverseFunction traverseFunction, void* userData)
@@ -1584,12 +1635,27 @@ bool8 geometryRemoveChild(Asset* geometry, Asset* child)
 
   geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);
   geometryMarkNeedAABBRecalculation(geometry);  
-
   geometryRecalculateIDs(geometry);
   
   return TRUE;
 }
 
+void geometryClearChildren(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+
+  for(AssetPtr child: geometryData->children)
+  {
+    geometryChildWasRemoved(geometry, child);
+  }
+
+  geometryData->children.clear();
+
+  geometryMarkNeedRebuild(geometry, /** Mark children */ TRUE);
+  geometryMarkNeedAABBRecalculation(geometry);  
+  geometryRecalculateIDs(geometry);  
+}
+ 
 std::vector<AssetPtr>& geometryGetChildren(Asset* geometry)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);  
