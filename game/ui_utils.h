@@ -42,3 +42,4 @@ void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function, uint32 index);
 bool8 drawGeometryItemActionButtons(Scene* scene, AssetPtr geometry);
 bool8 drawLightSourceItemActionButtons(AssetPtr lightSource);
 
+void drawGeometriesList(AssetPtr geometryTarget);

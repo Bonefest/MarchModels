@@ -3,6 +3,8 @@
 #include "logging.h"
 #include "renderer_utils.h"
 #include "billboard_system.h"
+
+#include "passes/fog_pass.h"
 #include "passes/render_pass.h"
 #include "passes/rasterization_pass.h"
 #include "passes/simple_shading_pass.h"
@@ -39,6 +41,8 @@ struct Renderer
   RenderPass* simpleShadingPass;
   RenderPass* pbrShadingPass;
 
+  RenderPass* fogPass;
+  
   std::vector<RenderPass*> passes;
   
   // std::vector<RenderPass*> tonemapperPasses;
@@ -308,6 +312,7 @@ static bool8 initializeRenderPasses()
   INIT(createLDRToFilmCopyPass, &data.ldrToFilmPass);
   INIT(initializeAABBCalculationPass);
   INIT(createSimpleShadingPass, &data.simpleShadingPass);
+  INIT(createFogPass, &data.fogPass);
 
   data.passes.push_back(data.rasterizationPass);
   data.passes.push_back(data.shadowRasterizationPass);
@@ -318,6 +323,7 @@ static bool8 initializeRenderPasses()
   data.passes.push_back(data.aabbVisualizationPass);
   data.passes.push_back(data.lightsVisualizationPass);
   data.passes.push_back(data.simpleShadingPass);
+  data.passes.push_back(data.fogPass);
   
   return TRUE;
 }
@@ -333,6 +339,7 @@ static void destroyRenderPasses()
   destroyRenderPass(data.lightsVisualizationPass);
   destroyRenderPass(data.ldrToFilmPass);
   destroyRenderPass(data.simpleShadingPass);
+  destroyRenderPass(data.fogPass);
   destroyAABBCalculationPass();
 }
 
@@ -406,6 +413,7 @@ bool8 rendererRenderScene(Film* film,
   else if(params.shadingMode == RS_SIMPLE_SHADING)
   {
     assert(renderPassExecute(data.simpleShadingPass));
+    assert(renderPassExecute(data.fogPass));
   }
 
   if(params.showAABB == TRUE)

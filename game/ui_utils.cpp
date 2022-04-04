@@ -262,45 +262,7 @@ bool8 drawGeometryItemActionButtons(Scene* scene, AssetPtr geometry)
     ImGui::SameLine();       
     if(ImGui::SmallButton(ICON_KI_LIST"##GeometryChoose"))
     {
-      float2 itemTopPos = ImGui::GetItemRectMin();
-
-      WindowPtr prevListWindow = windowManagerGetWindow("Geometries list");
-      if(prevListWindow != nullptr)
-      {
-        windowManagerRemoveWindow(prevListWindow);
-      }
-
-      std::vector<AssetPtr> assetsToDisplay = assetsManagerGetAssetsByType(ASSET_TYPE_GEOMETRY);
-
-      std::vector<ListItem> items = {};
-      for(AssetPtr asset: assetsToDisplay)
-      {
-        items.push_back(ListItem{assetGetName(asset), asset});
-      }
-
-      auto onAssetIsSelected = [geometry](Window* window, void* selection, uint32 index, void* target)
-      {
-        AssetPtr assetFromManager = assetsManagerFindAsset(assetGetName((Asset*)selection));
-        if(assetFromManager != nullptr)
-        {
-          geometryCopy(geometry, (Asset*)selection);
-        }
-      };
-
-      Window* assetsListWindow;
-      assert(createListWindow("Geometries list",
-                              "Select a geometry",
-                              items,
-                              onAssetIsSelected,
-                              nullptr,
-                              &assetsListWindow));
-
-      listWindowSetCloseOnLoseFocus(assetsListWindow, TRUE);
-      windowSetSize(assetsListWindow, float2(180.0, 100.0));
-      windowSetPosition(assetsListWindow, itemTopPos + float2(10, 10));
-      windowSetFocused(assetsListWindow, TRUE);
-
-      windowManagerAddWindow(WindowPtr(assetsListWindow));      
+      drawGeometriesList(geometry);
     }
     
     ImGui::SameLine();
@@ -383,4 +345,47 @@ bool8 drawLightSourceItemActionButtons(AssetPtr lightSource)
   popIconSmallButtonStyle();
   
   return removeIsPressed;
+}
+
+void drawGeometriesList(AssetPtr geometry)
+{
+  float2 itemTopPos = ImGui::GetItemRectMin();
+
+  WindowPtr prevListWindow = windowManagerGetWindow("Geometries list");
+  if(prevListWindow != nullptr)
+  {
+    windowManagerRemoveWindow(prevListWindow);
+  }
+
+  std::vector<AssetPtr> assetsToDisplay = assetsManagerGetAssetsByType(ASSET_TYPE_GEOMETRY);
+
+  std::vector<ListItem> items = {};
+  for(AssetPtr asset: assetsToDisplay)
+  {
+    items.push_back(ListItem{assetGetName(asset), asset});
+  }
+
+  auto onAssetIsSelected = [geometry](Window* window, void* selection, uint32 index, void* target)
+  {
+    AssetPtr assetFromManager = assetsManagerFindAsset(assetGetName((Asset*)selection));
+    if(assetFromManager != nullptr)
+    {
+      geometryCopy(geometry, (Asset*)selection);
+    }
+  };
+
+  Window* assetsListWindow;
+  assert(createListWindow("Geometries list",
+                          "Select a geometry",
+                          items,
+                          onAssetIsSelected,
+                          nullptr,
+                          &assetsListWindow));
+
+  listWindowSetCloseOnLoseFocus(assetsListWindow, TRUE);
+  windowSetSize(assetsListWindow, float2(180.0, 100.0));
+  windowSetPosition(assetsListWindow, itemTopPos + float2(10, 10));
+  windowSetFocused(assetsListWindow, TRUE);
+
+  windowManagerAddWindow(WindowPtr(assetsListWindow));      
 }

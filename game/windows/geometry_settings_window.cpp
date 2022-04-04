@@ -129,7 +129,11 @@ void geometrySettingsWindowDraw(Window* window, float64 delta)
     }
     
     ImGui::SameLine();
-    ImGui::SmallButton("[" ICON_KI_DOWNLOAD " Load prototype]");
+    
+    if(ImGui::SmallButton("[" ICON_KI_DOWNLOAD " Load prototype]"))
+    {
+      drawGeometriesList(data->geometry);
+    }
     ImGui::SameLine();
   ImGui::PopStyleColor();
   
