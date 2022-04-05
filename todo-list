@@ -68,3 +68,4 @@
 68. shader program ptr
 69. if aabb is disabled - sometimes lags are hapening
 70. fog setup for simple/pbr shading
+71. fast switch between "position mode" (only aabbs are shown) and "drawing mode"

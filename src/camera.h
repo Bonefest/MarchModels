@@ -65,3 +65,5 @@ ENGINE_API void cameraSetFovY(Camera* camera, float32 fovY);
 ENGINE_API float32 cameraGetFovY(Camera* camera);
 ENGINE_API void cameraSetFovX(Camera* camera, float32 fovX);
 ENGINE_API float32 cameraGetFovX(Camera* camera);
+ENGINE_API float32 cameraGetNear(Camera* camera);
+ENGINE_API float32 cameraGetFar(Camera* camera);

@@ -92,8 +92,8 @@ bool8 createSimpleShadingPass(RenderPass** outPass)
 
   SimpleShadingPassData* data = engineAllocObject<SimpleShadingPassData>(MEMORY_TYPE_GENERAL);
   data->ambientColor = float3(0.09f, 0.13f, 0.16f);
-  data->bottomColor = float3(0.5f, 0.5f, 1.0f);
-  data->topColor = float3(0.45f, 0.45f, 0.45f);  
+  data->bottomColor = float3(0.63f, 0.93f, 0.9f);
+  data->topColor = float3(0.09f, 0.7f, 1.0f);  
   
   data->ldrFBO = createFramebuffer(rendererGetResourceHandle(RR_LDR_MAP_TEXTURE));
   assert(data->ldrFBO != 0);

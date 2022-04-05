@@ -336,3 +336,13 @@ float32 cameraGetFovX(Camera* camera)
 {
   return camera->fovY * camera->aspectRatio;
 }
+
+float32 cameraGetNear(Camera* camera)
+{
+  return camera->near;
+}
+
+float32 cameraGetFar(Camera* camera)
+{
+  return camera->far;
+}

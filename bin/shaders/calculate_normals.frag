@@ -21,7 +21,7 @@ void main()
     int2 ifragCoord = int2(gl_FragCoord.x, gl_FragCoord.y);
     uint32 id = texelFetch(idsMap, ifragCoord, 0).r;
 
-    if(id == UKNOWN_GEOMETRY_ID)
+    if(id == UNKNOWN_GEOMETRY_ID)
     {
       outNormal = float3(0.0, 0.0, 0.0);
     }
