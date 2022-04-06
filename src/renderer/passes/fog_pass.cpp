@@ -58,7 +58,7 @@ static bool8 fogPassExecute(RenderPass* pass)
   glUniform1ui(2, data->fogType);
   glUniform2fv(3, 1, &data->fogMinMax[0]);
   glUniform2fv(4, 1, &fogData[0]);
-  glUniform3fv(5, 1, &data->fogColor[0]);    
+  glUniform3fv(5, 1, &data->fogColor[0]);
   
   drawTriangleNoVAO();
   
