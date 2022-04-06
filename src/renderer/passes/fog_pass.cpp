@@ -125,10 +125,10 @@ bool8 createFogPass(RenderPass** outPass)
   }
 
   FogPassData* data = engineAllocObject<FogPassData>(MEMORY_TYPE_GENERAL);
-  data->fogType = FOG_TYPE_LINEAR;
-  data->fogMinMax = float2(0.0f, 0.8f);
+  data->fogType = FOG_TYPE_EXPONENTIAL2;
+  data->fogMinMax = float2(0.0f, 1.0f);
   data->fogNearFar = float2(3.0f, 15.0f);
-  data->fogDensity = 0.5f;
+  data->fogDensity = 0.065f;
   data->fogColor = float3(1.0f, 1.0f, 1.0f);
   
   data->ldrFBO = createFramebuffer(rendererGetResourceHandle(RR_LDR_MAP_TEXTURE));

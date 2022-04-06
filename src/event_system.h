@@ -41,6 +41,12 @@ enum EventType
   EVENT_TYPE_CURSOR_MOVED,
 
   /** Content:
+   * f32[0] = xoffset
+   * f32[1] = yoffset
+   */
+  EVENT_TYPE_SCROLL_INPUT,
+  
+  /** Content:
    * i32[0] = width
    * i32[1] = height
    */

@@ -84,6 +84,17 @@ static void gmouseButtonCallback(GLFWwindow* window, int button, int action, int
   pushEvent(eventData);  
 }
 
+static void gscrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+  EventData eventData = {};
+  eventData.type = EVENT_TYPE_SCROLL_INPUT;
+  eventData.f32[0] = xoffset;
+  eventData.f32[1] = yoffset;
+  
+  triggerEvent(eventData);
+  pushEvent(eventData);    
+}
+
 static void gwindowResizedCallback(GLFWwindow* window, int width, int height)
 {
   application.width = (uint32)width;
@@ -157,7 +168,8 @@ static bool8 initGLFW()
   glfwSetKeyCallback(application.window, gkeyCallback);
   glfwSetCursorPosCallback(application.window, gcursorPosCallback);
   glfwSetMouseButtonCallback(application.window, gmouseButtonCallback);
-
+  glfwSetScrollCallback(application.window, gscrollCallback);
+  
   #ifdef DEBUG
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(openglErrorsCallback, NULL);

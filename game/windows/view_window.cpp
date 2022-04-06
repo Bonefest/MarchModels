@@ -67,7 +67,16 @@ static void updateViewWindow(Window* window, float64 delta)
   if(data->controlMode != VIEW_CONTROL_MODE_NONE)
   {
     const static float32& cameraSpeed = CVarSystemReadFloat("editor_ViewWindow_CameraSpeed");
-
+    float32 finalCameraSpeed = cameraSpeed;
+    if(glfwGetKey(glfwWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+    {
+      finalCameraSpeed *= 2.0f;
+    }
+    else if(glfwGetKey(glfwWindow, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+    {
+      finalCameraSpeed *= 0.5f;
+    }
+    
     Camera* camera = imageIntegratorGetCamera(data->integrator);
     
     float3 camPosition = cameraGetPosition(camera);
@@ -75,21 +84,30 @@ static void updateViewWindow(Window* window, float64 delta)
 
     if(glfwGetKey(glfwWindow, GLFW_KEY_A) == GLFW_PRESS)
     {
-      camPosition += camWorldBasis[0].xyz() * cameraSpeed * float32(delta);
+      camPosition += camWorldBasis[0].xyz() * finalCameraSpeed * float32(delta);
     }
     else if(glfwGetKey(glfwWindow, GLFW_KEY_D) == GLFW_PRESS)
     {
-      camPosition -= camWorldBasis[0].xyz() * cameraSpeed * float32(delta);
+      camPosition -= camWorldBasis[0].xyz() * finalCameraSpeed * float32(delta);
     }
 
     if(glfwGetKey(glfwWindow, GLFW_KEY_W) == GLFW_PRESS)
     {
-      camPosition += camWorldBasis[2].xyz() * cameraSpeed * float32(delta);
+      camPosition += camWorldBasis[2].xyz() * finalCameraSpeed * float32(delta);
     }
     else if(glfwGetKey(glfwWindow, GLFW_KEY_S) == GLFW_PRESS)
     {
-      camPosition -= camWorldBasis[2].xyz() * cameraSpeed * float32(delta);
+      camPosition -= camWorldBasis[2].xyz() * finalCameraSpeed * float32(delta);
     }
+
+    if(glfwGetKey(glfwWindow, GLFW_KEY_E) == GLFW_PRESS)
+    {
+      camPosition += float3(0.0f, 1.0f, 0.0f) * finalCameraSpeed * float32(delta);
+    }
+    else if(glfwGetKey(glfwWindow, GLFW_KEY_Q) == GLFW_PRESS)
+    {
+      camPosition -= float3(0.0f, 1.0f, 0.0f) * finalCameraSpeed * float32(delta);
+    }    
 
     cameraSetPosition(camera, camPosition);
   }
@@ -240,16 +258,20 @@ static void processInputViewWindow(Window* window,
   GLFWwindow* glfwWindow = applicationGetWindow();
   Camera* camera = imageIntegratorGetCamera(data->integrator);
 
+  static bool8 ignoreFirstFrame = FALSE;
+  
   if(eventData.type == EVENT_TYPE_BUTTON_PRESSED)
   {
     if(eventData.i32[0] == GLFW_MOUSE_BUTTON_RIGHT &&
        windowIsFocused(window) == TRUE &&
        windowIsHovered(window) == TRUE)
     {
+      ignoreFirstFrame = TRUE;
+      
       data->controlMode = VIEW_CONTROL_MODE_HOLD;
       io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
       glfwSetInputMode(glfwWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-      glfwSetCursorPos(glfwWindow, 0.0, 0.0);      
+      glfwSetCursorPos(glfwWindow, 0.0, 0.0);
     }
   }
   else if(eventData.type == EVENT_TYPE_BUTTON_RELEASED)
@@ -276,13 +298,12 @@ static void processInputViewWindow(Window* window,
   }
   else if(eventData.type == EVENT_TYPE_CURSOR_MOVED)
   {
-    if(data->controlMode != VIEW_CONTROL_MODE_NONE)
+    if(data->controlMode != VIEW_CONTROL_MODE_NONE && ignoreFirstFrame == FALSE)
     {
       const static float32& sensitivity = CVarSystemReadFloat("editor_ViewWindow_MouseSensitivity");
-      
+
       float32 dx = eventData.f32[0] * sensitivity;
       float32 dy = eventData.f32[1] * sensitivity;
-
 
       float3 eulerAngles = cameraGetEulerAngles(camera);
       eulerAngles.x += -dx;
@@ -291,6 +312,20 @@ static void processInputViewWindow(Window* window,
       cameraSetOrientation(camera, eulerAngles);
 
       glfwSetCursorPos(glfwWindow, 0.0, 0.0);
+    }
+
+    ignoreFirstFrame = FALSE;
+  }
+  else if(eventData.type == EVENT_TYPE_SCROLL_INPUT)
+  {
+    if(data->controlMode != VIEW_CONTROL_MODE_NONE)
+    {
+      Camera* camera = imageIntegratorGetCamera(data->integrator);
+    
+      float3 camPosition = cameraGetPosition(camera);
+      float4x4 camWorldBasis = cameraGetCameraWorldMat(camera);
+
+      cameraSetPosition(camera, camPosition + camWorldBasis[2].xyz() * eventData.f32[1]);
     }
   }
 }
