@@ -48,7 +48,7 @@ static bool8 fogPassExecute(RenderPass* pass)
   float2 fogData = data->fogType == FOG_TYPE_LINEAR ? data->fogNearFar : float2(data->fogDensity, 0.0f);
   
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE));
+  glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_DEPTH1_MAP_TEXTURE));
   glUniform1i(0, 0);
 
   glActiveTexture(GL_TEXTURE1);  
@@ -131,7 +131,7 @@ bool8 createFogPass(RenderPass** outPass)
   data->fogDensity = 0.065f;
   data->fogColor = float3(1.0f, 1.0f, 1.0f);
   
-  data->ldrFBO = createFramebuffer(rendererGetResourceHandle(RR_LDR_MAP_TEXTURE));
+  data->ldrFBO = createFramebuffer(rendererGetResourceHandle(RR_LDR1_MAP_TEXTURE));
   assert(data->ldrFBO != 0);
 
   data->fogProgram = ShaderProgramPtr(createAndLinkTriangleShadingProgram("shaders/fog.frag"));

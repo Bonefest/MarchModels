@@ -456,7 +456,7 @@ static void drawViewSettingsWindow(Window* window, float64 delta)
     ImGui::SameLine();
     ImGui::Checkbox("Enable normals", (bool*)&params.enableNormals);
     ImGui::SameLine();
-    ImGui::Checkbox("Show AABB", (bool*)&params.showAABB);
+    ImGui::Checkbox("Show UI widgets", (bool*)&params.showUIWidgets);
     ImGui::SameLine();
     ImGui::Checkbox("Show Lights", (bool*)&params.showLights);
     

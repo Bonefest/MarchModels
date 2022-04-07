@@ -31,7 +31,7 @@ static bool8 LDRToFilmCopyPassExecute(RenderPass* pass)
   
   shaderProgramUse(data->copyProgram);
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_LDR_MAP_TEXTURE));
+  glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_LDR1_MAP_TEXTURE));
   
   drawTriangleNoVAO();
   

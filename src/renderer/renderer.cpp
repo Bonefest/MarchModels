@@ -10,12 +10,12 @@
 #include "passes/simple_shading_pass.h"
 #include "passes/ldr_to_film_copy_pass.h"
 #include "passes/ids_visualization_pass.h"
-#include "passes/aabb_visualization_pass.h"
 #include "passes/normals_calculation_pass.h"
 #include "passes/shadow_rasterization_pass.h"
 #include "passes/lights_visualization_pass.h"
 #include "passes/normals_visualization_pass.h"
 #include "passes/distances_visualization_pass.h"
+#include "passes/ui_widgets_visualization_pass.h"
 #include "passes/geometry_native_aabb_calculation_pass.h"
 
 #include "renderer.h"
@@ -35,7 +35,7 @@ struct Renderer
   RenderPass* idsVisualizationPass;
   RenderPass* normalsVisualizationPass;
   RenderPass* shadowsVisualizationPass;
-  RenderPass* aabbVisualizationPass;
+  RenderPass* uiWidgetsVisualizationPass;
   RenderPass* lightsVisualizationPass;
 
   RenderPass* simpleShadingPass;
@@ -217,13 +217,20 @@ static bool8 initGeometryIDMapTexture()
   return TRUE;  
 }
 
-static bool8 initDistancesMapTexture()
+static bool8 initDepthMapTexture()
 {
-  glGenTextures(1, &data.handles[RR_DISTANCES_MAP_TEXTURE]);
-  glBindTexture(GL_TEXTURE_2D, data.handles[RR_DISTANCES_MAP_TEXTURE]);
+  glGenTextures(2, &data.handles[RR_DEPTH1_MAP_TEXTURE]);
+  
+  glBindTexture(GL_TEXTURE_2D, data.handles[RR_DEPTH1_MAP_TEXTURE]);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, MAX_WIDTH, MAX_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+  glBindTexture(GL_TEXTURE_2D, data.handles[RR_DEPTH2_MAP_TEXTURE]);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, MAX_WIDTH, MAX_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+  
   glBindTexture(GL_TEXTURE_2D, 0);
 
   return TRUE;  
@@ -231,11 +238,18 @@ static bool8 initDistancesMapTexture()
 
 static bool8 initLDRMapTexture()
 {
-  glGenTextures(1, &data.handles[RR_LDR_MAP_TEXTURE]);
-  glBindTexture(GL_TEXTURE_2D, data.handles[RR_LDR_MAP_TEXTURE]);
+  glGenTextures(2, &data.handles[RR_LDR1_MAP_TEXTURE]);
+  
+  glBindTexture(GL_TEXTURE_2D, data.handles[RR_LDR1_MAP_TEXTURE]);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, MAX_WIDTH, MAX_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+
+  glBindTexture(GL_TEXTURE_2D, data.handles[RR_LDR2_MAP_TEXTURE]);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, MAX_WIDTH, MAX_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+  
   glBindTexture(GL_TEXTURE_2D, 0);
 
   return TRUE;
@@ -275,7 +289,7 @@ static bool8 initializeRendererResources()
   INIT(initCoverageMaskTexture);
   INIT(initRaysMapTexture);
   INIT(initGeometryIDMapTexture);
-  INIT(initDistancesMapTexture);
+  INIT(initDepthMapTexture);
   INIT(initLDRMapTexture);
   INIT(initNormalsMapTexture);
   INIT(initShadowsMapTexture);
@@ -292,8 +306,10 @@ static void destroyRendererResources()
   glDeleteTextures(1, &data.handles[RR_COVERAGE_MASK_TEXTURE]);
   glDeleteTextures(1, &data.handles[RR_RAYS_MAP_TEXTURE]);
   glDeleteTextures(1, &data.handles[RR_GEOIDS_MAP_TEXTURE]);  
-  glDeleteTextures(1, &data.handles[RR_DISTANCES_MAP_TEXTURE]);  
-  glDeleteTextures(1, &data.handles[RR_LDR_MAP_TEXTURE]);
+  glDeleteTextures(1, &data.handles[RR_DEPTH1_MAP_TEXTURE]);
+  glDeleteTextures(1, &data.handles[RR_DEPTH2_MAP_TEXTURE]);    
+  glDeleteTextures(1, &data.handles[RR_LDR1_MAP_TEXTURE]);
+  glDeleteTextures(1, &data.handles[RR_LDR2_MAP_TEXTURE]);  
   glDeleteTextures(1, &data.handles[RR_SHADOWS_MAP_TEXTURE]);
 }
 
@@ -311,7 +327,7 @@ static bool8 initializeRenderPasses()
        &data.distancesVisualizationPass);
   INIT(createIDsVisualizationPass, &data.idsVisualizationPass);
   INIT(createNormalsVisualizationPass, &data.normalsVisualizationPass);
-  INIT(createAABBVisualizationPass, &data.aabbVisualizationPass);
+  INIT(createUIWidgetsVisualizationPass, &data.uiWidgetsVisualizationPass);
   INIT(createLightsVisualizationPass, &data.lightsVisualizationPass);
   INIT(createLDRToFilmCopyPass, &data.ldrToFilmPass);
   INIT(initializeAABBCalculationPass);
@@ -324,7 +340,7 @@ static bool8 initializeRenderPasses()
   data.passes.push_back(data.distancesVisualizationPass);
   data.passes.push_back(data.idsVisualizationPass);
   data.passes.push_back(data.normalsVisualizationPass);
-  data.passes.push_back(data.aabbVisualizationPass);
+  data.passes.push_back(data.uiWidgetsVisualizationPass);
   data.passes.push_back(data.lightsVisualizationPass);
   data.passes.push_back(data.simpleShadingPass);
   data.passes.push_back(data.fogPass);
@@ -339,7 +355,7 @@ static void destroyRenderPasses()
   destroyRenderPass(data.distancesVisualizationPass);
   destroyRenderPass(data.idsVisualizationPass);
   destroyRenderPass(data.normalsVisualizationPass);
-  destroyRenderPass(data.aabbVisualizationPass);
+  destroyRenderPass(data.uiWidgetsVisualizationPass);
   destroyRenderPass(data.lightsVisualizationPass);
   destroyRenderPass(data.ldrToFilmPass);
   destroyRenderPass(data.simpleShadingPass);
@@ -420,9 +436,9 @@ bool8 rendererRenderScene(Film* film,
     assert(renderPassExecute(data.fogPass));
   }
 
-  if(params.showAABB == TRUE)
+  if(params.showUIWidgets == TRUE)
   {
-    assert(renderPassExecute(data.aabbVisualizationPass));
+    assert(renderPassExecute(data.uiWidgetsVisualizationPass));
   }
 
   if(params.showLights == TRUE)

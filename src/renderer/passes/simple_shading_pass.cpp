@@ -38,7 +38,7 @@ static bool8 simpleShadingPassExecute(RenderPass* pass)
   shaderProgramUse(data->shadingProgram);
 
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE));
+  glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_DEPTH1_MAP_TEXTURE));
   
   glActiveTexture(GL_TEXTURE1);
   glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_NORMALS_MAP_TEXTURE));
@@ -95,7 +95,7 @@ bool8 createSimpleShadingPass(RenderPass** outPass)
   data->bottomColor = float3(0.63f, 0.93f, 0.9f);
   data->topColor = float3(0.09f, 0.7f, 1.0f);  
   
-  data->ldrFBO = createFramebuffer(rendererGetResourceHandle(RR_LDR_MAP_TEXTURE));
+  data->ldrFBO = createFramebuffer(rendererGetResourceHandle(RR_LDR1_MAP_TEXTURE));
   assert(data->ldrFBO != 0);
 
   data->shadingProgram = ShaderProgramPtr(createAndLinkTriangleShadingProgram("shaders/simple_shading.frag"));

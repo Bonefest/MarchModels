@@ -110,7 +110,7 @@ bool8 drawGeometryPostorder(Camera* camera,
   if(shadowPath == TRUE)
   {
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE));
+    glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_DEPTH1_MAP_TEXTURE));
     glUniform1i(1, 1);
   }
   

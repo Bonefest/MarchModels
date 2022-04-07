@@ -34,14 +34,16 @@ enum RendererResourceType
   RR_GEOIDS_MAP_TEXTURE,
   RR_RAYS_MAP_TEXTURE,
   
-  RR_DISTANCES_MAP_TEXTURE,
+  RR_DEPTH1_MAP_TEXTURE,
+  RR_DEPTH2_MAP_TEXTURE,  
   RR_NORMALS_MAP_TEXTURE,
   RR_SHADOWS_MAP_TEXTURE,
   RR_TEXCOORDS_MAP_TEXTURE,
   
   RR_RADIANCE_MAP_TEXTURE,
-  RR_LDR_MAP_TEXTURE,
-
+  RR_LDR1_MAP_TEXTURE,
+  RR_LDR2_MAP_TEXTURE,
+  
   RR_MAX
 };
 
@@ -62,7 +64,7 @@ struct RenderingParameters
   
   bool8 enableNormals  = TRUE;
   bool8 enableShadows  = TRUE;
-  bool8 showAABB       = TRUE;
+  bool8 showUIWidgets  = TRUE;
   bool8 showLights     = TRUE;
   bool8 showBillboards = TRUE;
 

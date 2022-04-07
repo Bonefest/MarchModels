@@ -62,7 +62,7 @@ bool8 createNormalsVisualizationPass(RenderPass** outPass)
 
   NormalsVisualizationPassData* data = engineAllocObject<NormalsVisualizationPassData>(MEMORY_TYPE_GENERAL);
   
-  data->ldrFBO = createFramebuffer(rendererGetResourceHandle(RR_LDR_MAP_TEXTURE));
+  data->ldrFBO = createFramebuffer(rendererGetResourceHandle(RR_LDR1_MAP_TEXTURE));
   assert(data->ldrFBO != 0);
 
   data->visualizationProgram = ShaderProgramPtr(createAndLinkTriangleShadingProgram("shaders/visualize_normals.frag"));

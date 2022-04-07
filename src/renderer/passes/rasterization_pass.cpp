@@ -163,7 +163,7 @@ bool8 createRasterizationPass(RenderPass** outPass)
   assert(data->raysMapFBO != 0);
 
   data->geometryAndDistancesFBO = createFramebufferD(rendererGetResourceHandle(RR_GEOIDS_MAP_TEXTURE),
-                                                     rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE));
+                                                     rendererGetResourceHandle(RR_DEPTH1_MAP_TEXTURE));
   assert(data->geometryAndDistancesFBO != 0);
 
   data->preparingProgram = ShaderProgramPtr(createAndLinkTriangleShadingProgram("shaders/prepare_to_raster.frag"));

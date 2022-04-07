@@ -70,3 +70,4 @@
 70. fog setup for simple/pbr shading
 71. fast switch between "position mode" (only aabbs are shown) and "drawing mode"
 72. render on top of an AABB an orientation of the object
+73. sky pass

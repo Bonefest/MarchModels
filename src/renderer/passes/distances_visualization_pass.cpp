@@ -38,7 +38,7 @@ static bool8 distancesVisualizationPassExecute(RenderPass* pass)
   shaderProgramUse(data->visualizationProgram);
 
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_DISTANCES_MAP_TEXTURE));
+  glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_DEPTH1_MAP_TEXTURE));
   
   GLuint programHandle = shaderProgramGetGLHandle(data->visualizationProgram);
   glUniform2fv(glGetUniformLocation(programHandle, "distancesRange"), 1, &data->distancesRange[0]);
@@ -87,7 +87,7 @@ bool8 createDistancesVisualizationPass(float2 distancesRange,
   data->closestColor = closestColor;
   data->farthestColor = farthestColor;
   
-  data->ldrFBO = createFramebuffer(rendererGetResourceHandle(RR_LDR_MAP_TEXTURE));
+  data->ldrFBO = createFramebuffer(rendererGetResourceHandle(RR_LDR1_MAP_TEXTURE));
   assert(data->ldrFBO != 0);
 
   data->visualizationProgram = ShaderProgramPtr(createAndLinkTriangleShadingProgram("shaders/visualize_distances.frag"));
