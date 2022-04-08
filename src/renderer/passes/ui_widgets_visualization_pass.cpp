@@ -13,9 +13,13 @@
 using std::vector;
 
 const static uint32 MAX_INSTANCES = 1024;
+
 const static uint32 CUBE_VRT_BUFFER_SLOT = 0;
 const static uint32 CUBE_INST_BUFFER_SLOT = 1;
+
 const static uint32 FRUSTUM_VRT_BUFFER_SLOT = 0;
+
+const static uint32 AXES_INST_BUFFER_SLOT = 1;
 
 const static float32 cubeVertexData[] =
 {
@@ -48,19 +52,29 @@ struct AABBVisualizationPassInstanceData
   float3 color;
 };
 
+struct AxesInstanceData
+{
+  float4 color;
+  float4x4 modelWorldMat;
+};
+
 struct UIWidgetsVisualizationPassData
 {
   Model3DPtr cubesModel;
   Model3DPtr frustumModel;
+  Model3DPtr axisModel;
   
   GLuint ldrFBO;
   
   ShaderProgramPtr aabbVisualizationProgram;
   ShaderProgramPtr frustumVisualizationProgram;
+  ShaderProgramPtr axisVisualizationProgram;
 
   AABBVisualizationMode visualizationMode;
   bool8 showParents = TRUE;
+  bool8 showAABB    = TRUE;
   bool8 showFrustum = FALSE;
+  bool8 showAxes    = TRUE;
 };
 
 static void destroyUIWidgetsVisualizationPass(RenderPass* pass)
@@ -68,10 +82,12 @@ static void destroyUIWidgetsVisualizationPass(RenderPass* pass)
   UIWidgetsVisualizationPassData* data = (UIWidgetsVisualizationPassData*)renderPassGetInternalData(pass);
   data->cubesModel = Model3DPtr(nullptr);
   data->frustumModel = Model3DPtr(nullptr);
+  data->axisModel = Model3DPtr(nullptr);
   glDeleteFramebuffers(1, &data->ldrFBO);
 
   data->aabbVisualizationProgram = ShaderProgramPtr(nullptr);
   data->frustumVisualizationProgram = ShaderProgramPtr(nullptr);
+  data->axisVisualizationProgram = ShaderProgramPtr(nullptr);  
   
   engineFreeObject(data, MEMORY_TYPE_GENERAL);
 }
@@ -125,6 +141,43 @@ static void gatherAABBs(UIWidgetsVisualizationPassData* data,
   }
 }
 
+static void gatherAxes(Asset* geometry,
+                       vector<AxesInstanceData>& instances)
+{
+  vector<AssetPtr>& children = geometryGetChildren(geometry);
+  for(auto child: children)
+  {
+    gatherAxes(child, instances);
+  }
+
+  if(geometryIsSelected(geometry) == TRUE)
+  {
+    const AABB& finalAABB = geometryGetFinalAABB(geometry);
+    float3 axisPosition = finalAABB.getCenter() + float3(0.0f, 0.5f + finalAABB.getHeight() * 0.5f, 0.0f);
+    quat axisOrientation = geometryGetOrientation(geometry);
+    
+    float4x4 axisCommonMat = mul(translation_matrix(axisPosition), rotation_matrix(axisOrientation));
+
+    // x axis
+    instances.push_back(AxesInstanceData{
+        float4(1.0f, 0.0f, 0.0f, 1.0f),
+        mul(axisCommonMat, rotation_matrix(rotation_quat(float3(0.0f, 1.0f, 0.0f), float32(HALF_PI))))
+    });
+
+    // y axis
+    instances.push_back(AxesInstanceData{
+        float4(0.0f, 1.0f, 0.0f, 1.0f),
+        mul(axisCommonMat, rotation_matrix(rotation_quat(float3(-1.0f, 0.0f, 0.0f), float32(HALF_PI))))
+    });    
+
+    // z axis
+    instances.push_back(AxesInstanceData{
+        float4(0.0f, 0.0f, 1.0f, 1.0f),
+        axisCommonMat
+    });    
+  }
+}
+
 static void drawAABBs(UIWidgetsVisualizationPassData* data)
 {
   vector<AABBVisualizationPassInstanceData> selectedInstances;
@@ -139,9 +192,6 @@ static void drawAABBs(UIWidgetsVisualizationPassData* data)
   
   glBindFramebuffer(GL_FRAMEBUFFER, data->ldrFBO);
   shaderProgramUse(data->aabbVisualizationProgram);
-
-  float4x4 viewProj = cameraGetWorldNDCMat(rendererGetPassedCamera());
-  glUniformMatrix4fv(0, 1, GL_FALSE, &viewProj[0][0]);
   
   glBindVertexArray(model3DGetVAOHandle(data->cubesModel));
 
@@ -193,14 +243,48 @@ static void drawFrustum(UIWidgetsVisualizationPassData* data)
   glDisable(GL_DEPTH_TEST);  
 }
 
+static void drawAxes(UIWidgetsVisualizationPassData* data)
+{
+  vector<AxesInstanceData> axes;  
+  gatherAxes(sceneGetGeometryRoot(rendererGetPassedScene()), axes);
+
+  glLineWidth(2.0);
+  model3DUpdateBuffer(data->axisModel, AXES_INST_BUFFER_SLOT,
+                      0, &axes[0], sizeof(AxesInstanceData) * axes.size());
+
+  glDepthFunc(GL_LESS);
+  glEnable(GL_DEPTH_TEST);
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, data->ldrFBO);
+  shaderProgramUse(data->axisVisualizationProgram);
+  
+  glBindVertexArray(model3DGetVAOHandle(data->axisModel));
+  glDrawArraysInstanced(GL_LINES, 0, 2, axes.size());
+  
+  shaderProgramUse(nullptr);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);  
+  glDisable(GL_DEPTH_TEST);  
+}
+
 static bool8 uiWidgetsVisualizationPassExecute(RenderPass* pass)
 {
   UIWidgetsVisualizationPassData* data = (UIWidgetsVisualizationPassData*)renderPassGetInternalData(pass);
 
-  drawAABBs(data);
+  if(data->showAABB == TRUE)
+  {
+    drawAABBs(data);
+  }
+  
   if(data->showFrustum == TRUE)
   {
     drawFrustum(data);
+  }
+
+  if(data->showAxes == TRUE)
+  {
+    drawAxes(data);
   }
   
   return TRUE;
@@ -216,10 +300,18 @@ static void uiWidgetsVisualizationPassDrawInputView(RenderPass* pass)
     "Show final AABB"
   };
 
-  ImGui::Checkbox("Show parents", (bool*)&data->showParents);
-  ImGui::SameLine();
+
   ImGui::Checkbox("Show frustum", (bool*)&data->showFrustum);
+  ImGui::SameLine();  
+
+  ImGui::Checkbox("Show axes", (bool*)&data->showAxes);
+  
+  ImGui::Checkbox("Show AABB", (bool*)&data->showAABB);
   ImGui::SameLine();
+  
+  ImGui::Checkbox("Show AABB parents", (bool*)&data->showParents);
+  ImGui::SameLine();
+
   ImGui::PushItemWidth(200.0);
   ImGui::Combo("AABB Visualization mode",
                (int32*)&data->visualizationMode,
@@ -269,8 +361,19 @@ static ShaderProgram* createFrustumVisualizationProgram()
 
 static ShaderProgram* createAxesVisualizationProgram()
 {
-  // TODO
-  return nullptr;
+  ShaderProgram* program = nullptr;
+  
+  createShaderProgram(&program);
+  shaderProgramAttachShader(program, shaderManagerLoadShader(GL_VERTEX_SHADER, "shaders/visualize_axis.vert"));
+  shaderProgramAttachShader(program, shaderManagerLoadShader(GL_FRAGMENT_SHADER, "shaders/visualize_axis.frag"));
+
+  if(linkShaderProgram(program) == FALSE)
+  {
+    destroyShaderProgram(program);
+    return nullptr;
+  }
+
+  return program;
 }
 
 static Model3DPtr createCubesModel()
@@ -305,6 +408,22 @@ static Model3DPtr createFrustumModel()
   return Model3DPtr(model);
 }
 
+static Model3DPtr createAxisModel()
+{
+  Model3D* model = nullptr;
+  assert(createModel3DEmpty(&model));
+  
+  model3DAttachBuffer(model, AXES_INST_BUFFER_SLOT, NULL, sizeof(AxesInstanceData) * MAX_INSTANCES, GL_DYNAMIC_DRAW);
+
+  model3DDescribeInput(model, 0, AXES_INST_BUFFER_SLOT, 3, GL_FLOAT, sizeof(AxesInstanceData), 0, FALSE);  // color
+  model3DDescribeInput(model, 1, AXES_INST_BUFFER_SLOT, 4, GL_FLOAT, sizeof(AxesInstanceData), 4 * sizeof(float32), FALSE);  // matrix col 1
+  model3DDescribeInput(model, 2, AXES_INST_BUFFER_SLOT, 4, GL_FLOAT, sizeof(AxesInstanceData), 8 * sizeof(float32), FALSE);  // matrix col 2
+  model3DDescribeInput(model, 3, AXES_INST_BUFFER_SLOT, 4, GL_FLOAT, sizeof(AxesInstanceData), 12 * sizeof(float32), FALSE); // matrix col 3
+  model3DDescribeInput(model, 4, AXES_INST_BUFFER_SLOT, 4, GL_FLOAT, sizeof(AxesInstanceData), 16 * sizeof(float32), FALSE); // matrix col 4  
+
+  return Model3DPtr(model);
+}
+
 bool8 createUIWidgetsVisualizationPass(RenderPass** outPass)
 {
   RenderPassInterface interface = {};
@@ -327,11 +446,15 @@ bool8 createUIWidgetsVisualizationPass(RenderPass** outPass)
 
   data->cubesModel = createCubesModel();
   data->frustumModel = createFrustumModel();
+  data->axisModel = createAxisModel();
   
   data->aabbVisualizationProgram = ShaderProgramPtr(createAABBVisualizationProgram());
   assert(data->aabbVisualizationProgram != nullptr);
 
   data->frustumVisualizationProgram = ShaderProgramPtr(createFrustumVisualizationProgram());
+  assert(data->frustumVisualizationProgram != nullptr);
+  
+  data->axisVisualizationProgram = ShaderProgramPtr(createAxesVisualizationProgram());
   assert(data->frustumVisualizationProgram != nullptr);
   
   renderPassSetInternalData(*outPass, data);

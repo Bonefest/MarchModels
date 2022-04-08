@@ -1,6 +1,6 @@
 #version 450 core
 
-#include defines.glsl
+#include common.glsl
 
 // Per-vetex attributes
 layout(location = 0) in float3 vertexPos;
@@ -13,15 +13,12 @@ layout(location = 3) in float3 aabbColor;
 // Output attributes
 layout(location = 0) out float3 outAABBColor;
 
-// Uniforms
-layout(location = 0) uniform mat4 viewProj;
-
 void main()
 {
   outAABBColor = aabbColor;
 
   // NOTE: NDC is in LHS --> We can apply our usual transformations
-  gl_Position = viewProj * float4(vertexPos * aabbSize + aabbPosition, 1.0);
+  gl_Position = params.camWorldNDCMat * float4(vertexPos * aabbSize + aabbPosition, 1.0);
 
   // NOTE: The only thing, is that we need to inverse the x (in OpenGL positive
   // x is on the right, in our system positive x is on the left)
