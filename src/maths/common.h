@@ -16,3 +16,5 @@ struct Ray
   float3 origin;
   float3 direction;
 };
+
+ENGINE_API float4x4 eulerToMat(float2 euler);

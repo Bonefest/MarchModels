@@ -141,13 +141,34 @@ static void gatherAABBs(UIWidgetsVisualizationPassData* data,
   }
 }
 
-static void gatherAxes(Asset* geometry,
-                       vector<AxesInstanceData>& instances)
+static void pushAxes(float3 position, float4x4 commonMat, vector<AxesInstanceData>& instances)
+{
+  // x axis
+  instances.push_back(AxesInstanceData{
+      float4(1.0f, 0.0f, 0.0f, 1.0f),
+      mul(commonMat, rotation_matrix(rotation_quat(float3(0.0f, 1.0f, 0.0f), float32(HALF_PI))))
+  });
+
+  // y axis
+  instances.push_back(AxesInstanceData{
+      float4(0.0f, 1.0f, 0.0f, 1.0f),
+      mul(commonMat, rotation_matrix(rotation_quat(float3(-1.0f, 0.0f, 0.0f), float32(HALF_PI))))
+  });    
+
+  // z axis
+  instances.push_back(AxesInstanceData{
+      float4(0.0f, 0.0f, 1.0f, 1.0f),
+      commonMat
+  });    
+}
+
+static void gatherGeometryAxes(Asset* geometry,
+                               vector<AxesInstanceData>& instances)
 {
   vector<AssetPtr>& children = geometryGetChildren(geometry);
   for(auto child: children)
   {
-    gatherAxes(child, instances);
+    gatherGeometryAxes(child, instances);
   }
 
   if(geometryIsSelected(geometry) == TRUE)
@@ -155,26 +176,22 @@ static void gatherAxes(Asset* geometry,
     const AABB& finalAABB = geometryGetFinalAABB(geometry);
     float3 axisPosition = finalAABB.getCenter() + float3(0.0f, 0.5f + finalAABB.getHeight() * 0.5f, 0.0f);
     quat axisOrientation = geometryGetOrientation(geometry);
-    
     float4x4 axisCommonMat = mul(translation_matrix(axisPosition), rotation_matrix(axisOrientation));
+    
+    pushAxes(axisPosition, axisCommonMat, instances);
+  }
+}
 
-    // x axis
-    instances.push_back(AxesInstanceData{
-        float4(1.0f, 0.0f, 0.0f, 1.0f),
-        mul(axisCommonMat, rotation_matrix(rotation_quat(float3(0.0f, 1.0f, 0.0f), float32(HALF_PI))))
-    });
-
-    // y axis
-    instances.push_back(AxesInstanceData{
-        float4(0.0f, 1.0f, 0.0f, 1.0f),
-        mul(axisCommonMat, rotation_matrix(rotation_quat(float3(-1.0f, 0.0f, 0.0f), float32(HALF_PI))))
-    });    
-
-    // z axis
-    instances.push_back(AxesInstanceData{
-        float4(0.0f, 0.0f, 1.0f, 1.0f),
-        axisCommonMat
-    });    
+static void gatherLightSourcesAxes(const std::vector<AssetPtr>& lightSources,
+                                   vector<AxesInstanceData>& instances)
+{
+  for(AssetPtr lsource: lightSources)
+  {
+    float3 axisPosition = lightSourceGetPosition(lsource);
+    float4x4 axisOrientation = eulerToMat(lightSourceGetOrientation(lsource));
+    float4x4 axisCommonMat = mul(translation_matrix(axisPosition), axisOrientation);
+    
+    pushAxes(axisPosition, axisCommonMat, instances);
   }
 }
 
@@ -246,7 +263,8 @@ static void drawFrustum(UIWidgetsVisualizationPassData* data)
 static void drawAxes(UIWidgetsVisualizationPassData* data)
 {
   vector<AxesInstanceData> axes;  
-  gatherAxes(sceneGetGeometryRoot(rendererGetPassedScene()), axes);
+  gatherGeometryAxes(sceneGetGeometryRoot(rendererGetPassedScene()), axes);
+  gatherLightSourcesAxes(sceneGetEnabledLightSources(rendererGetPassedScene()), axes);
 
   glLineWidth(2.0);
   model3DUpdateBuffer(data->axisModel, AXES_INST_BUFFER_SLOT,
