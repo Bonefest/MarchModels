@@ -7,6 +7,7 @@
 #include "passes/fog_pass.h"
 #include "passes/render_pass.h"
 #include "passes/rasterization_pass.h"
+#include "passes/sky_rendering_pass.h"
 #include "passes/simple_shading_pass.h"
 #include "passes/ldr_to_film_copy_pass.h"
 #include "passes/ids_visualization_pass.h"
@@ -41,6 +42,7 @@ struct Renderer
   RenderPass* simpleShadingPass;
   RenderPass* pbrShadingPass;
 
+  RenderPass* skyRenderingPass;
   RenderPass* fogPass;
   
   std::vector<RenderPass*> passes;
@@ -332,6 +334,7 @@ static bool8 initializeRenderPasses()
   INIT(createLDRToFilmCopyPass, &data.ldrToFilmPass);
   INIT(initializeAABBCalculationPass);
   INIT(createSimpleShadingPass, &data.simpleShadingPass);
+  INIT(createSkyRenderingPass, &data.skyRenderingPass);  
   INIT(createFogPass, &data.fogPass);
 
   data.passes.push_back(data.rasterizationPass);
@@ -343,6 +346,7 @@ static bool8 initializeRenderPasses()
   data.passes.push_back(data.uiWidgetsVisualizationPass);
   data.passes.push_back(data.lightsVisualizationPass);
   data.passes.push_back(data.simpleShadingPass);
+  data.passes.push_back(data.skyRenderingPass);  
   data.passes.push_back(data.fogPass);
   
   return TRUE;
@@ -359,7 +363,9 @@ static void destroyRenderPasses()
   destroyRenderPass(data.lightsVisualizationPass);
   destroyRenderPass(data.ldrToFilmPass);
   destroyRenderPass(data.simpleShadingPass);
+  destroyRenderPass(data.skyRenderingPass);  
   destroyRenderPass(data.fogPass);
+
   destroyAABBCalculationPass();
 }
 
@@ -432,6 +438,7 @@ bool8 rendererRenderScene(Film* film,
   }
   else if(params.shadingMode == RS_SIMPLE_SHADING)
   {
+    assert(renderPassExecute(data.skyRenderingPass));
     assert(renderPassExecute(data.simpleShadingPass));
     assert(renderPassExecute(data.fogPass));
   }

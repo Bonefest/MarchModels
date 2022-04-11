@@ -13,8 +13,6 @@ struct SimpleShadingPassData
 {
   GLuint ldrFBO;
   float3 ambientColor;
-  float3 bottomColor;
-  float3 topColor;
   
   ShaderProgramPtr shadingProgram;
 };
@@ -33,6 +31,9 @@ static bool8 simpleShadingPassExecute(RenderPass* pass)
 {
   SimpleShadingPassData* data = (SimpleShadingPassData*)renderPassGetInternalData(pass);
   const std::vector<AssetPtr>& lightSources = sceneGetEnabledLightSources(rendererGetPassedScene());
+
+  glEnable(GL_BLEND);
+  pushBlend(GL_FUNC_ADD, GL_FUNC_ADD, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ZERO, GL_ONE);  
   
   glBindFramebuffer(GL_FRAMEBUFFER, data->ldrFBO);
   shaderProgramUse(data->shadingProgram);
@@ -48,16 +49,17 @@ static bool8 simpleShadingPassExecute(RenderPass* pass)
 
   glUniform1ui(0, lightSources.size());
   glUniform3fv(1, 1, &data->ambientColor[0]);
-  glUniform3fv(2, 1, &data->topColor[0]);
-  glUniform3fv(3, 1, &data->bottomColor[0]);    
-  glUniform1i(4, 0);
-  glUniform1i(5, 1);
-  glUniform1i(6, 2);  
+  glUniform1i(2, 0);
+  glUniform1i(3, 1);
+  glUniform1i(4, 2);  
   
   drawTriangleNoVAO();
 
   shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+  popBlend();
+  glDisable(GL_BLEND);
   
   return TRUE;
 }
@@ -67,8 +69,6 @@ static void simpleShadingPassDrawInputView(RenderPass* pass)
   SimpleShadingPassData* data = (SimpleShadingPassData*)renderPassGetInternalData(pass);
 
   ImGui::ColorEdit3("Ambient color", &data->ambientColor[0]);
-  ImGui::ColorEdit3("Top background color", &data->topColor[0]);
-  ImGui::ColorEdit3("Bottom background color", &data->bottomColor[0]);  
 }
 
 static const char* simpleShadingPassGetName(RenderPass* pass)
@@ -92,8 +92,6 @@ bool8 createSimpleShadingPass(RenderPass** outPass)
 
   SimpleShadingPassData* data = engineAllocObject<SimpleShadingPassData>(MEMORY_TYPE_GENERAL);
   data->ambientColor = float3(0.09f, 0.13f, 0.16f);
-  data->bottomColor = float3(0.63f, 0.93f, 0.9f);
-  data->topColor = float3(0.09f, 0.7f, 1.0f);  
   
   data->ldrFBO = createFramebuffer(rendererGetResourceHandle(RR_LDR1_MAP_TEXTURE));
   assert(data->ldrFBO != 0);

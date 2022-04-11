@@ -71,10 +71,11 @@ struct UIWidgetsVisualizationPassData
   ShaderProgramPtr axisVisualizationProgram;
 
   AABBVisualizationMode visualizationMode;
-  bool8 showParents = TRUE;
-  bool8 showAABB    = TRUE;
-  bool8 showFrustum = FALSE;
-  bool8 showAxes    = TRUE;
+  bool8 showParents        = TRUE;
+  bool8 showUnselectedAABB = FALSE;
+  bool8 showAABB           = TRUE;
+  bool8 showFrustum        = FALSE;
+  bool8 showAxes           = TRUE;
 };
 
 static void destroyUIWidgetsVisualizationPass(RenderPass* pass)
@@ -127,17 +128,17 @@ static void gatherAABBs(UIWidgetsVisualizationPassData* data,
     {
       instanceData.color = float3(1.0, 0.0, 0.0);
     }
-    
+
     if(geometryIsSelected(geometry) == TRUE)
     {
-
-      unselectedInstances.push_back(instanceData);
-    }
-    else
-    {
-      instanceData.color *= 0.6f;
       selectedInstances.push_back(instanceData);
     }
+    else if(data->showUnselectedAABB == TRUE)
+    {
+      instanceData.color *= 0.6f;
+      unselectedInstances.push_back(instanceData);
+    }
+
   }
 }
 
@@ -200,7 +201,7 @@ static void drawAABBs(UIWidgetsVisualizationPassData* data)
   vector<AABBVisualizationPassInstanceData> selectedInstances;
   vector<AABBVisualizationPassInstanceData> unselectedInstances;  
   gatherAABBs(data, sceneGetGeometryRoot(rendererGetPassedScene()),
-              selectedInstances, unselectedInstances);
+              unselectedInstances, selectedInstances);
 
 
   glDepthFunc(GL_LESS);
@@ -318,13 +319,13 @@ static void uiWidgetsVisualizationPassDrawInputView(RenderPass* pass)
     "Show final AABB"
   };
 
-
-  ImGui::Checkbox("Show frustum", (bool*)&data->showFrustum);
-  ImGui::SameLine();  
-
-  ImGui::Checkbox("Show axes", (bool*)&data->showAxes);
+  ImGui::Text("AABB settings");
+  ImGui::Separator();
   
   ImGui::Checkbox("Show AABB", (bool*)&data->showAABB);
+  ImGui::SameLine();
+
+  ImGui::Checkbox("Show not selected AABB", (bool*)&data->showUnselectedAABB);
   ImGui::SameLine();
   
   ImGui::Checkbox("Show AABB parents", (bool*)&data->showParents);
@@ -335,7 +336,17 @@ static void uiWidgetsVisualizationPassDrawInputView(RenderPass* pass)
                (int32*)&data->visualizationMode,
                visualizationModesLabels,
                ARRAY_SIZE(visualizationModesLabels));
-  ImGui::PopItemWidth();
+  ImGui::PopItemWidth();  
+
+
+  ImGui::Text("Misc settings");
+  ImGui::Separator();
+  
+  ImGui::Checkbox("Show frustum", (bool*)&data->showFrustum);
+  ImGui::SameLine();  
+
+  ImGui::Checkbox("Show axes", (bool*)&data->showAxes);
+
 }
 
 static const char* uiWidgetsVisualizationPassGetName(RenderPass* pass)

@@ -2,15 +2,13 @@
 
 #include common.glsl
 
-layout(location = 0) out float3 outColor;
+layout(location = 0) out float4 outColor;
 
 layout(location = 0) uniform uint32 lightsCount;
 layout(location = 1) uniform float3 ambientColor;
-layout(location = 2) uniform float3 topBGColor;
-layout(location = 3) uniform float3 bottomBGColor;
-layout(location = 4) uniform sampler2D depthTexture;
-layout(location = 5) uniform sampler2D normalsTexture;
-layout(location = 6) uniform sampler2D shadowsTexture;
+layout(location = 2) uniform sampler2D depthTexture;
+layout(location = 3) uniform sampler2D normalsTexture;
+layout(location = 4) uniform sampler2D shadowsTexture;
 
 
 float3 getLightDirection(uint32 lightIndex, float3 p, inout float32 lpDistance)
@@ -35,9 +33,10 @@ void main()
 
   bool isSurface = dot(normal, normal) > 0.1;
   
-  float3 radiance = ambientColor;
+  float3 radiance = 0.0f.xxx;
   if(isSurface)
   {
+    radiance = ambientColor;    
     for(uint32 i = 0; i < lightsCount; i++)
     {
       float32 lpDistance = 1.0f;
@@ -57,12 +56,6 @@ void main()
       radiance += lightParams[i].intensity.rgb * max(dot(normal, l), 0.0) * attenuation * shadows[i % 4];
     }
   }
-  else
-  {
-    float3 worldRay = generateRayDir(uv);
-    float32 elevationAngle = dot(worldRay, float3(0.0f, 1.0f, 0.0f)) * 0.5 + 0.5;
-    radiance = pow(mix(bottomBGColor, topBGColor, elevationAngle), params.invGamma.xxx);
-  }
   
-  outColor = radiance;
+  outColor = float4(radiance, isSurface);
 }
