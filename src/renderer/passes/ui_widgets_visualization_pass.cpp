@@ -63,20 +63,59 @@ struct UIWidgetsVisualizationPassData
   Model3DPtr cubesModel;
   Model3DPtr frustumModel;
   Model3DPtr axisModel;
+  Model3DPtr gridModel;
   
   GLuint ldrFBO;
   
   ShaderProgramPtr aabbVisualizationProgram;
   ShaderProgramPtr frustumVisualizationProgram;
   ShaderProgramPtr axisVisualizationProgram;
+  ShaderProgramPtr gridVisualizationProgram;
 
   AABBVisualizationMode visualizationMode;
+  float32 gridFrequency;
   bool8 showParents        = TRUE;
   bool8 showUnselectedAABB = FALSE;
   bool8 showAABB           = TRUE;
   bool8 showFrustum        = FALSE;
   bool8 showAxes           = TRUE;
+  bool8 showGrid           = TRUE;
 };
+
+static uint32 calculateGridLinesCount(float32 frequency)
+{
+  float32 fsize = rendererGetPassedRenderingParameters().worldSize;
+  return uint32(fsize * frequency + 0.5f);
+}
+
+static Model3DPtr createGridModel(float32 frequency)
+{
+  Model3D* model = nullptr;
+  assert(createModel3DEmpty(&model));
+
+  float32 fsize = rendererGetPassedRenderingParameters().worldSize;
+  float32 hsize = fsize * 0.5f;
+
+  uint32 n = calculateGridLinesCount(frequency);
+  uint32 gap = fsize / float32(n);
+  
+  vector<float3> vertices;
+  for(uint32 k = 0; k < n; k++)
+  {
+    // horizontal line
+    vertices.push_back(float3(-hsize + k * gap, 0.0f, -hsize));
+    vertices.push_back(float3(-hsize + k * gap, 0.0f, hsize));
+
+    // vertical line
+    vertices.push_back(float3(-hsize, 0.0f, -hsize + k * gap));
+    vertices.push_back(float3(hsize, 0.0f, -hsize + k * gap));        
+  }
+
+  model3DAttachBuffer(model, 0, (float32*)&vertices[0], sizeof(float3) * vertices.size(), GL_STATIC_DRAW);
+  model3DDescribeInput(model, 0, 0, 3, GL_FLOAT, sizeof(float3), 0);
+  
+  return Model3DPtr(model);
+}
 
 static void destroyUIWidgetsVisualizationPass(RenderPass* pass)
 {
@@ -88,7 +127,8 @@ static void destroyUIWidgetsVisualizationPass(RenderPass* pass)
 
   data->aabbVisualizationProgram = ShaderProgramPtr(nullptr);
   data->frustumVisualizationProgram = ShaderProgramPtr(nullptr);
-  data->axisVisualizationProgram = ShaderProgramPtr(nullptr);  
+  data->axisVisualizationProgram = ShaderProgramPtr(nullptr);
+  data->gridVisualizationProgram = ShaderProgramPtr(nullptr);
   
   engineFreeObject(data, MEMORY_TYPE_GENERAL);
 }
@@ -287,6 +327,25 @@ static void drawAxes(UIWidgetsVisualizationPassData* data)
   glDisable(GL_DEPTH_TEST);  
 }
 
+static void drawGrid(UIWidgetsVisualizationPassData* data)
+{
+  uint32 n = calculateGridLinesCount(data->gridFrequency);
+  
+  glLineWidth(1.0);
+  glDepthFunc(GL_LESS);
+  glEnable(GL_DEPTH_TEST);
+  
+  glBindFramebuffer(GL_FRAMEBUFFER, data->ldrFBO);
+  shaderProgramUse(data->gridVisualizationProgram);
+  
+  glBindVertexArray(model3DGetVAOHandle(data->gridModel));
+  glDrawArrays(GL_LINES, 0, n * n * 2);
+  
+  shaderProgramUse(nullptr);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+
 static bool8 uiWidgetsVisualizationPassExecute(RenderPass* pass)
 {
   UIWidgetsVisualizationPassData* data = (UIWidgetsVisualizationPassData*)renderPassGetInternalData(pass);
@@ -304,6 +363,11 @@ static bool8 uiWidgetsVisualizationPassExecute(RenderPass* pass)
   if(data->showAxes == TRUE)
   {
     drawAxes(data);
+  }
+
+  if(data->showGrid == TRUE)
+  {
+    drawGrid(data);
   }
   
   return TRUE;
@@ -346,7 +410,16 @@ static void uiWidgetsVisualizationPassDrawInputView(RenderPass* pass)
   ImGui::SameLine();  
 
   ImGui::Checkbox("Show axes", (bool*)&data->showAxes);
+  ImGui::SameLine();
 
+  ImGui::Checkbox("Show grid", (bool*)&data->showGrid);  
+  ImGui::SameLine();  
+    
+
+  if(ImGui::SliderFloat("Grid frequency", &data->gridFrequency, 0.1f, 10.0f))
+  {
+    data->gridModel = createGridModel(data->gridFrequency);
+  }
 }
 
 static const char* uiWidgetsVisualizationPassGetName(RenderPass* pass)
@@ -405,6 +478,23 @@ static ShaderProgram* createAxesVisualizationProgram()
   return program;
 }
 
+static ShaderProgram* createGridVisualizationProgram()
+{
+  ShaderProgram* program = nullptr;
+  
+  createShaderProgram(&program);
+  shaderProgramAttachShader(program, shaderManagerLoadShader(GL_VERTEX_SHADER, "shaders/visualize_grid.vert"));
+  shaderProgramAttachShader(program, shaderManagerLoadShader(GL_FRAGMENT_SHADER, "shaders/visualize_grid.frag"));
+
+  if(linkShaderProgram(program) == FALSE)
+  {
+    destroyShaderProgram(program);
+    return nullptr;
+  }
+
+  return program;
+}
+
 static Model3DPtr createCubesModel()
 {
   Model3D* model = nullptr;
@@ -453,6 +543,7 @@ static Model3DPtr createAxisModel()
   return Model3DPtr(model);
 }
 
+
 bool8 createUIWidgetsVisualizationPass(RenderPass** outPass)
 {
   RenderPassInterface interface = {};
@@ -473,9 +564,11 @@ bool8 createUIWidgetsVisualizationPass(RenderPass** outPass)
                                     rendererGetResourceHandle(RR_DEPTH1_MAP_TEXTURE));
   assert(data->ldrFBO != 0);
 
+  data->gridFrequency = 0.2f;
   data->cubesModel = createCubesModel();
   data->frustumModel = createFrustumModel();
   data->axisModel = createAxisModel();
+  data->gridModel = createGridModel(data->gridFrequency);
   
   data->aabbVisualizationProgram = ShaderProgramPtr(createAABBVisualizationProgram());
   assert(data->aabbVisualizationProgram != nullptr);
@@ -485,6 +578,9 @@ bool8 createUIWidgetsVisualizationPass(RenderPass** outPass)
   
   data->axisVisualizationProgram = ShaderProgramPtr(createAxesVisualizationProgram());
   assert(data->frustumVisualizationProgram != nullptr);
+
+  data->gridVisualizationProgram = ShaderProgramPtr(createGridVisualizationProgram());
+  assert(data->gridVisualizationProgram != nullptr);
   
   renderPassSetInternalData(*outPass, data);
   
