@@ -416,10 +416,12 @@ static void uiWidgetsVisualizationPassDrawInputView(RenderPass* pass)
   ImGui::SameLine();  
     
 
+  ImGui::PushItemWidth(100.0f);
   if(ImGui::SliderFloat("Grid frequency", &data->gridFrequency, 0.1f, 10.0f))
   {
     data->gridModel = createGridModel(data->gridFrequency);
   }
+  ImGui::PopItemWidth();
 }
 
 static const char* uiWidgetsVisualizationPassGetName(RenderPass* pass)

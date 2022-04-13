@@ -63,7 +63,7 @@
 63. ambient color shouldn't affect background
 64. do not show pcfs for leafs
 65. add ability to disable scene elements
-66. disabling light disabled all other lights too (probably we need to add an id to the button)
+66. disabling light disabling all other lights too (probably we need to add an id to the button)
 67. possibly shaders are recreated too often (shaderid after some time is too big)
 68. shader program ptr
 69. if aabb is disabled - sometimes lags are hapening
@@ -74,3 +74,6 @@
 74. render axes for selected lights too
 75. render grid
 76. scene serialization
+77. scaling and translation transformations are computed in wrong order.
+78. it's possible to analyze emissive-only surfaces and render an additional emissive-only pass
+79. Make one larger buffer of GeometryTransformParameters: assign transforms to each ID. In future, we can use it for converting world positions to object's space for texturing. In the same GeometryTransforParameters, store other geometry data, e.g id of a material. 
