@@ -1,8 +1,11 @@
 #pragma once
 
 #include "defines.h"
+#include "maths/common.h"
 
 #define ARRAY_SIZE(array) sizeof((array))/sizeof((array[0]))
+
+float4 calculateUVRect(uint2 imageSize, uint2 offset, uint2 size);
 
 // --- [Reverting byte order] -------------------------------------------------
 

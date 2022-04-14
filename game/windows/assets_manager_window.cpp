@@ -16,6 +16,7 @@
 #include "editor_utils.h"
 #include "window_manager.h"
 #include "assets_manager_window.h"
+#include "material_settings_window.h"
 #include "script_function_settings_window.h"
 
 #include <ptr.h>
@@ -58,8 +59,8 @@ static AssetPtr createODFAsset();
 static AssetPtr createPCFAsset();
 static void editScriptFunctionAsset(AssetPtr asset);
 
-static AssetPtr createMaterialAsset() { /** TODO */ }
-static void editMaterialAsset(AssetPtr asset) { /** TODO */ }
+static AssetPtr createMaterialAsset();
+static void editMaterialAsset(AssetPtr asset);
 
 enum CategoryType
 {
@@ -354,4 +355,28 @@ void editScriptFunctionAsset(AssetPtr asset)
 
     windowManagerAddWindow(WindowPtr(settingsWindow));
   }
+}
+
+static AssetPtr createMaterialAsset()
+{
+  Asset* material;
+  createMaterial("new_material", &material);
+
+  return AssetPtr(material);
+}
+
+static void editMaterialAsset(AssetPtr asset)
+{
+  WindowPtr openedWindow = windowManagerGetWindow(materialSettingsWindowIdentifier(asset));
+  if(openedWindow != nullptr)
+  {
+    windowSetFocused(openedWindow, TRUE);
+  }
+  else
+  {
+    Window* settingsWindow = nullptr;
+    createMaterialSettingsWindow(asset, AssetPtr(nullptr), &settingsWindow);
+
+    windowManagerAddWindow(WindowPtr(settingsWindow));
+  }  
 }

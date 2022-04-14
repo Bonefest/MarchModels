@@ -1,6 +1,7 @@
 #include <vector>
 #include <unordered_map>
 
+#include "utils.h"
 #include "model3d.h"
 #include "renderer.h"
 #include "shader_manager.h"
@@ -178,13 +179,10 @@ void billboardSystemDrawImagePix(ImagePtr image,
                                  float3 offset,
                                  bool8 usePainterOrder)
 {
-  float32 invWidth = 1.0f / float32(imageGetWidth(image));
-  float32 invHeight = 1.0f / float32(imageGetHeight(image));
-
-  float2 uvMin = float2(float32(pixelOffset.x) * invWidth, float32(pixelOffset.y) * invHeight);
-  float2 uvMax = float2(float32(pixelSize.x) * invWidth, float32(pixelSize.y) * invHeight) + uvMin;
-
-  billboardSystemDrawImage(image, worldPosition, uvMin, uvMax, color, scale, offset, usePainterOrder);
+  float4 uvRect = calculateUVRect(imageGetSize(image), pixelOffset, pixelSize);
+  
+  billboardSystemDrawImage(image, worldPosition,
+                           float2(uvRect.x, uvRect.y), float2(uvRect.z, uvRect.w), color, scale, offset, usePainterOrder);
 }
 
 
