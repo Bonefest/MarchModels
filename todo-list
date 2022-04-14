@@ -76,4 +76,5 @@
 76. scene serialization
 77. scaling and translation transformations are computed in wrong order.
 78. it's possible to analyze emissive-only surfaces and render an additional emissive-only pass
-79. Make one larger buffer of GeometryTransformParameters: assign transforms to each ID. In future, we can use it for converting world positions to object's space for texturing. In the same GeometryTransforParameters, store other geometry data, e.g id of a material. 
+79. Make one larger buffer of GeometryTransformParameters: assign transforms to each ID. In future, we can use it for converting world positions to object's space for texturing. In the same GeometryTransforParameters, store other geometry data, e.g id of a material.
+80. No-Texture shading mode

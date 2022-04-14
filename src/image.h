@@ -13,6 +13,8 @@ ENGINE_API uint32 imageGetWidth(Image* image);
 ENGINE_API uint32 imageGetHeight(Image* image);
 ENGINE_API uint2 imageGetSize(Image* image);
 
+ENGINE_API const std::string& imageGetName(Image* image);
+
 ENGINE_API GLuint imageGetGLHandle(Image* image);
 
 using ImagePtr = SharedPtr<Image, destroyImage>;
