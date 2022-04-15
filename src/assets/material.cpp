@@ -3,7 +3,7 @@
 struct MaterialTextureData
 {
   ImagePtr texture;
-  float4 textureUVRect;
+  uint4 textureRect;
   float4 atlasUVRect;
   
   bool8 enabled;
@@ -35,10 +35,10 @@ const char* materialTextureTypeLabel(MaterialTextureType texType)
 {
   switch(texType)
   {
-    case MATERIAL_TEXTURE_TYPE_DIFFUSE: return "Diffuse texture";
-    case MATERIAL_TEXTURE_TYPE_SPECULAR: return "Specular texture";
-    case MATERIAL_TEXTURE_TYPE_BUMP: return "Bump texture";
-    case MATERIAL_TEXTURE_TYPE_MRIAO: return "MRIAO texture";
+    case MATERIAL_TEXTURE_TYPE_DIFFUSE: return "Diffuse";
+    case MATERIAL_TEXTURE_TYPE_SPECULAR: return "Specular";
+    case MATERIAL_TEXTURE_TYPE_BUMP: return "Bump";
+    case MATERIAL_TEXTURE_TYPE_MRIAO: return "MRIAO";
 
     default: return "Unknown texture";
   }
