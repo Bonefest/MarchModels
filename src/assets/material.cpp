@@ -3,7 +3,7 @@
 struct MaterialTextureData
 {
   ImagePtr texture;
-  uint4 textureRect;
+  uint4 textureRegion;
   float4 atlasUVRect;
   
   bool8 enabled;
@@ -11,6 +11,8 @@ struct MaterialTextureData
 
 struct Material
 {
+  MaterialTextureProjectionMode projectionMode;
+  
   float32 ior;
   float32 ao;
   float32 metallic;
@@ -44,6 +46,18 @@ const char* materialTextureTypeLabel(MaterialTextureType texType)
   }
 }
 
+const char* materialTextureProjectionModeLabel(MaterialTextureProjectionMode mode)
+{
+  switch(mode)
+  {
+    case MATERIAL_TEXTURE_PROJECTION_MODE_TRIPLANAR: return "Triplanar";
+    case MATERIAL_TEXTURE_PROJECTION_MODE_SPHERICAL: return "Spherical";
+    case MATERIAL_TEXTURE_PROJECTION_MODE_CYLINDRICAL: return "Cylyndrical";
+
+  default: return "Unknown projection mode";
+  }
+}
+
 bool8 createMaterial(const std::string& name, Asset** material)
 {
   AssetInterface interface = {};
@@ -56,6 +70,8 @@ bool8 createMaterial(const std::string& name, Asset** material)
   assert(allocateAsset(interface, name, material));
 
   Material* materialData = engineAllocObject<Material>(MEMORY_TYPE_GENERAL);
+  materialData->projectionMode = MATERIAL_TEXTURE_PROJECTION_MODE_TRIPLANAR;
+  
   materialData->ior = 1.0f;
   materialData->ao = 0.0f;
   materialData->metallic = 0.0f;
@@ -86,6 +102,18 @@ void materialDestroy(Asset* material)
   engineFreeObject(materialData, MEMORY_TYPE_GENERAL);
 }
 
+void materialSetProjectionMode(Asset* material, MaterialTextureProjectionMode mode)
+{
+  Material* materialData = (Material*)assetGetInternalData(material);
+  materialData->projectionMode = mode;
+}
+
+MaterialTextureProjectionMode materialGetProjectionMode(Asset* material)
+{
+  Material* materialData = (Material*)assetGetInternalData(material);  
+  return materialData->projectionMode;
+}
+
 void materialSetTexture(Asset* material, MaterialTextureType type, ImagePtr image)
 {
   Material* materialData = (Material*)assetGetInternalData(material);
@@ -108,6 +136,18 @@ bool8 materialHasTexture(Asset* material, MaterialTextureType type)
 {
   Material* materialData = (Material*)assetGetInternalData(material);  
   return materialData->textures[type].texture != ImagePtr(nullptr) ? TRUE : FALSE;
+}
+
+void materialSetTextureRegion(Asset* material, MaterialTextureType type, uint4 region)
+{
+  Material* materialData = (Material*)assetGetInternalData(material);
+  materialData->textures[type].textureRegion = region;
+}
+
+uint4 materialGetTextureRegion(Asset* material, MaterialTextureType type)
+{
+  Material* materialData = (Material*)assetGetInternalData(material);
+  return materialData->textures[type].textureRegion;
 }
 
 void materialSetEnabledTexture(Asset* material, MaterialTextureType type, bool8 enabled)

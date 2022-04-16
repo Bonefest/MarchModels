@@ -23,13 +23,20 @@ enum MaterialTextureProjectionMode
 };
   
 ENGINE_API const char* materialTextureTypeLabel(MaterialTextureType texType);
+ENGINE_API const char* materialTextureProjectionModeLabel(MaterialTextureProjectionMode mode);
 
 ENGINE_API bool8 createMaterial(const std::string& name, Asset** material);
+
+ENGINE_API void materialSetProjectionMode(Asset* material, MaterialTextureProjectionMode mode);
+ENGINE_API MaterialTextureProjectionMode materialGetProjectionMode(Asset* material);
 
 ENGINE_API void materialSetTexture(Asset* material, MaterialTextureType type, ImagePtr texture);
 ENGINE_API ImagePtr materialGetTexture(Asset* material, MaterialTextureType type);
 ENGINE_API void materialRemoveTexture(Asset* material, MaterialTextureType type);
 ENGINE_API bool8 materialHasTexture(Asset* material, MaterialTextureType type);
+
+ENGINE_API void materialSetTextureRegion(Asset* material, MaterialTextureType type, uint4 region);
+ENGINE_API uint4 materialGetTextureRegion(Asset* material, MaterialTextureType type);
 
 ENGINE_API void materialSetEnabledTexture(Asset* material, MaterialTextureType type, bool8 enabled);
 ENGINE_API bool8 materialIsTextureEnabled(Asset* material, MaterialTextureType type);

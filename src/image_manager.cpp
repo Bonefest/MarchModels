@@ -73,7 +73,8 @@ ImagePtr imageManagerLoadImage(const char* path)
 
   Image* image;
   createImage(textureHandle, width, height, &image);
-
+  imageSetName(image, path);
+  
   ImagePtr imagePtr = ImagePtr(image);
   
   data.loadedImages[string(path)] = imagePtr;

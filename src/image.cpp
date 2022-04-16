@@ -6,6 +6,8 @@ struct Image
 
   uint32 width;
   uint32 height;
+
+  std::string name;
 };
 
 bool8 createImage(GLuint texture, uint32 width, uint32 height, Image** outImage)
@@ -44,6 +46,16 @@ uint32 imageGetHeight(Image* image)
 uint2 imageGetSize(Image* image)
 {
   return uint2(image->width, image->height);
+}
+
+void imageSetName(Image* image, const std::string& name)
+{
+  image->name = name;
+}
+
+const std::string& imageGetName(Image* image)
+{
+  return image->name;
 }
 
 GLuint imageGetGLHandle(Image* image)
