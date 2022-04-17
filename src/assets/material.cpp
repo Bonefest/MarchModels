@@ -24,6 +24,8 @@ struct Material
   float4 emissionColor;
 
   MaterialTextureData textures[MATERIAL_TEXTURE_TYPE_COUNT];
+
+  bool8 integratedIntoAtlas = FALSE;
 };
 
 using nlohmann::json;
@@ -118,6 +120,7 @@ void materialSetTexture(Asset* material, MaterialTextureType type, ImagePtr imag
 {
   Material* materialData = (Material*)assetGetInternalData(material);
   materialData->textures[type].texture = image;
+  materialData->integratedIntoAtlas = FALSE;
 }
 
 ImagePtr materialGetTexture(Asset* material, MaterialTextureType type)
@@ -258,3 +261,26 @@ float32 materialGetRoughness(Asset* material)
   return materialData->roughness;
 }
 
+void materialSetTextureAtlasRect(Asset* material, MaterialTextureType type, float4 rect)
+{
+  Material* materialData = (Material*)assetGetInternalData(material);
+  materialData->textures[type].atlasUVRect = rect;
+}
+
+float4 materialGetTextureAtlasRect(Asset* material, MaterialTextureType type)
+{
+  Material* materialData = (Material*)assetGetInternalData(material);
+  return materialData->textures[type].atlasUVRect;
+}
+
+void materialSetIntegratedIntoAtlas(Asset* material, bool8 integrated)
+{
+  Material* materialData = (Material*)assetGetInternalData(material);
+  materialData->integratedIntoAtlas = integrated;
+}
+
+bool8 materialIsIntegratedIntoAtlas(Asset* material)
+{
+  Material* materialData = (Material*)assetGetInternalData(material);
+  return materialData->integratedIntoAtlas;
+}

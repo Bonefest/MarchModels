@@ -65,4 +65,9 @@ ENGINE_API float32 materialGetMetallic(Asset* material);
 ENGINE_API void materialSetRoughness(Asset* material, float32 roughness);
 ENGINE_API float32 materialGetRoughness(Asset* material);
 
+void materialSetTextureAtlasRect(Asset* material, MaterialTextureType type, float4 rect);
+float4 materialGetTextureAtlasRect(Asset* material, MaterialTextureType type);
+
+void materialSetIntegratedIntoAtlas(Asset* material, bool8 integrated);
+bool8 materialIsIntegratedIntoAtlas(Asset* material);
 // ENGINE_API SMaterial materialToShaderMaterial(Asset* material);

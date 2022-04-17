@@ -11,6 +11,7 @@
 #include "lua/lua_system.h"
 #include "renderer/renderer.h"
 #include "assets/assets_manager.h"
+#include "assets/materials_atlas_system.h"
 
 #include "application.h"
 #include "game_framework.h"
@@ -372,6 +373,17 @@ static bool8 initApplication()
     LOG_SUCCESS("Image manager has been initialized successfully!");
   }
 
+  /** --- Materials atlas system initialization ---------------------------- */
+  if(initializeMAS() == FALSE)
+  {
+    LOG_ERROR("Cannot initialize materials atlas system!");
+    return FALSE;
+  }
+  else
+  {
+    LOG_SUCCESS("Materials atlas system has been initialized successfully!");
+  }
+  
   /** --- Game initialization ---------------------------------------------- */
 
   if(!game.initialize(&application))
