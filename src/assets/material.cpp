@@ -75,7 +75,7 @@ bool8 createMaterial(const std::string& name, Asset** material)
   materialData->ior = 1.0f;
   materialData->ao = 0.0f;
   materialData->metallic = 0.0f;
-  materialData->roughness = 0.0f;
+  materialData->roughness = 1.0f;
 
   materialData->ambientColor = float4(0.0f, 0.0f, 0.0f, 0.0f);
   materialData->diffuseColor = float4(1.0f, 1.0f, 1.0f, 1.0f);

@@ -352,7 +352,8 @@ void editScriptFunctionAsset(AssetPtr asset)
   {
     Window* settingsWindow = nullptr;
     createScriptFunctionSettingsWindow(AssetPtr(nullptr), asset, &settingsWindow);
-
+    windowSetSize(settingsWindow, float2(640.0f, 360.0f));
+    
     windowManagerAddWindow(WindowPtr(settingsWindow));
   }
 }
@@ -376,7 +377,8 @@ static void editMaterialAsset(AssetPtr asset)
   {
     Window* settingsWindow = nullptr;
     createMaterialSettingsWindow(asset, AssetPtr(nullptr), &settingsWindow);
-
+    windowSetSize(settingsWindow, float2(640.0f, 360.0f));
+    
     windowManagerAddWindow(WindowPtr(settingsWindow));
   }  
 }

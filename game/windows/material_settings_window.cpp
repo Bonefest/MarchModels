@@ -52,8 +52,9 @@ bool8 createMaterialSettingsWindow(AssetPtr material, AssetPtr geometryOwner, Wi
       strcpy(data->texturePaths[itype], imageGetName(image).c_str());
     }
   }
-  
+
   windowSetInternalData(*outWindow, data);
+  windowSetStyle(*outWindow, ImGuiStyleVar_WindowPadding, float2(12.0f, 12.0f));  
   
   return TRUE;
 }
@@ -90,6 +91,14 @@ void materialSettingsWindowDraw(Window* window, float64 delta)
   float4 cancelUVRect = calculateUVRect(imageGetSize(defaultImage), uint2(832, 64), uint2(64, 64));
 
   ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+  ImGui::PushStyleColor(ImGuiCol_FrameBg, float4(0.2f, 0.2f, 0.2f, 0.54f));
+  ImGui::PushStyleColor(ImGuiCol_Button, (float4)SecondaryClr * 0.5f);
+  ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (float4)BrightSecondaryClr * 0.6f);
+  ImGui::PushStyleColor(ImGuiCol_ButtonActive, (float4)BrightSecondaryClr * 0.65f);  
+  ImGui::PushStyleColor(ImGuiCol_SliderGrab, float4(0.41f, 0.41f, 0.41f, 1.0f));
+      
+  ImGui::Text("Texture settings");
+  ImGui::Separator();
   
   // --- Projection mode ------------------------------------------------------
   static const char* projectionModeLabels[] =
@@ -108,6 +117,7 @@ void materialSettingsWindowDraw(Window* window, float64 delta)
   }
   
   // --- Texture choosing -----------------------------------------------------
+
   for(uint32 itype = 0; itype < MATERIAL_TEXTURE_TYPE_COUNT; itype++)
   {
     const float32 imageSize = 48.0f;
@@ -127,8 +137,7 @@ void materialSettingsWindowDraw(Window* window, float64 delta)
     uint2 textureSize = uint2(64, 64);
     uint4 textureRegion = materialGetTextureRegion(data->material, type);
     bool8 textureEnabled = materialIsTextureEnabled(data->material, type);
-    
-    // TODO: Else Use only rect specified by user    
+
     if(image == ImagePtr(nullptr))
     {
       uvMin = float2(defaultUVRect.x, defaultUVRect.y);
@@ -170,11 +179,7 @@ void materialSettingsWindowDraw(Window* window, float64 delta)
       ImGui::SameLine();
 
       ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, float2(0.0f, 4.0f));
-        ImGui::PushItemWidth(256.0f);
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, float4(0.2f, 0.2f, 0.2f, 0.54f));
-          ImGui::InputTextWithHint("", "path to a file", data->texturePaths[type], 256);
-        ImGui::PopStyleColor();
-        ImGui::PopItemWidth();
+        ImGui::InputTextWithHint("", "path to a file", data->texturePaths[type], 256);
 
         ImGui::SameLine();
 
@@ -182,18 +187,20 @@ void materialSettingsWindowDraw(Window* window, float64 delta)
         {
           ImGui::BeginDisabled(strlen(data->texturePaths[type]) == 0);
         }
-        ImGui::PushStyleColor(ImGuiCol_Button, (float4)SecondaryClr * 0.5f);
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (float4)BrightSecondaryClr * 0.6f);
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (float4)BrightSecondaryClr * 0.65f);
+
           if(ImGui::Button("Load"))
           {
             ImagePtr loadedImage = imageManagerLoadImage(data->texturePaths[type]);
             if(loadedImage != ImagePtr(nullptr))
             {
+              uint2 loadedTextureSize = imageGetSize(loadedImage);
+              uint4 loadedTextureRegion = uint4(0, 0, loadedTextureSize.x, loadedTextureSize.y);
+              
               materialSetTexture(data->material, type, loadedImage);
+              materialSetTextureRegion(data->material, type, loadedTextureRegion);
             }
           }
-        ImGui::PopStyleColor(3);
+
         if(textureEnabled == TRUE)
         {
           ImGui::EndDisabled();
@@ -207,7 +214,6 @@ void materialSettingsWindowDraw(Window* window, float64 delta)
       ImGui::Dummy(float2(imageSize, 0.0f));
       ImGui::SameLine();
 
-      ImGui::PushItemWidth(256.0f);
       ImGui::PushStyleColor(ImGuiCol_FrameBg, float4(0.13f, 0.13f, 0.13f, 0.54f));
 
         uint32 minRegionSize = 0;      
@@ -223,7 +229,6 @@ void materialSettingsWindowDraw(Window* window, float64 delta)
           materialSetTextureRegion(data->material, type, textureRegion);
         }
       ImGui::PopStyleColor();
-      ImGui::PopItemWidth();
 
       ImGui::NewLine();
 
@@ -238,8 +243,149 @@ void materialSettingsWindowDraw(Window* window, float64 delta)
     ImGui::PopID();
   }
 
-  // ---  -----------------------------------------------------
+  // --- Colors settings ------------------------------------------------------
+  
+  ImGui::Text("Constant colors settings");
+  ImGui::Separator();
+  
+  float4 ambientColor = materialGetAmbientColor(data->material);
+  float4 diffuseColor = materialGetDiffuseColor(data->material);
+  float4 specularColor = materialGetSpecularColor(data->material);
+  float4 emissionColor = materialGetEmissionColor(data->material);
 
+  // Ambient color
+  pushIconSmallButtonStyle();
+    if(ImGui::SmallButton(ICON_KI_RELOAD_INVERSE"##ReloadAmbient"))
+    {
+      materialSetAmbientColor(data->material, float4(0.0f, 0.0f, 0.0f, 1.0f));
+    }
+
+  ImGui::SameLine();
+  popIconSmallButtonStyle();
+  
+  if(ImGui::ColorEdit3("Ambient color", &ambientColor[0]))
+  {
+    materialSetAmbientColor(data->material, ambientColor);
+  }
+
+  // Diffuse color  
+  pushIconSmallButtonStyle();
+    if(ImGui::SmallButton(ICON_KI_RELOAD_INVERSE"##ReloadDiffuse"))
+    {
+      materialSetDiffuseColor(data->material, float4(1.0f, 1.0f, 1.0f, 1.0f));
+    }
+
+  ImGui::SameLine();
+  popIconSmallButtonStyle();
+  
+  if(ImGui::ColorEdit3("Diffuse color", &diffuseColor[0]))
+  {
+    materialSetDiffuseColor(data->material, diffuseColor);
+  }
+
+  // Specular color  
+  pushIconSmallButtonStyle();
+    if(ImGui::SmallButton(ICON_KI_RELOAD_INVERSE"##ReloadSpecular"))
+    {
+      materialSetSpecularColor(data->material, float4(1.0f, 1.0f, 1.0f, 1.0f));
+    }
+
+  ImGui::SameLine();
+  popIconSmallButtonStyle();
+  
+  if(ImGui::ColorEdit3("Specular color", &specularColor[0]))
+  {
+    materialSetSpecularColor(data->material, specularColor);
+  }
+
+  // Emission color
+  pushIconSmallButtonStyle();
+    if(ImGui::SmallButton(ICON_KI_RELOAD_INVERSE"##ReloadEmission"))
+    {
+      materialSetEmissionColor(data->material, float4(0.0f, 0.0f, 0.0f, 1.0f));
+    }
+
+  ImGui::SameLine();
+  popIconSmallButtonStyle();  
+
+  if(ImGui::ColorEdit3("Emission color", &emissionColor[0]))
+  {
+    materialSetEmissionColor(data->material, emissionColor);
+  }
+
+  ImGui::NewLine();
+  
+  // --- Misc settings ------------------------------------------------------  
+
+  ImGui::Text("Misc settings");
+  ImGui::Separator();
+  
+  float32 metallic = materialGetMetallic(data->material);
+  float32 roughness = materialGetRoughness(data->material);  
+  float32 ior = materialGetIOR(data->material);
+  float32 ao = materialGetAO(data->material);
+
+  // Metallic
+  pushIconSmallButtonStyle();
+    if(ImGui::SmallButton(ICON_KI_RELOAD_INVERSE"##ReloadMetallic"))
+    {
+      materialSetMetallic(data->material, 0.0f);
+    }
+
+  ImGui::SameLine();
+  popIconSmallButtonStyle();  
+
+  if(ImGui::SliderFloat("Metallic", &metallic, 0.0f, 1.0f))
+  {
+    materialSetMetallic(data->material, metallic);
+  }
+
+  // Roughness  
+  pushIconSmallButtonStyle();
+    if(ImGui::SmallButton(ICON_KI_RELOAD_INVERSE"##ReloadRoughness"))
+    {
+      materialSetRoughness(data->material, 1.0f);
+    }
+
+  ImGui::SameLine();
+  popIconSmallButtonStyle();  
+
+  if(ImGui::SliderFloat("Roughness", &roughness, 0.0f, 1.0f))
+  {
+    materialSetRoughness(data->material, roughness);
+  }  
+
+  // Index of refraction
+  pushIconSmallButtonStyle();
+    if(ImGui::SmallButton(ICON_KI_RELOAD_INVERSE"##ReloadIOR"))
+    {
+      materialSetIOR(data->material, 1.0f);
+    }
+
+  ImGui::SameLine();
+  popIconSmallButtonStyle();  
+
+  if(ImGui::SliderFloat("IOR", &ior, 1.0f, 100.0f))
+  {
+    materialSetIOR(data->material, ior);
+  }
+  
+  // Ambient occlusion
+  pushIconSmallButtonStyle();
+    if(ImGui::SmallButton(ICON_KI_RELOAD_INVERSE"##ReloadAO"))
+    {
+      materialSetAO(data->material, 0.0f);
+    }
+
+  ImGui::SameLine();
+  popIconSmallButtonStyle();  
+
+  if(ImGui::SliderFloat("AO", &ao, 0.0f, 1.0f))
+  {
+    materialSetAO(data->material, ao);
+  }
+  
+  ImGui::PopStyleColor(5);
   ImGui::PopStyleVar();
 }
 
