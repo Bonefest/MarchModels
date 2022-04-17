@@ -145,6 +145,7 @@ void materialSetTextureRegion(Asset* material, MaterialTextureType type, uint4 r
 {
   Material* materialData = (Material*)assetGetInternalData(material);
   materialData->textures[type].textureRegion = region;
+  materialData->integratedIntoAtlas = FALSE;  
 }
 
 uint4 materialGetTextureRegion(Asset* material, MaterialTextureType type)

@@ -83,6 +83,8 @@ void materialSettingsWindowUpdate(Window* window, float64 delta)
 
 }
 
+
+#include "assets/materials_atlas_system.h"
 void materialSettingsWindowDraw(Window* window, float64 delta)
 {
   MaterialSettingsWindowData* data = (MaterialSettingsWindowData*)windowGetInternalData(window);

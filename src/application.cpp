@@ -410,6 +410,7 @@ static void shutdownApplication()
   }
      
   game.shutdown(&application);
+  shutdownMAS();
   shutdownImageManager();
   shutdownRenderer();
   shutdownAssetsManager();
@@ -438,6 +439,7 @@ static void processInputApplication()
 static void updateApplication(float64 delta)
 {
   schedulerUpdate(delta);
+  masUpdate();
   game.update(&application, delta);
 }
 
