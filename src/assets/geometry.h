@@ -123,4 +123,7 @@ ENGINE_API uint32 geometryGetTotalChildrenCount(Asset* geometry);
 ENGINE_API AssetPtr geometryGetSDF(Asset* geometry);
 ENGINE_API bool8 geometryHasSDF(Asset* geometry);
 
+ENGINE_API void geometrySetMaterial(Asset* geometry, AssetPtr material);
+ENGINE_API AssetPtr geometryGetMaterial(Asset* geometry);
+
 

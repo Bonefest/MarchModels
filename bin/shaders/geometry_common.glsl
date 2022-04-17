@@ -10,7 +10,9 @@ layout(location = 0) uniform sampler2D raysMap;
 
 layout(std140, binding = GEOMETRY_TRANSFORMS_UBO_BINDING) uniform GeometryTransformParametersUBO
 {
-  GeometryTransformParameters geo;
+  GeometryParameters geo[MAX_GEOMETRIES];
+  
+  //GeometryTransformParameters geo;
 };
 
 GeometryData unionGeometries(GeometryData geometry1, GeometryData geometry2)

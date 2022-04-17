@@ -12,12 +12,15 @@
   #define STACKS_SSBO_BINDING             2
   #define AABB_CALCULATION_SSBO_BINDING   3
 
+  #define MAX_GEOMETRIES                  200
+  #define MAX_MATERIALS                   128
+
   #define MAX_LIGHT_SOURCES_COUNT         4
   #define MAX_STACK_SIZE                  8
   #define INF_DISTANCE                    77777.0
   #define INT_DISTANCE                    0.0001
   #define UNKNOWN_GEOMETRY_ID             65535
-
+  #define UNKNOWN_MATERIAL_ID             65535
   // One geometry has two members (see GeometryData declaration)
   #define GEOMETRY_MEMBERS_COUNT 2
   // 4 bytes per member, 1 member for size, 2 members per array element,
@@ -101,6 +104,44 @@
     float4x4 worldGeoMat;
     float4x4 geoParentMat;
     float4x4 parentGeoMat;
+  };
+
+  struct GeometryParameters
+  {
+    uint32 materialID;
+    uint32 _gap1;
+    uint32 _gap2;
+    uint32 _gap3;    
+    
+    float4   position;
+    float4   scale;
+    float4x4 geoWorldMat;
+    float4x4 worldGeoMat;
+    float4x4 geoParentMat;
+    float4x4 parentGeoMat;
+  };
+
+  struct MaterialParameters
+  {
+    uint32 diffuseTextureEnabled;
+    uint32 specularTextureEnabled;
+    uint32 bumpTextureEnabled;
+    uint32 mriaoTextureEnabled;
+
+    float4 diffuseTextureUVRect;
+    float4 specularTextureUVRect;
+    float4 bumpTextureUVRect;
+    float4 mriaoTextureUVRect;
+
+    float4 ambientColor;
+    float4 diffuseColor;
+    float4 specularColor;
+    float4 emissionColor;
+
+    float4 mriao;
+    float4 _gap1;
+    float4 _gap2;
+    float4 _gap3;    
   };
 
   struct AABBCalculationBufferParameters

@@ -100,8 +100,8 @@ bool8 compileShader(Shader* shader)
     char log[1024];
     glGetShaderInfoLog(shader->shader, 1024, NULL, log);
 
-    //LOG_ERROR("Shader compilation has failed with message: '%s'", log);
-    //LOG_ERROR("Shader code:\n%s", shader->source);
+    // LOG_ERROR("Shader compilation has failed with message: '%s'", log);
+    // LOG_ERROR("Shader code:\n%s", shader->source);
     
     return FALSE;
   }

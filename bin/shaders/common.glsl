@@ -7,6 +7,7 @@
   {
     GlobalParameters params;
     LightSourceParameters lightParams[MAX_LIGHT_SOURCES_COUNT];
+    MaterialParameters materials[MAX_MATERIALS];    
   };
 
   float32 normalizeAndGetLength(inout float3 vector)

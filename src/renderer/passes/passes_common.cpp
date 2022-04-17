@@ -82,18 +82,6 @@ bool8 drawGeometryPostorder(Camera* camera,
     return FALSE;
   }
 
-  GeometryTransformParameters geoTransforms = {};
-  geoTransforms.position = float4(geometryGetPosition(geometry), 1.0);
-  geoTransforms.scale = float4(geometryGetFullScale(geometry), 1.0);
-  geoTransforms.geoWorldMat = geometryGetGeoWorldMat(geometry);
-  geoTransforms.worldGeoMat = geometryGetWorldGeoMat(geometry);
-  geoTransforms.geoParentMat = geometryGetGeoParentMat(geometry);
-  geoTransforms.parentGeoMat = geometryGetParentGeoMat(geometry);
-  
-  glBindBuffer(GL_UNIFORM_BUFFER, rendererGetResourceHandle(RR_GEOTRANSFORM_PARAMS_UBO));
-  glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(GeometryTransformParameters), &geoTransforms);
-  glBindBuffer(GL_UNIFORM_BUFFER, 0);                  
-
   shaderProgramUse(geometryProgram);
 
   glUniform1ui(glGetUniformLocation(shaderProgramGetGLHandle(geometryProgram), "geometryID"),

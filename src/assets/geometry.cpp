@@ -72,7 +72,7 @@ struct Geometry
 
   // Leaf geometry data
   AssetPtr sdf;
-  Material* material;
+  AssetPtr material;
 };
 
 static void geometryDestroy(Asset* geometry);
@@ -317,8 +317,8 @@ static void geometryGenerateTransformCode(Asset* geometry, ShaderBuild* build, b
   // e.g during AABB calculation)
   if(applyGeometryTransform == TRUE)
   {
-    shaderBuildAddCode(build, "\tfloat4 tp = geo.worldGeoMat * float4(p / geo.scale.xyz, 1.0);");
-    shaderBuildAddCode(build, "\tfloat32 d = SDF(tp.xyz) * geo.scale.x;");    
+    shaderBuildAddCode(build, "\tfloat4 tp = geo[geometryID].worldGeoMat * float4(p / geo[geometryID].scale.xyz, 1.0);");
+    shaderBuildAddCode(build, "\tfloat32 d = SDF(tp.xyz) * geo[geometryID].scale.x;");    
   }
   else
   {
@@ -1690,4 +1690,16 @@ bool8 geometryHasSDF(Asset* geometry)
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);  
   
   return geometryData->sdf != nullptr;
+}
+
+void geometrySetMaterial(Asset* geometry, AssetPtr material)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  geometryData->material = material;
+}
+
+AssetPtr geometryGetMaterial(Asset* geometry)
+{
+  Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
+  return geometryData->material;
 }

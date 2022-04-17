@@ -118,7 +118,8 @@ void masUpdate()
   std::vector<AssetPtr> materials = assetsManagerGetAssetsByType(ASSET_TYPE_MATERIAL);
 
   uint2 atlasSize = imageGetSize(data.atlas);
-  
+
+  uint32 materialID = 0;
   for(AssetPtr material: materials)
   {
     if(materialIsIntegratedIntoAtlas(material) == FALSE)
@@ -147,6 +148,8 @@ void masUpdate()
 
       materialSetIntegratedIntoAtlas(material, TRUE);
     }
+
+    materialSetShaderID(material, materialID++);    
   }
 }
 

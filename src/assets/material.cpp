@@ -25,6 +25,7 @@ struct Material
 
   MaterialTextureData textures[MATERIAL_TEXTURE_TYPE_COUNT];
 
+  uint32 shaderID = 0;
   bool8 integratedIntoAtlas = FALSE;
 };
 
@@ -91,6 +92,8 @@ bool8 createMaterial(const std::string& name, Asset** material)
   }
   
   assetSetInternalData(*material, materialData);
+
+  return TRUE;
 }
 
 void materialDestroy(Asset* material)
@@ -262,6 +265,18 @@ float32 materialGetRoughness(Asset* material)
   return materialData->roughness;
 }
 
+void materialSetShaderID(Asset* material, uint32 id)
+{
+  Material* materialData = (Material*)assetGetInternalData(material);
+  materialData->shaderID = id;
+}
+
+uint32 materialGetShaderID(Asset* material)
+{
+  Material* materialData = (Material*)assetGetInternalData(material);
+  return materialData->shaderID;
+}
+
 void materialSetTextureAtlasRect(Asset* material, MaterialTextureType type, float4 rect)
 {
   Material* materialData = (Material*)assetGetInternalData(material);
@@ -284,4 +299,29 @@ bool8 materialIsIntegratedIntoAtlas(Asset* material)
 {
   Material* materialData = (Material*)assetGetInternalData(material);
   return materialData->integratedIntoAtlas;
+}
+
+MaterialParameters materialToMaterialParameters(Asset* material)
+{
+  Material* materialData = (Material*)assetGetInternalData(material);
+  
+  MaterialParameters parameters = {};
+  parameters.diffuseTextureEnabled = materialData->textures[MATERIAL_TEXTURE_TYPE_DIFFUSE].enabled;
+  parameters.specularTextureEnabled = materialData->textures[MATERIAL_TEXTURE_TYPE_SPECULAR].enabled;
+  parameters.bumpTextureEnabled = materialData->textures[MATERIAL_TEXTURE_TYPE_BUMP].enabled;
+  parameters.mriaoTextureEnabled = materialData->textures[MATERIAL_TEXTURE_TYPE_MRIAO].enabled;
+
+  parameters.diffuseTextureUVRect = materialData->textures[MATERIAL_TEXTURE_TYPE_DIFFUSE].atlasUVRect;
+  parameters.specularTextureUVRect = materialData->textures[MATERIAL_TEXTURE_TYPE_SPECULAR].atlasUVRect;
+  parameters.bumpTextureUVRect = materialData->textures[MATERIAL_TEXTURE_TYPE_BUMP].atlasUVRect;
+  parameters.mriaoTextureUVRect = materialData->textures[MATERIAL_TEXTURE_TYPE_MRIAO].atlasUVRect;
+
+  parameters.ambientColor = materialData->ambientColor;
+  parameters.diffuseColor = materialData->diffuseColor;
+  parameters.specularColor = materialData->specularColor;
+  parameters.emissionColor = materialData->emissionColor;
+
+  parameters.mriao = float4(materialData->metallic, materialData->roughness, materialData->ior, materialData->ao);
+
+  return parameters;
 }

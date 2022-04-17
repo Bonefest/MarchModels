@@ -2,7 +2,9 @@
 
 #include "logging.h"
 #include "renderer_utils.h"
+#include "assets/material.h"
 #include "billboard_system.h"
+#include "assets/assets_manager.h"
 
 #include "passes/fog_pass.h"
 #include "passes/render_pass.h"
@@ -143,6 +145,61 @@ static void rendererSetupGlobalLightParameters(Scene* scene)
 
 }
 
+static void rendererSetupGeometriesParameters(Scene* scene)
+{
+  const std::set<AssetPtr>& children = geometryRootGetAllChildren(sceneGetGeometryRoot(scene));
+  std::vector<GeometryParameters> parameters(MAX_GEOMETRIES);
+
+  for(AssetPtr geometry: children)
+  {
+    GeometryParameters geo;
+
+    if(geometryIsLeaf(geometry) == TRUE)
+    {
+      // TODO: geo.materialID = materialGetShaderID(geometryGetMaterial(geometry));
+    }
+    else
+    {
+      geo.materialID = UNKNOWN_MATERIAL_ID;
+    }
+    
+    geo.position = float4(geometryGetPosition(geometry), 1.0);
+    geo.scale = float4(geometryGetFullScale(geometry), 1.0);
+    geo.geoWorldMat = geometryGetGeoWorldMat(geometry);
+    geo.worldGeoMat = geometryGetWorldGeoMat(geometry);
+    geo.geoParentMat = geometryGetGeoParentMat(geometry);
+    geo.parentGeoMat = geometryGetParentGeoMat(geometry);
+
+    parameters[geometryGetID(geometry)] = geo;
+  }
+
+  glBindBuffer(GL_UNIFORM_BUFFER, rendererGetResourceHandle(RR_GEOTRANSFORM_PARAMS_UBO));
+  glBufferSubData(GL_UNIFORM_BUFFER, 0,
+                  sizeof(GeometryParameters) * parameters.size(),
+                  &parameters[0]);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);  
+}
+
+static void rendererSetupMaterialsParameters()
+{
+  std::vector<AssetPtr> materials = assetsManagerGetAssetsByType(ASSET_TYPE_MATERIAL);
+  std::vector<MaterialParameters> parameters(MAX_MATERIALS);
+
+  for(AssetPtr material: materials)
+  {
+    parameters[materialGetShaderID(material)] = materialToMaterialParameters(material);
+  }
+
+  uint32 offset = sizeof(GlobalParameters) + sizeof(LightSourceParameters) * MAX_LIGHT_SOURCES_COUNT;
+
+  glBindBuffer(GL_UNIFORM_BUFFER, rendererGetResourceHandle(RR_GLOBAL_PARAMS_UBO));
+  glBufferSubData(GL_UNIFORM_BUFFER, offset,
+                  sizeof(MaterialParameters) * parameters.size(),
+                  &parameters[0]);
+  glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+}
+
 // ----------------------------------------------------------------------------
 // Resources initialization / destroying
 // ----------------------------------------------------------------------------
@@ -163,7 +220,7 @@ static bool8 initGlobalParamsUBO()
   glGenBuffers(1, &data.handles[RR_GLOBAL_PARAMS_UBO]);
   glBindBuffer(GL_UNIFORM_BUFFER, data.handles[RR_GLOBAL_PARAMS_UBO]);
   glBufferData(GL_UNIFORM_BUFFER,
-               sizeof(GlobalParameters) + MAX_LIGHT_SOURCES_COUNT * sizeof(LightSourceParameters),
+               sizeof(GlobalParameters) + MAX_LIGHT_SOURCES_COUNT * sizeof(LightSourceParameters) + MAX_MATERIALS * sizeof(MaterialParameters),
                NULL, GL_DYNAMIC_DRAW);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
   glBindBufferBase(GL_UNIFORM_BUFFER, GLOBAL_PARAMS_UBO_BINDING, data.handles[RR_GLOBAL_PARAMS_UBO]);
@@ -175,7 +232,7 @@ static bool8 initGeometryTransformParamsUBO()
 {
   glGenBuffers(1, &data.handles[RR_GEOTRANSFORM_PARAMS_UBO]);
   glBindBuffer(GL_UNIFORM_BUFFER, data.handles[RR_GEOTRANSFORM_PARAMS_UBO]);
-  glBufferData(GL_UNIFORM_BUFFER, sizeof(GeometryTransformParameters), NULL, GL_DYNAMIC_DRAW);
+  glBufferData(GL_UNIFORM_BUFFER, sizeof(GeometryParameters) * MAX_GEOMETRIES, NULL, GL_DYNAMIC_COPY);
   glBindBuffer(GL_UNIFORM_BUFFER, 0);
   glBindBufferBase(GL_UNIFORM_BUFFER, GEOMETRY_TRANSFORMS_UBO_BINDING, data.handles[RR_GEOTRANSFORM_PARAMS_UBO]);
 
@@ -409,6 +466,8 @@ bool8 rendererRenderScene(Film* film,
   
   rendererSetupGlobalParameters(film, scene, camera, params);
   rendererSetupGlobalLightParameters(scene);
+  rendererSetupGeometriesParameters(scene);
+  rendererSetupMaterialsParameters();
 
   pushViewport(0, 0, data.globalParameters.gapResolution.x, data.globalParameters.gapResolution.y);
 

@@ -3,6 +3,8 @@
 #include "image.h"
 #include "asset.h"
 
+#include <../bin/shaders/declarations.h>
+
 static const AssetType ASSET_TYPE_MATERIAL = 0x89c5e3b6;
 
 enum MaterialTextureType
@@ -65,9 +67,13 @@ ENGINE_API float32 materialGetMetallic(Asset* material);
 ENGINE_API void materialSetRoughness(Asset* material, float32 roughness);
 ENGINE_API float32 materialGetRoughness(Asset* material);
 
+void materialSetShaderID(Asset* material, uint32 id);
+uint32 materialGetShaderID(Asset* material);
+
 void materialSetTextureAtlasRect(Asset* material, MaterialTextureType type, float4 rect);
 float4 materialGetTextureAtlasRect(Asset* material, MaterialTextureType type);
 
 void materialSetIntegratedIntoAtlas(Asset* material, bool8 integrated);
 bool8 materialIsIntegratedIntoAtlas(Asset* material);
-// ENGINE_API SMaterial materialToShaderMaterial(Asset* material);
+
+MaterialParameters materialToMaterialParameters(Asset* material);
