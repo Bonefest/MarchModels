@@ -191,11 +191,11 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
 
         ImGui::PopStyleColor();
       }
-      
-      // Script functions -----------------------------------------------------
 
       popIconSmallButtonStyle();
       
+      // Script functions -----------------------------------------------------
+
         std::vector<AssetPtr> functions = geometryGetScriptFunctions(geometry);
 
         for(uint32 i = 0; i < functions.size(); i++)
@@ -222,7 +222,15 @@ static bool8 sceneHierarchyDrawGeometryData(Window* window,
           
           drawScriptFunctionItem(geometry, function, i);
         }
-
+        
+      // Material -------------------------------------------------------------
+        
+        if(geometryIsLeaf(geometry) == TRUE)
+        {
+          AssetPtr material = geometryGetMaterial(geometry);
+          drawMaterialItem(geometry, material);
+        }
+        
       // Children geometry ----------------------------------------------------
 
         std::vector<AssetPtr>& children = geometryGetChildren(geometry);

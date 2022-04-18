@@ -19,6 +19,7 @@
 #include <samplers/center_sampler.h>
 
 #include "editor.h"
+#include "editor_utils.h"
 #include "windows/view_window.h"
 #include "windows/console_window.h"
 #include "windows/window_manager.h"
@@ -91,7 +92,9 @@ static void declareDefaultScriptFunctions()
   
   assetsManagerAddAsset(AssetPtr(intersectionPCFPrototype));
   assetsManagerAddAsset(AssetPtr(unionPCFPrototype));
-  assetsManagerAddAsset(AssetPtr(subtractionPCFPrototype));    
+  assetsManagerAddAsset(AssetPtr(subtractionPCFPrototype));
+
+  assetsManagerAddAsset(createDefaultMaterial());
 }
 
 bool8 initEditor(Application* app)

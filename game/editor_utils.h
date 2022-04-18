@@ -9,3 +9,4 @@ AssetPtr createDefaultODF();
 AssetPtr createDefaultPCF();
 AssetPtr createNewGeometry();
 AssetPtr createNewLight();
+AssetPtr createDefaultMaterial();

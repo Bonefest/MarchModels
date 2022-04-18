@@ -306,6 +306,8 @@ MaterialParameters materialToMaterialParameters(Asset* material)
   Material* materialData = (Material*)assetGetInternalData(material);
   
   MaterialParameters parameters = {};
+  parameters.projectionMode = materialData->projectionMode;
+  
   parameters.diffuseTextureEnabled = materialData->textures[MATERIAL_TEXTURE_TYPE_DIFFUSE].enabled;
   parameters.specularTextureEnabled = materialData->textures[MATERIAL_TEXTURE_TYPE_SPECULAR].enabled;
   parameters.bumpTextureEnabled = materialData->textures[MATERIAL_TEXTURE_TYPE_BUMP].enabled;

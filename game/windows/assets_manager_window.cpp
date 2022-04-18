@@ -360,10 +360,10 @@ void editScriptFunctionAsset(AssetPtr asset)
 
 static AssetPtr createMaterialAsset()
 {
-  Asset* material;
-  createMaterial("new_material", &material);
+  AssetPtr material = createDefaultMaterial();
+  assetSetName(material, "new_material");
 
-  return AssetPtr(material);
+  return material;
 }
 
 static void editMaterialAsset(AssetPtr asset)

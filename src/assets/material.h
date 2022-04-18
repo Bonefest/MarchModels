@@ -16,13 +16,6 @@ enum MaterialTextureType
 
   MATERIAL_TEXTURE_TYPE_COUNT
 };
-
-enum MaterialTextureProjectionMode
-{
-  MATERIAL_TEXTURE_PROJECTION_MODE_TRIPLANAR,
-  MATERIAL_TEXTURE_PROJECTION_MODE_SPHERICAL,
-  MATERIAL_TEXTURE_PROJECTION_MODE_CYLINDRICAL
-};
   
 ENGINE_API const char* materialTextureTypeLabel(MaterialTextureType texType);
 ENGINE_API const char* materialTextureProjectionModeLabel(MaterialTextureProjectionMode mode);

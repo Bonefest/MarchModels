@@ -121,8 +121,21 @@
     float4x4 parentGeoMat;
   };
 
+  #define MATERIAL_TEXTURE_PROJECTION_MODE_TRIPLANAR   0
+  #define MATERIAL_TEXTURE_PROJECTION_MODE_SPHERICAL   1
+  #define MATERIAL_TEXTURE_PROJECTION_MODE_CYLINDRICAL 2
+
+  #if defined(__cplusplus)
+    using MaterialTextureProjectionMode = uint32;
+  #endif
+
   struct MaterialParameters
   {
+    uint32 projectionMode;
+    uint32 _gap1;
+    uint32 _gap2;
+    uint32 _gap3;
+    
     uint32 diffuseTextureEnabled;
     uint32 specularTextureEnabled;
     uint32 bumpTextureEnabled;
@@ -139,9 +152,9 @@
     float4 emissionColor;
 
     float4 mriao;
-    float4 _gap1;
-    float4 _gap2;
-    float4 _gap3;    
+    float4 _gap4;
+    float4 _gap5;
+    float4 _gap6;    
   };
 
   struct AABBCalculationBufferParameters

@@ -10,6 +10,7 @@
 #include "windows/list_window.h"
 #include "windows/window_manager.h"
 #include "windows/light_settings_window.h"
+#include "windows/material_settings_window.h"
 #include "windows/geometry_settings_window.h"
 #include "windows/script_function_settings_window.h"
 
@@ -127,6 +128,43 @@ void openScriptFunctionSettingsWindow(AssetPtr geometryOwner, AssetPtr function)
   {
     windowSetFocused(scriptFunctionSettingsWindow, TRUE);
   }
+}
+
+void drawMaterialItem(AssetPtr geometry, AssetPtr material)
+{
+  ImGui::TextColored("_<C>%#010x</C>_[MAT] _<C>0x1</C>_'%s'",
+                     revbytes((uint32)WarningClr),
+                     assetGetName(material).c_str());
+
+  ImGui::SameLine();
+
+  pushIconSmallButtonStyle();
+  
+  if(ImGui::SmallButton(ICON_KI_LIST))
+  {
+
+  }
+
+  ImGui::SameLine();
+  
+  if(ImGui::SmallButton(ICON_KI_COG))
+  {
+    WindowPtr openedWindow = windowManagerGetWindow(materialSettingsWindowIdentifier(material));
+    if(openedWindow != nullptr)
+    {
+      windowSetFocused(openedWindow, TRUE);
+    }
+    else
+    {
+      Window* settingsWindow = nullptr;
+      createMaterialSettingsWindow(material, geometry, &settingsWindow);
+      windowSetSize(settingsWindow, float2(640.0f, 360.0f));
+
+      windowManagerAddWindow(WindowPtr(settingsWindow));
+    }  
+  }
+  
+  popIconSmallButtonStyle();
 }
 
 void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function, uint32 index)
