@@ -65,12 +65,13 @@ AABB AABBCalculationPassCalculateAABB(Asset* geometry)
   ShaderProgramPtr aabbProgram = geometryGetAABBProgram(geometry);
   shaderProgramUse(aabbProgram);
 
-  glUniform2ui(1, viewportSize, viewportSize);    
-  glUniform2f(2, 1.0 / viewportSize, 1.0 / viewportSize);
+  glUniform1ui(0, geometryGetID(geometry));
+  glUniform2ui(2, viewportSize, viewportSize);    
+  glUniform2f(3, 1.0 / viewportSize, 1.0 / viewportSize);
   
   for(uint32 i = 0; i < iterationsCount; i++)
   {
-    glUniform1ui(0, i);
+    glUniform1ui(1, i);
     glDispatchCompute((uint32)std::ceil(float32(viewportSize) / float32(localWorkgroupSize)),
                       (uint32)std::ceil(float32(viewportSize) / float32(localWorkgroupSize)),
                       1);

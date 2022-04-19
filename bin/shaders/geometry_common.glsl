@@ -8,11 +8,9 @@ layout(location = 0) uniform sampler2D raysMap;
   layout(location = 1) uniform sampler2D depthMap;
 #endif
 
-layout(std140, binding = GEOMETRY_TRANSFORMS_UBO_BINDING) uniform GeometryTransformParametersUBO
+layout(std140, binding = GEOMETRY_TRANSFORMS_UBO_BINDING) uniform GeometryParametersUBO
 {
   GeometryParameters geo[MAX_GEOMETRIES];
-  
-  //GeometryTransformParameters geo;
 };
 
 GeometryData unionGeometries(GeometryData geometry1, GeometryData geometry2)

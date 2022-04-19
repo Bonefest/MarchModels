@@ -512,7 +512,12 @@ static bool8 geometryRebuildAABBCalculationProgram(Asset* geometry)
                         localWorkgroupSize);
   
   assert(shaderBuildIncludeFile(build, "shaders/common.glsl") == TRUE);  
+  shaderBuildAddCodefln(build, "layout(std140, binding = GEOMETRY_TRANSFORMS_UBO_BINDING) uniform GeometryParametersUBO {");
+  shaderBuildAddCodefln(build, "GeometryParameters geo[MAX_GEOMETRIES];");
+  shaderBuildAddCodefln(build, "};");
 
+  shaderBuildAddCodefln(build, "layout(location = 0) uniform uint32 geometryID;");
+  
   geometryGenerateTransformCode(geometry, build, /** Use transformation of geometry */ FALSE);  
 
   assert(shaderBuildIncludeFile(build, "shaders/calculate_aabb.glsl") == TRUE);    

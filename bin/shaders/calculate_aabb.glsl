@@ -45,9 +45,9 @@ layout(std140, binding = AABB_CALCULATION_SSBO_BINDING) buffer GeometryTransform
   AABBCalculationBufferParameters aabbParams;
 };
 
-layout(location = 0) uniform uint32 calculationIteration;
-layout(location = 1) uniform uint2  resolution;
-layout(location = 2) uniform float2 invResolution;
+layout(location = 1) uniform uint32 calculationIteration;
+layout(location = 2) uniform uint2  resolution;
+layout(location = 3) uniform float2 invResolution;
 
 void main()
 {

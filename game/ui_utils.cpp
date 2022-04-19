@@ -2,6 +2,7 @@
 
 #include <utils.h>
 #include <assets/geometry.h>
+#include <assets/material.h>
 #include <assets/assets_manager.h>
 #include <assets/script_function.h>
 
@@ -16,6 +17,39 @@
 
 static const uint32 textInputPopupBufSize = 1024;
 static char textInputPopupBuf[textInputPopupBufSize];
+
+static void drawAssetsList(const std::string& listName,
+                           const std::string& assetName,
+                           const std::vector<ListItem>& items,
+                           fpOnListItemSelected selectedCallback,
+                           void* userData = nullptr)
+{
+  float2 itemTopPos = ImGui::GetItemRectMin();
+
+  WindowPtr prevListWindow = windowManagerGetWindow(listName);
+  if(prevListWindow != nullptr)
+  {
+    windowManagerRemoveWindow(prevListWindow);
+  }
+
+  char title[128];
+  sprintf(title, "Select a %s", assetName.c_str());
+  
+  Window* assetsListWindow;
+  assert(createListWindow(listName,
+                          title,
+                          items,
+                          selectedCallback,
+                          userData,
+                          &assetsListWindow));
+
+  listWindowSetCloseOnLoseFocus(assetsListWindow, TRUE);
+  windowSetSize(assetsListWindow, float2(180.0, 100.0));
+  windowSetPosition(assetsListWindow, itemTopPos + float2(10, 10));
+  windowSetFocused(assetsListWindow, TRUE);
+
+  windowManagerAddWindow(WindowPtr(assetsListWindow));        
+}
 
 void pushIconSmallButtonStyle()
 {
@@ -142,7 +176,21 @@ void drawMaterialItem(AssetPtr geometry, AssetPtr material)
   
   if(ImGui::SmallButton(ICON_KI_LIST))
   {
+    std::vector<AssetPtr> assetsToDisplay = assetsManagerGetAssetsByType(ASSET_TYPE_MATERIAL);
 
+    std::vector<ListItem> items = {};
+    for(AssetPtr asset: assetsToDisplay)
+    {
+      items.push_back(ListItem{assetGetName(asset), asset});
+    }
+
+    auto onAssetIsSelected = [geometry](Window* window, void* selection, uint32 index, void* target)
+    {
+      AssetPtr material = assetsManagerFindAsset(assetGetName((Asset*)selection));      
+      geometrySetMaterial((Asset*)target, material);
+    };
+
+    drawAssetsList("Materials list", "material", items, onAssetIsSelected, geometry.raw());    
   }
 
   ImGui::SameLine();
@@ -190,14 +238,6 @@ void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function, uint32 index)
     // NOTE: Script functions list button
     if(ImGui::SmallButton(ICON_KI_LIST))
     {
-      float2 itemTopPos = ImGui::GetItemRectMin();
-
-      WindowPtr prevAssetsListWindow = windowManagerGetWindow("Script functions list");
-      if(prevAssetsListWindow != nullptr)
-      {
-        windowManagerRemoveWindow(prevAssetsListWindow);
-      }
-
       std::vector<AssetPtr> assetsToDisplay = assetsManagerGetAssetsByType(ASSET_TYPE_SCRIPT_FUNCTION);
 
       // NOTE: Remove all script functions that don't have similar type
@@ -225,20 +265,7 @@ void drawScriptFunctionItem(AssetPtr geometry, AssetPtr function, uint32 index)
         }
       };
 
-      Window* assetsListWindow;
-      assert(createListWindow("Script functions list",
-                              "Select a function",
-                              items,
-                              onScriptFunctionIsSelected,
-                              function,
-                              &assetsListWindow));
-
-      listWindowSetCloseOnLoseFocus(assetsListWindow, TRUE);
-      windowSetSize(assetsListWindow, float2(180.0, 100.0));
-      windowSetPosition(assetsListWindow, itemTopPos + float2(10, 10));
-      windowSetFocused(assetsListWindow, TRUE);
-
-      windowManagerAddWindow(WindowPtr(assetsListWindow));
+      drawAssetsList("Script functions list", "function", items, onScriptFunctionIsSelected, function);
     }
 
     ImGui::SameLine();
@@ -300,6 +327,7 @@ bool8 drawGeometryItemActionButtons(Scene* scene, AssetPtr geometry)
     ImGui::SameLine();       
     if(ImGui::SmallButton(ICON_KI_LIST"##GeometryChoose"))
     {
+      
       drawGeometriesList(geometry);
     }
     
@@ -387,14 +415,6 @@ bool8 drawLightSourceItemActionButtons(AssetPtr lightSource)
 
 void drawGeometriesList(AssetPtr geometry)
 {
-  float2 itemTopPos = ImGui::GetItemRectMin();
-
-  WindowPtr prevListWindow = windowManagerGetWindow("Geometries list");
-  if(prevListWindow != nullptr)
-  {
-    windowManagerRemoveWindow(prevListWindow);
-  }
-
   std::vector<AssetPtr> assetsToDisplay = assetsManagerGetAssetsByType(ASSET_TYPE_GEOMETRY);
 
   std::vector<ListItem> items = {};
@@ -402,7 +422,7 @@ void drawGeometriesList(AssetPtr geometry)
   {
     items.push_back(ListItem{assetGetName(asset), asset});
   }
-
+  
   auto onAssetIsSelected = [geometry](Window* window, void* selection, uint32 index, void* target)
   {
     AssetPtr assetFromManager = assetsManagerFindAsset(assetGetName((Asset*)selection));
@@ -411,19 +431,6 @@ void drawGeometriesList(AssetPtr geometry)
       geometryCopy(geometry, (Asset*)selection);
     }
   };
-
-  Window* assetsListWindow;
-  assert(createListWindow("Geometries list",
-                          "Select a geometry",
-                          items,
-                          onAssetIsSelected,
-                          nullptr,
-                          &assetsListWindow));
-
-  listWindowSetCloseOnLoseFocus(assetsListWindow, TRUE);
-  windowSetSize(assetsListWindow, float2(180.0, 100.0));
-  windowSetPosition(assetsListWindow, itemTopPos + float2(10, 10));
-  windowSetFocused(assetsListWindow, TRUE);
-
-  windowManagerAddWindow(WindowPtr(assetsListWindow));      
+  
+  drawAssetsList("Geometries list", "geometry", items, onAssetIsSelected);
 }
