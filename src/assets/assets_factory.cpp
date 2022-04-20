@@ -1,6 +1,7 @@
 #include "assets_factory.h"
 
 #include "geometry.h"
+#include "material.h"
 #include "light_source.h"
 #include "script_function.h"
 
@@ -26,6 +27,7 @@ AssetPtr createAssetFromJson(nlohmann::json& jsonData)
           createScriptFunction(SCRIPT_FUNCTION_TYPE_SDF, "", &asset);
         }
       } break;
+      case ASSET_TYPE_MATERIAL: createMaterial("", &asset); break;
       default:
       {
         LOG_ERROR("Attempt to create asset from a json with unknown ID!");

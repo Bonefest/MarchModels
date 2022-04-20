@@ -13,6 +13,7 @@ using namespace nlohmann;
 
 #include <logging.h>
 #include <scheduler.h>
+#include <assets/geometry.h>
 #include <assets/assets_factory.h>
 
 #include "assets_manager.h"
@@ -28,9 +29,26 @@ static AssetsManager manager;
 static void assetsManagerSaveToFile(float32 time, const std::string& fileName, void* owner, void* data)
 {
   json jsonData;
-  for(uint32 i = 0; i < manager.assets.size(); i++)
+  vector<AssetPtr> geometries;
+
+  uint32 counter = 0;
+  for(AssetPtr asset : manager.assets)
   {
-    assetSerialize(manager.assets[i], jsonData["assets"][i]);
+    if(assetGetType(asset) == ASSET_TYPE_GEOMETRY)
+    {
+      geometries.push_back(asset);
+    }
+    else
+    {
+      assetSerialize(asset, jsonData["assets"][counter++]);
+    }
+  }
+
+  // Geometries should be serialized in the end, because they depend on the other assets, so that
+  // during deserialization of geometry, everything else will be already deserialized.
+  for(AssetPtr geometry: geometries)
+  {
+    assetSerialize(geometry, jsonData["assets"][counter++]);
   }
   
   jsonData.dump(4);
@@ -71,7 +89,7 @@ bool8 assetsManagerLoadFromFile(const std::string& fileName)
       AssetPtr asset = createAssetFromJson(assetJson);
       if(asset == AssetPtr(nullptr))
       {
-        LOG_ERROR("Asset manager cannot load an asset from '%s'!", fileName.c_str());
+        LOG_ERROR("Asset manager cannot load an asset %s from '%s'!", jsonData.value("name", "").c_str(), fileName.c_str());
       }
       else
       {

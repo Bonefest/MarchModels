@@ -731,6 +731,8 @@ bool8 geometrySerialize(AssetPtr geometry, json& jsonData)
   jsonData["bounded"] = geometryData->bounded;
   jsonData["aabb_automatically_calculated"] = geometryData->aabbAutomaticallyCalculated;
 
+  jsonData["material"] = assetGetName(geometryData->material);
+  
   for(uint32 i = 0; i < geometryData->children.size(); i++)
   {
     if(assetSerialize(geometryData->children[i], jsonData["children"][i]) == FALSE)
@@ -790,6 +792,8 @@ bool8 geometryDeserialize(AssetPtr geometry, json& jsonData)
   geometryData->bounded = jsonData.value("bounded", FALSE);
   geometryData->aabbAutomaticallyCalculated = jsonData.value("aabb_automatically_calculated", FALSE);
 
+  geometryData->material = assetsManagerFindAsset(jsonData.value("material", "default_material"));
+  
   // Remove previous children
   geometryClearChildren(geometry);
 

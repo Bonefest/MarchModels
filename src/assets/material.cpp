@@ -1,3 +1,6 @@
+#include "image_manager.h"
+#include "maths/json_serializers.h"
+
 #include "material.h"
 
 struct MaterialTextureData
@@ -25,6 +28,7 @@ struct Material
 
   MaterialTextureData textures[MATERIAL_TEXTURE_TYPE_COUNT];
 
+  // Internal data
   uint32 shaderID = 0;
   bool8 integratedIntoAtlas = FALSE;
 };
@@ -32,8 +36,8 @@ struct Material
 using nlohmann::json;
 
 static void materialDestroy(Asset* material);
-static bool8 materialSerialize(AssetPtr material, json& jsonData) { }
-static bool8 materialDeserialize(AssetPtr material, json& jsonData) { }
+static bool8 materialSerialize(AssetPtr material, json& jsonData);
+static bool8 materialDeserialize(AssetPtr material, json& jsonData);
 static uint32 materialGetSize(Asset* asset) { /** TODO */ }
 
 const char* materialTextureTypeLabel(MaterialTextureType texType)
@@ -105,6 +109,80 @@ void materialDestroy(Asset* material)
   }
   
   engineFreeObject(materialData, MEMORY_TYPE_GENERAL);
+}
+
+bool8 materialSerialize(AssetPtr material, json& jsonData)
+{
+  Material* materialData = (Material*)assetGetInternalData(material);  
+
+  jsonData["projection_mode"] = (uint32)materialData->projectionMode;
+  
+  jsonData["ior"] = materialData->ior;
+  jsonData["ao"] = materialData->ao;  
+  jsonData["metallic"] = materialData->metallic;
+  jsonData["roughness"] = materialData->roughness;
+  
+  jsonData["ambient_color"] = vecToJson(materialData->ambientColor);
+  jsonData["diffuse_color"] = vecToJson(materialData->diffuseColor);
+  jsonData["specular_color"] = vecToJson(materialData->specularColor);
+  jsonData["emission_color"] = vecToJson(materialData->emissionColor);
+
+  for(uint32 itype = 0; itype < MATERIAL_TEXTURE_TYPE_COUNT; itype++)
+  {
+    MaterialTextureType type = (MaterialTextureType)itype;
+    const char* typeStr = materialTextureTypeLabel(type);
+    
+    if(materialData->textures[itype].texture != ImagePtr(nullptr))
+    {
+      jsonData[typeStr]["name"] = imageGetName(materialData->textures[itype].texture);
+      jsonData[typeStr]["texture_region"] = vecToJson(materialData->textures[itype].textureRegion);
+      jsonData[typeStr]["enabled"] = materialData->textures[itype].enabled;
+    }
+  }
+
+  return TRUE;
+}
+
+bool8 materialDeserialize(AssetPtr material, json& jsonData)
+{
+  Material* materialData = (Material*)assetGetInternalData(material);    
+  *materialData = Material{};
+  
+  materialData->projectionMode = (MaterialTextureProjectionMode)jsonData.value("projection_mode", (uint32)MATERIAL_TEXTURE_PROJECTION_MODE_TRIPLANAR);
+  
+  materialData->ior = jsonData.value("ior", 1.0f);
+  materialData->ao = jsonData.value("ao", 0.0f);
+  materialData->metallic = jsonData.value("metallic", 0.0f);
+  materialData->roughness = jsonData.value("roughness", 1.0f);
+  
+  materialData->ambientColor = jsonToVec<float32, 4>(jsonData["ambient_color"]);
+  materialData->diffuseColor = jsonToVec<float32, 4>(jsonData["diffuse_color"]);
+  materialData->specularColor = jsonToVec<float32, 4>(jsonData["specular_color"]);
+  materialData->emissionColor = jsonToVec<float32, 4>(jsonData["emission_color"]);
+
+  for(uint32 itype = 0; itype < MATERIAL_TEXTURE_TYPE_COUNT; itype++)
+  {
+    MaterialTextureType type = (MaterialTextureType)itype;
+    const char* typeStr = materialTextureTypeLabel(type);
+
+    if(jsonData[typeStr].is_object())
+    {
+      std::string textureName = jsonData[typeStr]["name"];
+      ImagePtr texture = imageManagerLoadImage(textureName.c_str());
+      if(texture == ImagePtr(nullptr))
+      {
+        LOG_WARNING("Cannot find %s material's texture with name '%s'",
+                    assetGetName(material).c_str(), textureName.c_str());
+      }
+
+      materialData->textures[itype].texture = texture;
+      materialData->textures[itype].textureRegion = jsonToVec<uint32, 4>(jsonData[typeStr]["texture_region"]);
+      materialData->textures[itype].enabled = jsonData[typeStr].value("enabled", FALSE);
+    }
+
+  }
+
+  materialData->integratedIntoAtlas = FALSE;
 }
 
 void materialSetProjectionMode(Asset* material, MaterialTextureProjectionMode mode)
