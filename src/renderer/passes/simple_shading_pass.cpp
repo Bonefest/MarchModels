@@ -39,19 +39,23 @@ static bool8 simpleShadingPassExecute(RenderPass* pass)
   shaderProgramUse(data->shadingProgram);
 
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_DEPTH1_MAP_TEXTURE));
+  glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_GEOIDS_MAP_TEXTURE));
   
   glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_DEPTH1_MAP_TEXTURE));
+  
+  glActiveTexture(GL_TEXTURE2);
   glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_NORMALS_MAP_TEXTURE));
 
-  glActiveTexture(GL_TEXTURE2);
+  glActiveTexture(GL_TEXTURE3);
   glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_SHADOWS_MAP_TEXTURE));
 
   glUniform1ui(0, lightSources.size());
   glUniform3fv(1, 1, &data->ambientColor[0]);
   glUniform1i(2, 0);
   glUniform1i(3, 1);
-  glUniform1i(4, 2);  
+  glUniform1i(4, 2);
+  glUniform1i(5, 3);  
   
   drawTriangleNoVAO();
 

@@ -1,26 +1,15 @@
 #version 450 core
 
-#include common.glsl
+#include pbr_common.glsl
 
 layout(location = 0) out float4 outColor;
 
 layout(location = 0) uniform uint32 lightsCount;
 layout(location = 1) uniform float3 ambientColor;
-layout(location = 2) uniform sampler2D depthTexture;
-layout(location = 3) uniform sampler2D normalsTexture;
-layout(location = 4) uniform sampler2D shadowsTexture;
-
-
-float3 getLightDirection(uint32 lightIndex, float3 p, inout float32 lpDistance)
-{
-  if(lightParams[lightIndex].type == LIGHT_SOURCE_TYPE_DIRECTIONAL)
-  {
-    return -lightParams[lightIndex].forward;
-  }
-
-  lpDistance = distance(p, lightParams[lightIndex].position.xyz);
-  return (lightParams[lightIndex].position.xyz - p) / lpDistance;
-}
+layout(location = 2) uniform usampler2D idTexture;
+layout(location = 3) uniform sampler2D depthTexture;
+layout(location = 4) uniform sampler2D normalsTexture;
+layout(location = 5) uniform sampler2D shadowsTexture;
 
 void main()
 {
@@ -36,25 +25,19 @@ void main()
   float3 radiance = 0.0f.xxx;
   if(isSurface)
   {
-    radiance = ambientColor;    
-    for(uint32 i = 0; i < lightsCount; i++)
-    {
-      float32 lpDistance = 1.0f;
-      float3 l = getLightDirection(i, worldPos, lpDistance);
-
-      float2 attFactors = lightParams[i].attenuationDistanceFactors;
-      float32 attenuation = 1.0f / (attFactors.x * lpDistance + attFactors.y * lpDistance * lpDistance);
-
-      if(lightParams[i].type == LIGHT_SOURCE_TYPE_SPOT)
-      {
-        float2 angFactors = lightParams[i].attenuationAngleFactors;
-        float32 t = max(dot(-l, lightParams[i].forward.xyz), 0.0);
-
-        attenuation *= mix(0.0f, 1.0f, clamp((t - angFactors.y) / (angFactors.x - angFactors.y), 0, 1));
-      }
-
-      radiance += lightParams[i].intensity.rgb * max(dot(normal, l), 0.0) * attenuation * shadows[i % 4];
-    }
+    uint32 id = texelFetch(idTexture, ifragCoord, 0).r;
+    MaterialParameters material = materials[geo[id].materialID];
+    
+    float3 v = normalize(params.camPosition.xyz - worldPos);
+    radiance = simplifiedRenderingEquation(worldPos,
+                                           normal,
+                                           v,
+                                           material.ambientColor.rgb,
+                                           material.diffuseColor.rgb,
+                                           material.mriao.y,
+                                           material.mriao.w,
+                                           shadows,
+                                           lightsCount);
   }
   
   outColor = float4(radiance, isSurface);

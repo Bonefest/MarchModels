@@ -10,6 +10,11 @@
     MaterialParameters materials[MAX_MATERIALS];    
   };
 
+  layout(std140, binding = GEOMETRY_TRANSFORMS_UBO_BINDING) uniform GeometryParametersUBO
+  {
+    GeometryParameters geo[MAX_GEOMETRIES];
+  };
+
   float32 normalizeAndGetLength(inout float3 vector)
   {
     float32 len = length(vector);
@@ -106,5 +111,7 @@
 
     return worldPos.xyz / worldPos.w;
   }
+
+
 
 #endif

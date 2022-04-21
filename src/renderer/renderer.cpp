@@ -23,8 +23,8 @@
 
 #include "renderer.h"
 
-#define MAX_WIDTH 1280
-#define MAX_HEIGHT 720
+#define MAX_WIDTH 320
+#define MAX_HEIGHT 180
 
 struct Renderer
 {
@@ -156,7 +156,7 @@ static void rendererSetupGeometriesParameters(Scene* scene)
 
     if(geometryIsLeaf(geometry) == TRUE)
     {
-      // TODO: geo.materialID = materialGetShaderID(geometryGetMaterial(geometry));
+      geo.materialID = materialGetShaderID(geometryGetMaterial(geometry));
     }
     else
     {
