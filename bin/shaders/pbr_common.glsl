@@ -36,7 +36,7 @@ float32 getAttenuation(uint32 lightIndex, float32 lpDistance, float3 l)
 
 float32 roughnessToShininess(float32 roughness)
 {
-  return clamp(2.0f / (roughness * roughness) - 2, 0.0f, 10000.0f);
+  return clamp(2.0f / ((roughness + 0.001) * (roughness + 0.001)) - 2, 0.1f, 2000.0f);
 }
 
 float3 iorToF0(float32 ior)
@@ -48,7 +48,7 @@ float3 iorToF0(float32 ior)
 float32 ggxNDF(float3 n, float3 h, float32 roughness)
 {
   float32 r2 = roughness * roughness;
-  float32 NoH = dot(n, h);
+  float32 NoH = max(dot(n, h), 0.0f);
   float32 factor = (1 + NoH * NoH * (r2 - 1));
   return r2 / (PI * factor * factor);
 }
@@ -96,8 +96,8 @@ float3 cookTorranceBRDF(float3 n,
                         float3 irradiance,
                         float32 roughness)
 {
-  float32 NoL = dot(n, l);
-  float32 NoV = dot(n, v);
+  float32 NoL = max(dot(n, l), 0.0f);
+  float32 NoV = max(dot(n, v), 0.0f);
   
   float32 NDF = ggxNDF(n, h, roughness);
   float32 Geometry = smithGeometry(n, l, v, roughness);
@@ -121,8 +121,6 @@ float3 simplifiedRenderingEquation(float3 pWorld,
                                    uint32 lightsCount)
                      
 {
-  bool isSurface = dot(n, n) > 0.1;
-
   float3 radiance = ambientColor;
   float32 shininess = roughnessToShininess(roughness);
   
@@ -130,10 +128,10 @@ float3 simplifiedRenderingEquation(float3 pWorld,
   {
     float32 lLen = 1.0f;
     float3 l = getLightDirection(i, pWorld, lLen);
-    float32 NoL = dot(n, l);
+    float32 NoL = max(dot(n, l), 0.0f);
 
     float3 h = normalize(l + v);
-    float32 NoH = dot(n, h);
+    float32 NoH = max(dot(n, h), 0.0f);
     
     float32 attenuation = getAttenuation(i, lLen, l);
     float32 shadow = shadows[i % 4];

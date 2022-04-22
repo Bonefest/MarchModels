@@ -28,10 +28,10 @@ void main()
     uint32 id = texelFetch(idTexture, ifragCoord, 0).r;
     MaterialParameters material = materials[geo[id].materialID];
     
-    float3 v = normalize(params.camPosition.xyz - worldPos);
+    float3 view = normalize(params.camPosition.xyz - worldPos);
     radiance = simplifiedRenderingEquation(worldPos,
                                            normal,
-                                           v,
+                                           view,
                                            material.ambientColor.rgb,
                                            material.diffuseColor.rgb,
                                            material.mriao.y,

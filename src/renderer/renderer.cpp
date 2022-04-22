@@ -23,8 +23,8 @@
 
 #include "renderer.h"
 
-#define MAX_WIDTH 320
-#define MAX_HEIGHT 180
+#define MAX_WIDTH 400
+#define MAX_HEIGHT 400
 
 struct Renderer
 {
