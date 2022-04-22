@@ -5,7 +5,7 @@
 layout(location = 0) out float4 outColor;
 
 layout(location = 0) uniform uint32 lightsCount;
-layout(location = 1) uniform float3 ambientColor;
+layout(location = 1) uniform sampler2D atlasTexture;
 layout(location = 2) uniform usampler2D idTexture;
 layout(location = 3) uniform sampler2D depthTexture;
 layout(location = 4) uniform sampler2D normalsTexture;
@@ -27,15 +27,30 @@ void main()
   {
     uint32 id = texelFetch(idTexture, ifragCoord, 0).r;
     MaterialParameters material = materials[geo[id].materialID];
+
+    float3 objectPos = (geo[id].worldGeoMat * float4(worldPos, 1.0)).xyz;
+    float3 view = normalize(params.camPosition.xyz - worldPos);    
+
+    float3 diffuseColor = material.diffuseTextureEnabled == 1 ? psample(atlasTexture,
+                                                                        objectPos,
+                                                                        normal,
+                                                                        material.diffuseTextureUVRect,
+                                                                        material.projectionMode).rgb : material.diffuseColor.rgb;
+
+    float4 mriao = material.mriaoTextureEnabled == 1 ? psample(atlasTexture,
+                                                               objectPos,
+                                                               normal,
+                                                               material.mriaoTextureUVRect,
+                                                               material.projectionMode) : material.mriao;
     
-    float3 view = normalize(params.camPosition.xyz - worldPos);
+
     radiance = simplifiedRenderingEquation(worldPos,
                                            normal,
                                            view,
                                            material.ambientColor.rgb,
-                                           material.diffuseColor.rgb,
-                                           material.mriao.y,
-                                           material.mriao.w,
+                                           diffuseColor,
+                                           mriao.y,
+                                           mriao.w,
                                            shadows,
                                            lightsCount);
   }

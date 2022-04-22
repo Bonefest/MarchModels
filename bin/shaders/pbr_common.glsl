@@ -1,6 +1,68 @@
 #include common.glsl
 
+#define HALF_PI 1.5707963f
 #define PI 3.1415926f
+#define PI2 6.2831852f
+
+// ----------------------------------------------------------------------------
+// Projections
+// ----------------------------------------------------------------------------
+
+float32 saturate(float32 value)
+{
+  return clamp(value, 0.0f, 1.0f);
+}
+
+float4 sampleTriplanar(sampler2D text, float3 p, float3 n, float2 uvMin, float2 uvSize)
+{
+  p = fract(p);
+  
+  float4 x = texture(text, uvSize * p.yz + uvMin);
+  float4 y = texture(text, uvSize * p.zx + uvMin);
+  float4 z = texture(text, uvSize * p.xy + uvMin);
+
+  float3 w = pow(n, 2.0f.xxx);
+  
+  return (x * w.x + y * w.y + z * w.z) / (w.x + w.y + w.z);
+}
+
+float4 sampleSpherical(sampler2D text, float3 p, float2 uvMin, float2 uvSize)
+{
+  float3 np = normalize(p);
+  
+  float32 rotationAngle = atan(np.z, np.x);
+  float32 elevationAngle = asin(np.y);  
+
+  float2 uv = float2(saturate((rotationAngle + PI) / PI2),
+                     saturate((elevationAngle + HALF_PI) / PI));
+  
+  return texture(text, uvSize * uv + uvMin);
+}
+
+float4 sampleCylindrical(sampler2D text, float3 p, float2 uvMin, float2 uvSize)
+{
+  float2 np = normalize(p.xz);
+
+  float32 rotationAngle = atan(np.y, np.x);
+
+  float2 uv = float2(saturate((rotationAngle + PI) / PI2), fract(p.y));
+  return texture(text, uvSize * uv + uvMin);
+}
+
+float4 psample(sampler2D text, float3 p, float3 n, float4 uvRect, uint32 mode)
+{
+  float2 uvSize = uvRect.zw - uvRect.xy;
+  float2 uvMin = uvRect.xy;
+  
+  switch(mode)
+  {
+    case MATERIAL_TEXTURE_PROJECTION_MODE_TRIPLANAR: return sampleTriplanar(text, p, n, uvMin, uvSize);
+    case MATERIAL_TEXTURE_PROJECTION_MODE_SPHERICAL: return sampleSpherical(text, p, uvMin, uvSize);
+    case MATERIAL_TEXTURE_PROJECTION_MODE_CYLINDRICAL: return sampleCylindrical(text, p, uvMin, uvSize);
+  }
+
+  return 0.0f.xxxx;
+}
 
 // ----------------------------------------------------------------------------
 // Helpers
@@ -36,7 +98,7 @@ float32 getAttenuation(uint32 lightIndex, float32 lpDistance, float3 l)
 
 float32 roughnessToShininess(float32 roughness)
 {
-  return clamp(2.0f / ((roughness + 0.001) * (roughness + 0.001)) - 2, 0.1f, 2000.0f);
+  return clamp(2.0f / ((roughness + 0.001) * (roughness + 0.001)) - 2, 1.0f, 10000.0f);
 }
 
 float3 iorToF0(float32 ior)
