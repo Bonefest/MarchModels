@@ -23,6 +23,8 @@
 
 #include "renderer.h"
 
+#include <moviemaker/movie.h>
+
 #define MAX_WIDTH 400
 #define MAX_HEIGHT 400
 
@@ -459,6 +461,8 @@ bool8 rendererRenderScene(Film* film,
                           Camera* camera,
                           const RenderingParameters& params)
 {
+  // TODO: MovieWriter mwriter("test", 320, 240);
+  
   data.passedFilm = film;
   data.passedScene = scene;
   data.passedCamera = camera;

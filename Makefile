@@ -16,11 +16,11 @@ DEFINES = -DDEBUG -DENABLE_EDITOR_GAME #-DTEST_COMPILE_PATH
 # Compiler flags
 CFLAGS = -g -Wall -O0 -fPIC -std=c++1z ${DEFINES} $(INCLUDE_DIRS)
 
-# Linker flags
-LDFLAGS =-lXxf86vm -lxkbcommon-x11 -L/usr/lib/X11
+# Linker flags, -Wl,-R tells where to find .so files after compilation
+LDFLAGS =-lXxf86vm -lxkbcommon-x11 -L/usr/lib/X11 -Lthrdparty/moviemaker/ -Wl,-R/usr/local/lib
 
 # Link libraries
-LDLIBS =-lglfw -ldl -xcb -lX11 -lX11-xcb -llua5.3 -lgtest -lgmock -lpthread 
+LDLIBS =-lglfw -ldl -xcb -lX11 -lX11-xcb -llua5.3 -lgtest -lgmock -lpthread -lmoviemaker-cpp
 
 # Similarly to the old ./build_editor.sh script - find all .c/.cpp files and save them into corresponding variables
 CPP_SRC_FILES = $(shell find . -type f -name "*.cpp")
