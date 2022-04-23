@@ -125,9 +125,27 @@
   #define MATERIAL_TEXTURE_PROJECTION_MODE_SPHERICAL   1
   #define MATERIAL_TEXTURE_PROJECTION_MODE_CYLINDRICAL 2
 
+  #define MATERIAL_TEXTURE_TYPE_DIFFUSE  0
+  #define MATERIAL_TEXTURE_TYPE_SPECULAR 1
+  #define MATERIAL_TEXTURE_TYPE_BUMP     2
+  #define MATERIAL_TEXTURE_TYPE_MRIAO    3
+  #define MATERIAL_TEXTURE_TYPE_COUNT    4
+
   #if defined(__cplusplus)
     using MaterialTextureProjectionMode = uint32;
+    using MaterialTextureType = uint32;
   #endif
+
+  struct MaterialTextureParameters
+  {
+    uint32 enabled;
+    float32 blendingFactor;
+    float32 _gap1;
+    float32 _gap2;    
+    
+    float4 defaultValue;
+    float4 uvRect;
+  };
 
   struct MaterialParameters
   {
@@ -135,26 +153,13 @@
     uint32 _gap1;
     uint32 _gap2;
     uint32 _gap3;
-    
-    uint32 diffuseTextureEnabled;
-    uint32 specularTextureEnabled;
-    uint32 bumpTextureEnabled;
-    uint32 mriaoTextureEnabled;
-
-    float4 diffuseTextureUVRect;
-    float4 specularTextureUVRect;
-    float4 bumpTextureUVRect;
-    float4 mriaoTextureUVRect;
 
     float4 ambientColor;
-    float4 diffuseColor;
-    float4 specularColor;
     float4 emissionColor;
-
-    float4 mriao;
     float4 _gap4;
-    float4 _gap5;
-    float4 _gap6;    
+    float4 _gap5;    
+    
+    MaterialTextureParameters textures[MATERIAL_TEXTURE_TYPE_COUNT];
   };
 
   struct AABBCalculationBufferParameters

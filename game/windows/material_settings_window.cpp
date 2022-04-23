@@ -122,7 +122,7 @@ void materialSettingsWindowDraw(Window* window, float64 delta)
 
   for(uint32 itype = 0; itype < MATERIAL_TEXTURE_TYPE_COUNT; itype++)
   {
-    const float32 imageSize = 48.0f;
+    const float32 imageSize = 64.0f;
     
     ImGui::PushID(itype);
 
@@ -138,6 +138,7 @@ void materialSettingsWindowDraw(Window* window, float64 delta)
 
     uint2 textureSize = uint2(64, 64);
     uint4 textureRegion = materialGetTextureRegion(data->material, type);
+    float32 textureBlendingFactor = materialGetTextureBlendingFactor(data->material, type);
     bool8 textureEnabled = materialIsTextureEnabled(data->material, type);
 
     if(image == ImagePtr(nullptr))
@@ -212,7 +213,7 @@ void materialSettingsWindowDraw(Window* window, float64 delta)
       ImGui::PopStyleVar();
       ImGui::NewLine();
 
-      ImGui::SetCursorPosY(imageStart.y + imageSize * 0.5f);
+      ImGui::SetCursorPosY(imageStart.y + imageSize * 0.4f);
       ImGui::Dummy(float2(imageSize, 0.0f));
       ImGui::SameLine();
 
@@ -232,6 +233,15 @@ void materialSettingsWindowDraw(Window* window, float64 delta)
         }
       ImGui::PopStyleColor();
 
+      ImGui::SetCursorPosY(imageStart.y + imageSize * 0.8f);
+      ImGui::Dummy(float2(imageSize, 0.0f));
+      ImGui::SameLine();
+
+      if(ImGui::SliderFloat("Blending", &textureBlendingFactor, 1.0f, 10.0f))
+      {
+        materialSetTextureBlendingFactor(data->material, type, textureBlendingFactor);
+      }
+      
       ImGui::NewLine();
 
       ImGui::SetCursorPos(imageStart);

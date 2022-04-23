@@ -1,5 +1,8 @@
 #ifndef DEFINES_GLSL_INCLUDED
 #define DEFINES_GLSL_INCLUDED
+  #define TRUE  1
+  #define FALSE 0
+
   #define float32 float
   #define int32 int
   #define uint32 uint

@@ -8,6 +8,7 @@ struct MaterialTextureData
   ImagePtr texture;
   uint4 textureRegion;
   float4 atlasUVRect;
+  float32 blendingFactor;
   
   bool8 enabled;
 };
@@ -92,6 +93,7 @@ bool8 createMaterial(const std::string& name, Asset** material)
   for(uint32 i = 0; i < MATERIAL_TEXTURE_TYPE_COUNT; i++)
   {
     materialData->textures[i].texture = ImagePtr(nullptr);
+    materialData->textures[i].blendingFactor = 2.0f;
     materialData->textures[i].enabled = FALSE;
   }
   
@@ -136,6 +138,7 @@ bool8 materialSerialize(AssetPtr material, json& jsonData)
     {
       jsonData[typeStr]["name"] = imageGetName(materialData->textures[itype].texture);
       jsonData[typeStr]["texture_region"] = vecToJson(materialData->textures[itype].textureRegion);
+      jsonData[typeStr]["blending_factor"] = materialData->textures[itype].blendingFactor;
       jsonData[typeStr]["enabled"] = materialData->textures[itype].enabled;
     }
   }
@@ -177,6 +180,7 @@ bool8 materialDeserialize(AssetPtr material, json& jsonData)
 
       materialData->textures[itype].texture = texture;
       materialData->textures[itype].textureRegion = jsonToVec<uint32, 4>(jsonData[typeStr]["texture_region"]);
+      materialData->textures[itype].blendingFactor = jsonData[typeStr].value("blending_factor", 2.0f);
       materialData->textures[itype].enabled = jsonData[typeStr].value("enabled", FALSE);
     }
 
@@ -233,6 +237,18 @@ uint4 materialGetTextureRegion(Asset* material, MaterialTextureType type)
 {
   Material* materialData = (Material*)assetGetInternalData(material);
   return materialData->textures[type].textureRegion;
+}
+
+void materialSetTextureBlendingFactor(Asset* material, MaterialTextureType type, float32 factor)
+{
+  Material* materialData = (Material*)assetGetInternalData(material);
+  materialData->textures[type].blendingFactor = factor;
+}
+
+float32 materialGetTextureBlendingFactor(Asset* material, MaterialTextureType type)
+{
+  Material* materialData = (Material*)assetGetInternalData(material);
+  return materialData->textures[type].blendingFactor;
 }
 
 void materialSetEnabledTexture(Asset* material, MaterialTextureType type, bool8 enabled)
@@ -385,23 +401,23 @@ MaterialParameters materialToMaterialParameters(Asset* material)
   
   MaterialParameters parameters = {};
   parameters.projectionMode = materialData->projectionMode;
+
+  for(uint32 itype = 0; itype < MATERIAL_TEXTURE_TYPE_COUNT; itype++)
+  {
+    parameters.textures[itype].enabled = materialData->textures[itype].enabled;
+    parameters.textures[itype].blendingFactor = materialData->textures[itype].blendingFactor;
+    // TODO: parameters.textures[itype].defaultValue = materialData->textures[itype].defaultValue;
+    parameters.textures[itype].uvRect = materialData->textures[itype].atlasUVRect;
+  }
   
-  parameters.diffuseTextureEnabled = materialData->textures[MATERIAL_TEXTURE_TYPE_DIFFUSE].enabled;
-  parameters.specularTextureEnabled = materialData->textures[MATERIAL_TEXTURE_TYPE_SPECULAR].enabled;
-  parameters.bumpTextureEnabled = materialData->textures[MATERIAL_TEXTURE_TYPE_BUMP].enabled;
-  parameters.mriaoTextureEnabled = materialData->textures[MATERIAL_TEXTURE_TYPE_MRIAO].enabled;
-
-  parameters.diffuseTextureUVRect = materialData->textures[MATERIAL_TEXTURE_TYPE_DIFFUSE].atlasUVRect;
-  parameters.specularTextureUVRect = materialData->textures[MATERIAL_TEXTURE_TYPE_SPECULAR].atlasUVRect;
-  parameters.bumpTextureUVRect = materialData->textures[MATERIAL_TEXTURE_TYPE_BUMP].atlasUVRect;
-  parameters.mriaoTextureUVRect = materialData->textures[MATERIAL_TEXTURE_TYPE_MRIAO].atlasUVRect;
-
   parameters.ambientColor = materialData->ambientColor;
-  parameters.diffuseColor = materialData->diffuseColor;
-  parameters.specularColor = materialData->specularColor;
   parameters.emissionColor = materialData->emissionColor;
 
-  parameters.mriao = float4(materialData->metallic, materialData->roughness, materialData->ior, materialData->ao);
+  parameters.textures[MATERIAL_TEXTURE_TYPE_DIFFUSE].defaultValue = materialData->diffuseColor;  
+  parameters.textures[MATERIAL_TEXTURE_TYPE_MRIAO].defaultValue = float4(materialData->metallic,
+                                                                         materialData->roughness,
+                                                                         materialData->ior,
+                                                                         materialData->ao);
 
   return parameters;
 }

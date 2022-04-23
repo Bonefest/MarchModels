@@ -79,3 +79,4 @@
 79. Make one larger buffer of GeometryTransformParameters: assign transforms to each ID. In future, we can use it for converting world positions to object's space for texturing. In the same GeometryTransforParameters, store other geometry data, e.g id of a material.
 80. No-Texture shading mode
 81. blend factor for textures
+82. replace specular texture via emission texture

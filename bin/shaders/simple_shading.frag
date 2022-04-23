@@ -31,18 +31,17 @@ void main()
     float3 objectPos = (geo[id].worldGeoMat * float4(worldPos, 1.0)).xyz;
     float3 view = normalize(params.camPosition.xyz - worldPos);    
 
-    float3 diffuseColor = material.diffuseTextureEnabled == 1 ? psample(atlasTexture,
-                                                                        objectPos,
-                                                                        normal,
-                                                                        material.diffuseTextureUVRect,
-                                                                        material.projectionMode).rgb : material.diffuseColor.rgb;
+    float3 diffuseColor = psample(atlasTexture,
+                                  objectPos,
+                                  normal,
+                                  material.textures[MATERIAL_TEXTURE_TYPE_DIFFUSE],
+                                  material.projectionMode).rgb;
 
-    float4 mriao = material.mriaoTextureEnabled == 1 ? psample(atlasTexture,
-                                                               objectPos,
-                                                               normal,
-                                                               material.mriaoTextureUVRect,
-                                                               material.projectionMode) : material.mriao;
-    
+    float4 mriao = psample(atlasTexture,
+                           objectPos,
+                           normal,
+                           material.textures[MATERIAL_TEXTURE_TYPE_MRIAO],
+                           material.projectionMode);
 
     radiance = simplifiedRenderingEquation(worldPos,
                                            normal,

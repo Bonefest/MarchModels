@@ -13,7 +13,7 @@ float32 saturate(float32 value)
   return clamp(value, 0.0f, 1.0f);
 }
 
-float4 sampleTriplanar(sampler2D text, float3 p, float3 n, float2 uvMin, float2 uvSize)
+float4 sampleTriplanar(sampler2D text, float3 p, float3 n, float2 uvMin, float2 uvSize, float32 factor)
 {
   p = fract(p);
   
@@ -21,7 +21,7 @@ float4 sampleTriplanar(sampler2D text, float3 p, float3 n, float2 uvMin, float2 
   float4 y = texture(text, uvSize * p.zx + uvMin);
   float4 z = texture(text, uvSize * p.xy + uvMin);
 
-  float3 w = pow(n, 2.0f.xxx);
+  float3 w = pow(n, factor.xxx);
   
   return (x * w.x + y * w.y + z * w.z) / (w.x + w.y + w.z);
 }
@@ -49,19 +49,27 @@ float4 sampleCylindrical(sampler2D text, float3 p, float2 uvMin, float2 uvSize)
   return texture(text, uvSize * uv + uvMin);
 }
 
-float4 psample(sampler2D text, float3 p, float3 n, float4 uvRect, uint32 mode)
+float4 psample(sampler2D text, float3 p, float3 n, MaterialTextureParameters params, uint32 mode)
 {
-  float2 uvSize = uvRect.zw - uvRect.xy;
-  float2 uvMin = uvRect.xy;
-  
-  switch(mode)
+  if(params.enabled == TRUE)
   {
-    case MATERIAL_TEXTURE_PROJECTION_MODE_TRIPLANAR: return sampleTriplanar(text, p, n, uvMin, uvSize);
-    case MATERIAL_TEXTURE_PROJECTION_MODE_SPHERICAL: return sampleSpherical(text, p, uvMin, uvSize);
-    case MATERIAL_TEXTURE_PROJECTION_MODE_CYLINDRICAL: return sampleCylindrical(text, p, uvMin, uvSize);
-  }
+  
+    float2 uvSize = params.uvRect.zw - params.uvRect.xy;
+    float2 uvMin = params.uvRect.xy;
 
-  return 0.0f.xxxx;
+    switch(mode)
+    {
+      case MATERIAL_TEXTURE_PROJECTION_MODE_TRIPLANAR: return sampleTriplanar(text, p, n, uvMin, uvSize, params.blendingFactor);
+      case MATERIAL_TEXTURE_PROJECTION_MODE_SPHERICAL: return sampleSpherical(text, p, uvMin, uvSize);
+      case MATERIAL_TEXTURE_PROJECTION_MODE_CYLINDRICAL: return sampleCylindrical(text, p, uvMin, uvSize);
+    }
+
+    return 0.0f.xxxx;
+  }
+  else
+  {
+    return params.defaultValue;
+  }
 }
 
 // ----------------------------------------------------------------------------

@@ -7,16 +7,6 @@
 
 static const AssetType ASSET_TYPE_MATERIAL = 0x89c5e3b6;
 
-enum MaterialTextureType
-{
-  MATERIAL_TEXTURE_TYPE_DIFFUSE,
-  MATERIAL_TEXTURE_TYPE_SPECULAR,
-  MATERIAL_TEXTURE_TYPE_BUMP,
-  MATERIAL_TEXTURE_TYPE_MRIAO,
-
-  MATERIAL_TEXTURE_TYPE_COUNT
-};
-  
 ENGINE_API const char* materialTextureTypeLabel(MaterialTextureType texType);
 ENGINE_API const char* materialTextureProjectionModeLabel(MaterialTextureProjectionMode mode);
 
@@ -32,6 +22,9 @@ ENGINE_API bool8 materialHasTexture(Asset* material, MaterialTextureType type);
 
 ENGINE_API void materialSetTextureRegion(Asset* material, MaterialTextureType type, uint4 region);
 ENGINE_API uint4 materialGetTextureRegion(Asset* material, MaterialTextureType type);
+
+ENGINE_API void materialSetTextureBlendingFactor(Asset* material, MaterialTextureType type, float32 factor);
+ENGINE_API float32 materialGetTextureBlendingFactor(Asset* material, MaterialTextureType type);
 
 ENGINE_API void materialSetEnabledTexture(Asset* material, MaterialTextureType type, bool8 enabled);
 ENGINE_API bool8 materialIsTextureEnabled(Asset* material, MaterialTextureType type);
