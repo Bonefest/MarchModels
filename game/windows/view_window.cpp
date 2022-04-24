@@ -1,4 +1,7 @@
+#include <ctime>
+
 #include <imgui/imgui.h>
+#include <moviemaker/movie.h>
 
 #include <utils.h>
 #include <stopwatch.h>
@@ -32,14 +35,18 @@ struct ViewWindowData
   RenderingParameters renderingParameters;
   
   float32 maxFPS;
-  Stopwatch lifetimeStopwatch;
+  Time elapsedTime;
+
   Stopwatch refreshStopwatch;
   Time refreshPeriod;
 
   ViewControlMode controlMode;
   bool8 requestedRedrawImage;
 
-  WindowPtr settingsWindow;  
+  WindowPtr settingsWindow;
+
+  MovieWriter* movieWriter = nullptr;
+  uint32 capturedFrames = 0;
 };
 
 static bool8 initializeViewWindow(Window* window)
@@ -47,7 +54,7 @@ static bool8 initializeViewWindow(Window* window)
   ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);
   
   Time initTime = Time::current();
-  data->lifetimeStopwatch.setTimepoint(initTime);
+
   data->refreshStopwatch.setTimepoint(initTime);
   
   return TRUE;
@@ -129,20 +136,44 @@ static void drawViewWindow(Window* window, float64 delta)
   Scene* currentScene = editorGetCurrentScene();
   imageIntegratorSetScene(data->integrator, currentScene);
 
-  bool8 newFrameTicked = data->refreshStopwatch.isPaused() == FALSE &&
-    data->refreshStopwatch.getElapsedTime() > data->refreshPeriod;
-  
+  bool8 newFrameTicked = (data->refreshStopwatch.isPaused() == FALSE &&
+                          data->refreshStopwatch.getElapsedTime() > data->refreshPeriod) ||
+                         data->movieWriter != nullptr;
+
+  Film* film = imageIntegratorGetFilm(data->integrator);
+  uint2 filmSize = filmGetSize(film);
+
   if((data->requestedRedrawImage == TRUE || newFrameTicked == TRUE) && currentScene != nullptr)
   {
-    data->renderingParameters.time = data->lifetimeStopwatch.getElapsedTime().asSecs();
+    if(newFrameTicked == TRUE)
+    {
+      data->elapsedTime += data->refreshPeriod;
+    }
+    
+    data->renderingParameters.time = data->elapsedTime.asSecs();
     imageIntegratorExecute(data->integrator, data->renderingParameters);
     data->refreshStopwatch.restart();
 
     data->requestedRedrawImage = FALSE;
-  }
 
-  Film* film = imageIntegratorGetFilm(data->integrator);
-  uint2 filmSize = filmGetSize(film);
+    if(data->movieWriter != nullptr)
+    {
+      GLuint filmHandle = filmGetGLHandle(film);
+      const uint32 bufSize = filmSize.x * filmSize.y * 4;
+      uint8 pixels[bufSize];
+      
+      glGetTextureImage(filmHandle, 0, GL_BGRA, GL_UNSIGNED_BYTE, bufSize, pixels);
+
+      data->movieWriter->addFrame(pixels);
+      data->capturedFrames++;
+
+      if(data->capturedFrames >= data->maxFPS * 10)
+      {
+        delete data->movieWriter;
+        data->movieWriter = nullptr;
+      }
+    }
+  }
 
   float2 windowSize = ImGui::GetWindowContentAreaSize();
   if(windowSize.x != filmSize.x || windowSize.y != filmSize.y)
@@ -162,7 +193,6 @@ static void drawViewWindow(Window* window, float64 delta)
 
     if(ImGui::Button(ICON_KI_RELOAD_INVERSE"##view"))
     {
-      data->lifetimeStopwatch.restart();
       data->refreshStopwatch.restart();
     }
 
@@ -170,24 +200,15 @@ static void drawViewWindow(Window* window, float64 delta)
 
     if(ImGui::Button(ICON_KI_BACKWARD"##view"))
     {
-      float64 totalSecs = data->lifetimeStopwatch.getTimepoint().asSecs();
-      float64 currentSecs = Time::current().asSecs();
-
-      // NOTE: Determine how much time to add (we need to limit it, so that elapsed time is not
-      // overcome, i.e always greater than 0)
-      float64 addSecs = min(data->lifetimeStopwatch.getElapsedTime().asSecs(), 1.0f);
-
-      // NOTE: Shift timepoint 0.0-1.0 second(s) forward, so that total elapsed time is decreased.
-      data->lifetimeStopwatch.setTimepoint(Time::secs(min(totalSecs + addSecs, currentSecs)));
+      data->elapsedTime -= Time::secs(1.0f);
     }
 
     ImGui::SameLine();
 
-    if(data->lifetimeStopwatch.isPaused())
+    if(data->refreshStopwatch.isPaused())
     {
       if(ImGui::Button(ICON_KI_CARET_RIGHT"##view"))
       {
-        data->lifetimeStopwatch.unpause();
         data->refreshStopwatch.unpause();
       }
     }
@@ -195,7 +216,6 @@ static void drawViewWindow(Window* window, float64 delta)
     {
       if(ImGui::Button(ICON_KI_PAUSE"##view"))
       {
-        data->lifetimeStopwatch.pause();
         data->refreshStopwatch.pause();
       }
     }
@@ -204,10 +224,7 @@ static void drawViewWindow(Window* window, float64 delta)
 
     if(ImGui::Button(ICON_KI_FORWARD"##view"))
     {
-      float64 totalSecs = data->lifetimeStopwatch.getTimepoint().asSecs();
-
-      // NOTE: Shift timepoint one second backward, so that total elapsed time is increased.
-      data->lifetimeStopwatch.setTimepoint(Time::secs(totalSecs - 1.0f));
+      data->elapsedTime += Time::secs(1.0f);
     }
 
     ImGui::SameLine();
@@ -233,14 +250,51 @@ static void drawViewWindow(Window* window, float64 delta)
     }
 
     char shortInfoBuf[255];
-    sprintf(shortInfoBuf, "Time: %.2f | FPS: %u", data->lifetimeStopwatch.getElapsedTime().asSecs(), 0);
+    sprintf(shortInfoBuf, "Time: %.2f", data->elapsedTime.asSecs());
+    
     float32 textWidth = ImGui::CalcTextSize(shortInfoBuf).x;
 
     ImGui::SameLine(windowSize.x - textWidth - cogButtonWidth - 2.0 * style.FramePadding.x);
     ImGui::Text("%s", shortInfoBuf);
 
-    ImGui::SetCursorPos(initialCursorPos + float2(0.0f, avalReg.y - ImGui::GetFontSize()));
+    ImGui::SetCursorPos(initialCursorPos + float2(0.0f, avalReg.y - 1.5 * ImGui::GetFontSize()));
     ImGui::Text("Culled objects: %d", culledObjectsCounter);
+
+    static float32 imageButtonWidth = 10.0f;
+    static float32 imageButtonHeight = 10.0f;
+
+    ImGui::SameLine(windowSize.x - imageButtonWidth - style.FramePadding.x);
+
+    bool8 imageButtonPressed = ImGui::Button(ICON_KI_IMAGE"##view");
+    imageButtonWidth = ImGui::GetItemRectSize().x;
+    imageButtonHeight = ImGui::GetItemRectSize().y;
+
+    if(imageButtonPressed == TRUE)
+    {
+      // TODO: Save image
+    }
+
+    static float32 cameraButtonWidth = 10.0f;
+    ImGui::SameLine(windowSize.x - cameraButtonWidth - imageButtonWidth - 2.0f * style.FramePadding.x);
+
+    bool8 cameraButtonPressed = ImGui::Button(ICON_KI_CAMERA"##view");
+    cameraButtonWidth = ImGui::GetItemRectSize().x;
+
+    if(cameraButtonPressed == TRUE)
+    {
+      if(data->movieWriter == nullptr)
+      {
+        std::time_t rawTime = std::time(0);
+        std::tm* currentTime = std::localtime(&rawTime);
+
+        char recordName[256];
+        sprintf(recordName, "record_%02d%02d%02d", currentTime->tm_hour, currentTime->tm_min, currentTime->tm_sec);
+        
+        data->movieWriter = new MovieWriter(recordName, filmSize.x, filmSize.y, uint32(data->maxFPS));
+        data->capturedFrames = 0;
+      }
+    }
+    
   }
   else
   {

@@ -51,3 +51,5 @@ flycheck_*.el
 obj/
 internal/
 bin/imgui.ini
+
+*.mp4

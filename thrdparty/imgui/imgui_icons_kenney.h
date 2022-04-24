@@ -239,3 +239,5 @@
 #define ICON_KI_EYE_DIS "\uE9D1"
 #define ICON_KI_NLOCK "\uEA75"
 #define ICON_KI_NUNLOCK "\uEA76"
+#define ICON_KI_IMAGE "\uE9F4"
+#define ICON_KI_CAMERA "\uE9F5"

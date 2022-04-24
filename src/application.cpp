@@ -23,6 +23,9 @@ struct Application
   bool8       initialized;
   uint32      width;
   uint32      height;
+  uint32      FPS;
+  float64     frameTime;
+  bool8       fixedFPS = FALSE;
   const char* name;
 
   GLFWwindow* window;
@@ -175,7 +178,7 @@ static bool8 initGLFW()
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(openglErrorsCallback, NULL);
   #endif
-  
+
   return TRUE;
 }
 
@@ -248,6 +251,8 @@ static bool8 initApplication()
     LOG_ERROR("Application cannot be initialized twice!");
     return FALSE;
   }
+
+  applicationSetFPS(60);
   
   if(!initializeGameFramework(&game))
   {
@@ -468,11 +473,20 @@ static void startApplicationLoop()
   Stopwatch mainLoopStopwatch;
   while(!glfwWindowShouldClose(application.window))
   {
+    static float64 elapsedTime = 0.0f;
     float64 delta = mainLoopStopwatch.restart().asSecs();
+    elapsedTime += delta;
+    
+    if(elapsedTime >= application.frameTime)
+    {
+      delta = application.fixedFPS == TRUE ? application.frameTime : elapsedTime;
+      
+      processInputApplication();
+      updateApplication(delta);
+      drawApplication(delta);
 
-    processInputApplication();
-    updateApplication(delta);
-    drawApplication(delta);
+      elapsedTime = 0.0f;
+    }
   }
 }
 
@@ -514,3 +528,25 @@ GLFWwindow* applicationGetWindow()
   return application.window;
 }
 
+void applicationSetFPS(uint32 FPS)
+{
+  assert(FPS > 0);
+  
+  application.FPS = FPS;
+  application.frameTime = 1.0f / float32(FPS);
+}
+
+uint32 applicationGetFPS()
+{
+  return application.FPS;
+}
+
+void applicationSetFPSFixed(bool8 fixed)
+{
+  application.fixedFPS = fixed;
+}
+
+bool8 applicationIsFPSFixed()
+{
+  return application.fixedFPS;
+}
