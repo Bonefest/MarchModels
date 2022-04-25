@@ -36,7 +36,6 @@ static bool8 normalsVisualizationPassExecute(RenderPass* pass)
   
   drawTriangleNoVAO();
   
-  shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   return TRUE;

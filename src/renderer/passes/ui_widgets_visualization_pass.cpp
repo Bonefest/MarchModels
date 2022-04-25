@@ -266,7 +266,6 @@ static void drawAABBs(UIWidgetsVisualizationPassData* data)
   
   glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0, unselectedInstances.size());
   
-  shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);  
@@ -294,7 +293,6 @@ static void drawFrustum(UIWidgetsVisualizationPassData* data)
   glBindVertexArray(model3DGetVAOHandle(data->frustumModel));
   glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
   
-  shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);  
@@ -320,7 +318,6 @@ static void drawAxes(UIWidgetsVisualizationPassData* data)
   glBindVertexArray(model3DGetVAOHandle(data->axisModel));
   glDrawArraysInstanced(GL_LINES, 0, 2, axes.size());
   
-  shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);  
@@ -341,7 +338,6 @@ static void drawGrid(UIWidgetsVisualizationPassData* data)
   glBindVertexArray(model3DGetVAOHandle(data->gridModel));
   glDrawArrays(GL_LINES, 0, n * n * 2);
   
-  shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 

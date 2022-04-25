@@ -46,7 +46,6 @@ static bool8 distancesVisualizationPassExecute(RenderPass* pass)
   glUniform3fv(glGetUniformLocation(programHandle, "farthestColor"), 1, &data->farthestColor[0]);
   
   drawTriangleNoVAO();
-  shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   return TRUE;

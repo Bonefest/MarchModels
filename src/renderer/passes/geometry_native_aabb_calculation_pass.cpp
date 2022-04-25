@@ -77,8 +77,6 @@ AABB AABBCalculationPassCalculateAABB(Asset* geometry)
                       1);
   }
 
-  shaderProgramUse(nullptr);
-
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, data.aabbBufferHandle);
   AABBCalculationBufferParameters* mappedParams =
     (AABBCalculationBufferParameters*)glMapBufferRange(GL_SHADER_STORAGE_BUFFER,

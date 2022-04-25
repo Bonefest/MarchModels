@@ -42,7 +42,6 @@ static bool8 rasterizationPassPrepareToRasterize(RasterizationPassData* data)
   drawTriangleNoVAO();
 
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  shaderProgramUse(nullptr);
 
   return TRUE;
 }
@@ -118,8 +117,7 @@ static bool8 rasterizationPassExtractResults(RasterizationPassData* data)
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_RAYS_MAP_TEXTURE));  
   drawTriangleNoVAO();
-
-  shaderProgramUse(nullptr);
+  
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   glDisable(GL_DEPTH_TEST);

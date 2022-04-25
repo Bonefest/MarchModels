@@ -38,7 +38,6 @@ static bool8 normalsCalculationPassExecute(RenderPass* pass)
   
   drawTriangleNoVAO();
   
-  shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   return TRUE;
@@ -66,7 +65,6 @@ static ShaderProgram* createNormalsCalculationProgram()
   shaderProgramUse(program);
   glUniform1i(glGetUniformLocation(shaderProgramGetGLHandle(program), "distancesMap"), 0);  
   glUniform1i(glGetUniformLocation(shaderProgramGetGLHandle(program), "idsMap"), 1);
-  shaderProgramUse(nullptr);
   
   return program;
 }

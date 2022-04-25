@@ -35,7 +35,6 @@ static bool8 idsVisualizationPassExecute(RenderPass* pass)
   glBindTexture(GL_TEXTURE_2D, rendererGetResourceHandle(RR_GEOIDS_MAP_TEXTURE));
   
   drawTriangleNoVAO();
-  shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   return TRUE;

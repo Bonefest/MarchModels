@@ -40,7 +40,6 @@ static bool8 skyRenderingPassExecute(RenderPass* pass)
   
   drawTriangleNoVAO();
   
-  shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   return TRUE;

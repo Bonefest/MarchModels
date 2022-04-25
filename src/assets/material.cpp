@@ -150,7 +150,7 @@ bool8 materialDeserialize(AssetPtr material, json& jsonData)
 {
   Material* materialData = (Material*)assetGetInternalData(material);    
   *materialData = Material{};
-  
+
   materialData->projectionMode = (MaterialTextureProjectionMode)jsonData.value("projection_mode", (uint32)MATERIAL_TEXTURE_PROJECTION_MODE_TRIPLANAR);
   
   materialData->ior = jsonData.value("ior", 1.0f);
@@ -170,7 +170,12 @@ bool8 materialDeserialize(AssetPtr material, json& jsonData)
 
     if(jsonData[typeStr].is_object())
     {
-      std::string textureName = jsonData[typeStr]["name"];
+      std::string textureName = "";
+      if(jsonData[typeStr]["name"].is_string())
+      {
+        textureName = jsonData[typeStr].value("name", "");
+      }
+      
       ImagePtr texture = imageManagerLoadImage(textureName.c_str());
       if(texture == ImagePtr(nullptr))
       {
@@ -180,8 +185,14 @@ bool8 materialDeserialize(AssetPtr material, json& jsonData)
 
       materialData->textures[itype].texture = texture;
       materialData->textures[itype].textureRegion = jsonToVec<uint32, 4>(jsonData[typeStr]["texture_region"]);
-      materialData->textures[itype].blendingFactor = jsonData[typeStr].value("blending_factor", 2.0f);
-      materialData->textures[itype].enabled = jsonData[typeStr].value("enabled", FALSE);
+
+      materialData->textures[itype].blendingFactor = 2.0f;
+      if(jsonData[typeStr]["blending_factor"].is_number())
+      {
+        materialData->textures[itype].blendingFactor = jsonData[typeStr]["blending_factor"];
+      }
+
+      materialData->textures[itype].enabled = jsonData[typeStr]["enabled"];
     }
 
   }

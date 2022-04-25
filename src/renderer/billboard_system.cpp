@@ -225,7 +225,6 @@ void billboardSystemPresent()
   }
   
   glBindVertexArray(0);
-  shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   popBlend();

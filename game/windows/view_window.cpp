@@ -46,6 +46,7 @@ struct ViewWindowData
   WindowPtr settingsWindow;
 
   MovieWriter* movieWriter = nullptr;
+  uint32 framesToCapture = 60;
   uint32 capturedFrames = 0;
 };
 
@@ -167,7 +168,7 @@ static void drawViewWindow(Window* window, float64 delta)
       data->movieWriter->addFrame(pixels);
       data->capturedFrames++;
 
-      if(data->capturedFrames >= data->maxFPS * 10)
+      if(data->capturedFrames >= data->framesToCapture)
       {
         delete data->movieWriter;
         data->movieWriter = nullptr;
@@ -294,6 +295,12 @@ static void drawViewWindow(Window* window, float64 delta)
         data->capturedFrames = 0;
       }
     }
+
+    static float32 framesToCaptureWidth = 90.0f;
+    ImGui::SameLine(windowSize.x - framesToCaptureWidth - cameraButtonWidth - imageButtonWidth - 3.0f * style.FramePadding.x);    
+
+    ImGui::PushItemWidth(framesToCaptureWidth);
+    ImGui::SliderInt("##FramesToCapture", (int32*)&data->framesToCapture, 30, 600);
     
   }
   else
@@ -445,7 +452,7 @@ bool8 createViewWindow(const std::string& identifier,
   data->settingsWindow = WindowPtr(nullptr);
   
   windowSetInternalData(*outWindow, data);
-  viewWindowSetMaxFPS(*outWindow, 60.0f);
+  viewWindowSetMaxFPS(*outWindow, 30.0f);
 
   return TRUE;
 }

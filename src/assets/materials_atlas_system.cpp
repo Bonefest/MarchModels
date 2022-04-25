@@ -32,8 +32,8 @@ bool8 initializeMAS()
     return FALSE;
   }
 
-  const uint32 atlasWidth = 4096;
-  const uint32 atlasHeight = 4096;  
+  const uint32 atlasWidth = 1024;
+  const uint32 atlasHeight = 512;  
   
   GLuint atlasHandle;
   glGenTextures(1, &atlasHandle);
@@ -109,7 +109,7 @@ static float4 addTextureToAtlas(ImagePtr texture)
   
   data.rowHeight = max(data.rowHeight, textureSize.y);
   data.atlasInsertRegion.x += textureSize.x;
-  
+
   return uvRect;
 }
 

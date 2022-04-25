@@ -104,7 +104,5 @@ bool8 drawGeometryPostorder(Camera* camera,
   
   drawTriangleNoVAO();
   
-  shaderProgramUse(nullptr);
-
   return TRUE;  
 }

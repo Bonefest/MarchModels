@@ -58,7 +58,6 @@ static bool8 shadowRasterizationPassPrepareToRasterize(ShadowRasterizationPassDa
 
   glDisable(GL_STENCIL_TEST);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  shaderProgramUse(nullptr);
   
   return TRUE;
 }

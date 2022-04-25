@@ -63,7 +63,6 @@ static bool8 simpleShadingPassExecute(RenderPass* pass)
   
   drawTriangleNoVAO();
 
-  shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   popBlend();

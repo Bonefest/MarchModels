@@ -35,7 +35,6 @@ static bool8 LDRToFilmCopyPassExecute(RenderPass* pass)
   
   drawTriangleNoVAO();
   
-  shaderProgramUse(nullptr);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   return TRUE;
