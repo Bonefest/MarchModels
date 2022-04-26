@@ -12,8 +12,8 @@
   #define STACKS_SSBO_BINDING             2
   #define AABB_CALCULATION_SSBO_BINDING   3
 
-  #define MAX_GEOMETRIES                  200
-  #define MAX_MATERIALS                   128
+  #define MAX_GEOMETRIES                  64
+  #define MAX_MATERIALS                   32
 
   #define MAX_LIGHT_SOURCES_COUNT         4
   #define MAX_STACK_SIZE                  8
