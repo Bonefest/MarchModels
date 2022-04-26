@@ -81,3 +81,4 @@
 81. blend factor for textures
 82. replace specular texture via emission texture
 83. after long sessions, even culled objects are taking rendering time
+84. investigate why if branch takes so much time.

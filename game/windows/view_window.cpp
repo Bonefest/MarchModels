@@ -168,6 +168,8 @@ static void drawViewWindow(Window* window, float64 delta)
       data->movieWriter->addFrame(pixels);
       data->capturedFrames++;
 
+      LOG_INFO("Captured frame #%u", data->capturedFrames);
+      
       if(data->capturedFrames >= data->framesToCapture)
       {
         delete data->movieWriter;

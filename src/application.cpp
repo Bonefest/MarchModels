@@ -477,7 +477,7 @@ static void startApplicationLoop()
     float64 delta = mainLoopStopwatch.restart().asSecs();
     elapsedTime += delta;
     
-    if(elapsedTime >= application.frameTime)
+    if(true)//elapsedTime >= application.frameTime)
     {
       delta = application.fixedFPS == TRUE ? application.frameTime : elapsedTime;
       
