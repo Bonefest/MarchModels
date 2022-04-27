@@ -33,6 +33,7 @@ using std::unordered_map;
 struct EditorData
 {
   Scene* currentScene = nullptr;
+  char sceneNameBuf[255];
   Camera* camera;
 
   WindowPtr viewWindow;
@@ -101,7 +102,10 @@ bool8 initEditor(Application* app)
 {
   declareDefaultScriptFunctions();
 
-  assert(createScene(&editorData.currentScene));
+  Scene* startScene;
+  assert(createScene(&startScene));
+  editorSetScene(startScene);
+  
   assert(initWindowManager());
 
   Window* consoleWindow = nullptr;
@@ -201,17 +205,26 @@ void drawMenu(float2& outMenuSize)
   ImGui::BeginMainMenuBar();
     if(ImGui::BeginMenu(ICON_KI_COMPUTER" Scene"))
     {
-      if(ImGui::MenuItem("New"))
+      ImGui::PushStyleColor(ImGuiCol_FrameBg, float4(0.0f, 0.0f, 0.0f, 0.0f));
+        if(ImGui::InputText("", editorData.sceneNameBuf, 255))
+        {
+          
+        }
+      ImGui::PopStyleColor();
+
+      ImGui::Separator();
+      
+      if(ImGui::MenuItem("New", "Ctrl-N"))
       {
         
       }
 
-      if(ImGui::MenuItem("Open"))
+      if(ImGui::MenuItem("Open", "Ctrl-O"))
       {
         
       }
 
-      if(ImGui::MenuItem("Save"))
+      if(ImGui::MenuItem("Save", "Ctrl-S"))
       {
 
       }
@@ -267,6 +280,7 @@ void editorSetScene(Scene* scene)
 {
   // TODO: Notify all that scene has changed
   editorData.currentScene = scene;
+  strcpy(editorData.sceneNameBuf, sceneGetName(scene).c_str());
 }
 
 Scene* editorGetCurrentScene()

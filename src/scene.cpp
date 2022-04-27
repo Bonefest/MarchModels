@@ -1,5 +1,6 @@
 #include <algorithm>
 
+#include <assets/assets_factory.h>
 #include <../bin/shaders/declarations.h>
 
 #include "memory_manager.h"
@@ -7,11 +8,14 @@
 #include "scene.h"
 
 using std::vector;
+using std::string;
 
 struct Scene
 {
   AssetPtr geometryRoot;
   vector<AssetPtr> lightSources;
+
+  string name;
 };
 
 bool8 createScene(Scene** outScene)
@@ -27,6 +31,7 @@ bool8 createScene(Scene** outScene)
   }
 
   (*outScene)->geometryRoot = AssetPtr(sceneRootGeometry);
+  (*outScene)->name = "default_scene";
 
   return TRUE;
 }
@@ -36,9 +41,49 @@ void destroyScene(Scene* scene)
   engineFreeObject(scene, MEMORY_TYPE_GENERAL);
 }
 
+bool8 serializeScene(Scene* scene, nlohmann::json& json)
+{
+  json["name"] = scene->name;
+  assetSerialize(scene->geometryRoot, json["geometry_root"]);
+
+  json["lights_count"] = scene->lightSources.size();
+  for(uint32 i = 0; i < scene->lightSources.size(); i++)
+  {
+    assetSerialize(scene->lightSources[i], json["lights"][i]);
+  }
+
+  return TRUE;
+}
+
+bool8 deserializeScene(Scene* scene, nlohmann::json& json)
+{
+  scene->lightSources.clear();
+  
+  scene->name = json["name"];
+  scene->geometryRoot = createAssetFromJson(json);
+
+  uint32 lightsCount = json["lights_count"];
+  for(uint32 i = 0; i < lightsCount; i++)
+  {
+    scene->lightSources.push_back(createAssetFromJson(json["lights"][i]));
+  }
+
+  return TRUE;
+}
+
 void updateScene(Scene* scene, float64 delta)
 {
   geometryUpdate(scene->geometryRoot, delta);
+}
+
+void sceneSetName(Scene* scene, const std::string& name)
+{
+  scene->name = name;
+}
+
+const std::string& sceneGetName(Scene* scene)
+{
+  return scene->name;
 }
 
 void sceneAddGeometry(Scene* scene, AssetPtr geometry)

@@ -64,6 +64,13 @@ static bool8 initializeViewWindow(Window* window)
 static void shutdownViewWindow(Window* window)
 {
   ViewWindowData* data = (ViewWindowData*)windowGetInternalData(window);
+  
+  if(data->movieWriter != nullptr)
+  {
+    delete data->movieWriter;
+    data->movieWriter = nullptr;
+  }
+  
   engineFreeMem(data, MEMORY_TYPE_GENERAL);
 }
 

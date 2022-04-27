@@ -7,6 +7,7 @@ using std::vector;
 using std::string;
 
 #include <imgui/imgui.h>
+#include <imgui/TextEditor.h>
 
 #include <utils.h>
 #include <logging.h>
@@ -76,6 +77,8 @@ struct ScriptFunctionSettingsWindowData
   
   AssetPtr dummyRootGeometry;
   AssetPtr dummyGeometry;
+
+  TextEditor textEditor;
 };
 
 static bool8 scriptFunctionSettingsWindowInitialize(Window*);
@@ -113,8 +116,10 @@ bool8 createScriptFunctionSettingsWindow(AssetPtr owner, AssetPtr function, Wind
   ScriptFunctionSettingsWindowData* data = engineAllocObject<ScriptFunctionSettingsWindowData>(MEMORY_TYPE_GENERAL);
   data->owner = owner;
   data->function = function;
+  data->textEditor.SetLanguageDefinition(TextEditor::LanguageDefinition::HLSL());
+  data->textEditor.SetText(scriptFunctionGetRawCode(function));
+  
   strcpy(data->saveName, assetGetName(function).c_str());
-  strcpy(data->codeBuf, scriptFunctionGetRawCode(function).c_str());
   windowSetInternalData(*outWindow, data);
 
   Asset* dummyRootGeometry; 
@@ -332,6 +337,8 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
   // Code child
   // --------------------------------------------------------------------------
   ImGui::BeginChild("CodeChild", float2(avalReg.x * 0.5, avalReg.y));
+
+
   
   float2 cursorPos = ImGui::GetCursorScreenPos();
   ImGui::GetWindowDrawList()->AddRectFilled(cursorPos,
@@ -348,7 +355,7 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
     AssetPtr targetGeometry = (sfType == SCRIPT_FUNCTION_TYPE_PCF ? data->dummyRootGeometry : data->dummyGeometry);
 
     std::string previousCode = scriptFunctionGetRawCode(data->function);
-    scriptFunctionSetCode(data->function, data->codeBuf);
+    scriptFunctionSetCode(data->function, data->textEditor.GetText().c_str());
     
     geometryRemoveFunction(targetGeometry, data->function);
     geometryAddFunction(targetGeometry, data->function);
@@ -381,16 +388,12 @@ void scriptFunctionSettingsWindowDraw(Window* window, float64 delta)
   }
   popIconSmallButtonStyle();
   
-  float2 codeReg = ImGui::GetContentRegionAvail();
-
   ImGui::PushStyleColor(ImGuiCol_FrameBg, (float4)ImColor(32, 32, 32, 128));
   ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
-  ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 5.0);  
-    ImGui::InputTextMultiline("##CodeInputText",
-                              data->codeBuf,
-                             ARRAY_SIZE(data->codeBuf),
-                              codeReg,
-                              ImGuiInputTextFlags_AllowTabInput);
+  ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 5.0);
+  
+    data->textEditor.Render("Code");
+
   ImGui::PopStyleVar(2);
   ImGui::PopStyleColor();
   
