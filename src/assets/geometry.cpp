@@ -631,9 +631,9 @@ bool8 createGeometry(const string& name, Asset** outGeometry)
   geometryData->needRebuild = TRUE;
   geometryData->dirty = TRUE;
   geometryData->enabled = TRUE;
-  geometryData->nativeAABB = AABB::createUnbounded();
-  geometryData->dynamicAABB = AABB::createUnbounded();
-  geometryData->finalAABB = AABB::createUnbounded();  
+  geometryData->nativeAABB = AABB();
+  geometryData->dynamicAABB = AABB();
+  geometryData->finalAABB = AABB();
   geometryData->drawProgram = ShaderProgramPtr(nullptr);
   geometryData->shadowProgram = ShaderProgramPtr(nullptr);
   geometryData->aabbProgram = ShaderProgramPtr(nullptr);
@@ -697,7 +697,7 @@ static AssetPtr deserializeScriptFunction(json& jsonData)
 bool8 geometrySerialize(AssetPtr geometry, json& jsonData)
 {
   Geometry* geometryData = (Geometry*)assetGetInternalData(geometry);
-
+  
   for(uint32 i = 0; i < geometryData->idfs.size(); i++)
   {
     jsonData["idfs"][i] = serializeScriptFunction(geometryData->idfs[i]);
@@ -708,7 +708,11 @@ bool8 geometrySerialize(AssetPtr geometry, json& jsonData)
     jsonData["odfs"][i] = serializeScriptFunction(geometryData->odfs[i]);
   }
 
-  jsonData["pcf"] = serializeScriptFunction(geometryData->pcf);
+  if(geometryData->pcf != nullptr)
+  {
+    jsonData["pcf"] = serializeScriptFunction(geometryData->pcf);
+  }
+  
   if(geometryData->sdf != nullptr)
   {
     jsonData["sdf"] = serializeScriptFunction(geometryData->sdf);
@@ -728,7 +732,10 @@ bool8 geometrySerialize(AssetPtr geometry, json& jsonData)
   jsonData["bounded"] = geometryData->bounded;
   jsonData["aabb_automatically_calculated"] = geometryData->aabbAutomaticallyCalculated;
 
-  jsonData["material"] = assetGetName(geometryData->material);
+  if(geometryData->material != nullptr)
+  {
+    jsonData["material"] = assetGetName(geometryData->material);
+  }
   
   for(uint32 i = 0; i < geometryData->children.size(); i++)
   {
@@ -761,7 +768,15 @@ bool8 geometryDeserialize(AssetPtr geometry, json& jsonData)
     }
   }
 
-  geometryData->pcf = deserializeScriptFunction(jsonData.at("pcf"));
+  if(jsonData.contains("pcf"))
+  {
+    geometryData->pcf = deserializeScriptFunction(jsonData.at("pcf"));
+  }
+  else
+  {
+    geometryData->pcf = assetsManagerFindAsset("unionPCF");
+  }
+  
   if(jsonData.contains("sdf"))
   {
     geometryData->sdf = deserializeScriptFunction(jsonData.at("sdf"));

@@ -1,10 +1,13 @@
 #include <vector>
 #include <string>
+#include <fstream>
 #include <unordered_map>
 
 #include <imgui/imgui.h>
 #include <linalg/linalg.h>
 #include <imgui/imgui_internal.h>
+
+#include <nlohmann/json.hpp>
 
 #include <film.h>
 #include <camera.h>
@@ -19,6 +22,7 @@
 #include <samplers/center_sampler.h>
 
 #include "editor.h"
+#include "ui_utils.h"
 #include "editor_utils.h"
 #include "windows/view_window.h"
 #include "windows/console_window.h"
@@ -29,6 +33,7 @@
 using std::vector;
 using std::string;
 using std::unordered_map;
+using nlohmann::json;
 
 struct EditorData
 {
@@ -202,13 +207,16 @@ static void prepareDockingLayout(float2 screenSize, float2 screenOffset)
 
 void drawMenu(float2& outMenuSize)
 {
+  static const char* OpenScenePopupName = "OpenScenePopupName##EditorMenu";
+  bool8 requestedOpenScenePopup = FALSE;
+  
   ImGui::BeginMainMenuBar();
     if(ImGui::BeginMenu(ICON_KI_COMPUTER" Scene"))
     {
       ImGui::PushStyleColor(ImGuiCol_FrameBg, float4(0.0f, 0.0f, 0.0f, 0.0f));
         if(ImGui::InputText("", editorData.sceneNameBuf, 255))
         {
-          
+          sceneSetName(editorData.currentScene, editorData.sceneNameBuf);
         }
       ImGui::PopStyleColor();
 
@@ -216,17 +224,28 @@ void drawMenu(float2& outMenuSize)
       
       if(ImGui::MenuItem("New", "Ctrl-N"))
       {
-        
+        Scene* newScene;
+        assert(createScene(&newScene));
+        editorSetScene(newScene);
       }
 
       if(ImGui::MenuItem("Open", "Ctrl-O"))
       {
-        
+        requestedOpenScenePopup = TRUE;
       }
 
       if(ImGui::MenuItem("Save", "Ctrl-S"))
       {
+        json jsonData;
+        assert(serializeScene(editorData.currentScene, jsonData));
 
+        char fileName[255];
+        sprintf(fileName, "%s.json", sceneGetName(editorData.currentScene).c_str());
+
+        std::ofstream file(fileName);
+        file << jsonData;
+
+        LOG_SUCCESS("Saved current scene into '%s'", fileName);
       }
       
       ImGui::Separator();
@@ -252,8 +271,53 @@ void drawMenu(float2& outMenuSize)
     }
     
   outMenuSize = ImGui::GetWindowSize();
-    
+
+  
   ImGui::EndMainMenuBar();
+
+  // --------------------------------------------------------------------------
+  // Open scene popup
+  // --------------------------------------------------------------------------
+  if(requestedOpenScenePopup == TRUE)
+  {
+    ImGui::OpenPopup(OpenScenePopupName);
+  }
+  
+  if(ImGui::IsPopupOpen(OpenScenePopupName))
+  {
+    ImGuiUtilsButtonsFlags pressedButton = textInputPopup(OpenScenePopupName, "Enter scene name");
+                                                          
+    if(ImGuiUtilsButtonsFlags_Accept == pressedButton)
+    {
+      const char* enteredName = textInputPopupGetBuffer();
+      
+      if(strlen(enteredName) > 0)
+      {
+        std::ifstream file(enteredName);
+        if(file.is_open())
+        {
+          json jsonData;
+          file >> jsonData;
+
+          Scene* loadedScene;
+          createScene(&loadedScene);
+          assert(deserializeScene(loadedScene, jsonData));
+
+          editorSetScene(loadedScene);
+        }
+        else
+        {
+          LOG_ERROR("Cannot find a scene '%s'", enteredName);
+        }
+      }
+      else
+      {
+        LOG_ERROR("Scene cannot have an empty name!");
+      }
+    }
+  }
+  
+  
 }
 
 void editorDraw(Application* app, float64 delta)

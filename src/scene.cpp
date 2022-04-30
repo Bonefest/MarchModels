@@ -38,6 +38,9 @@ bool8 createScene(Scene** outScene)
 
 void destroyScene(Scene* scene)
 {
+  scene->geometryRoot = AssetPtr(nullptr);
+  scene->lightSources.clear();
+  
   engineFreeObject(scene, MEMORY_TYPE_GENERAL);
 }
 
@@ -60,7 +63,7 @@ bool8 deserializeScene(Scene* scene, nlohmann::json& json)
   scene->lightSources.clear();
   
   scene->name = json["name"];
-  scene->geometryRoot = createAssetFromJson(json);
+  scene->geometryRoot = createAssetFromJson(json["geometry_root"]);
 
   uint32 lightsCount = json["lights_count"];
   for(uint32 i = 0; i < lightsCount; i++)
