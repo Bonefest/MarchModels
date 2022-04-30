@@ -369,7 +369,7 @@ static void geometryGenerateLeafCode(Asset* geometry, ShaderBuild* build)
   shaderBuildAddCode(build, "}");
 }
 
-// NOTE: Branch geometry uses only ODFs (realted to the branch itself)
+// NOTE: Branch geometry uses only ODFs (related to the branch itself)
 static void geometryGenerateBranchCode(Asset* geometry, ShaderBuild* build)
 {
   // register ODFs (only of the geometry)
@@ -631,9 +631,9 @@ bool8 createGeometry(const string& name, Asset** outGeometry)
   geometryData->needRebuild = TRUE;
   geometryData->dirty = TRUE;
   geometryData->enabled = TRUE;
-  geometryData->nativeAABB = AABB();
-  geometryData->dynamicAABB = AABB();
-  geometryData->finalAABB = AABB();
+  geometryData->nativeAABB = AABB(-1024.0f, -1024.0f, -1024.0f, 1024.0f, 1024.0f, 1024.0f);
+  geometryData->dynamicAABB = AABB(-1024.0f, -1024.0f, -1024.0f, 1024.0f, 1024.0f, 1024.0f);
+  geometryData->finalAABB = AABB(-1024.0f, -1024.0f, -1024.0f, 1024.0f, 1024.0f, 1024.0f);
   geometryData->drawProgram = ShaderProgramPtr(nullptr);
   geometryData->shadowProgram = ShaderProgramPtr(nullptr);
   geometryData->aabbProgram = ShaderProgramPtr(nullptr);
