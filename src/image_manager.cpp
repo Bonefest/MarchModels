@@ -67,16 +67,17 @@ ImagePtr imageManagerLoadImage(const char* path)
     assert(FALSE && "Given image's format is not supported...");
   }
 
+
   glGenerateMipmap(GL_TEXTURE_2D);
   
   glBindTexture(GL_TEXTURE_2D, 0);
-
+  
   Image* image;
   createImage(textureHandle, width, height, &image);
   imageSetName(image, path);
   
   ImagePtr imagePtr = ImagePtr(image);
-  
+
   data.loadedImages[string(path)] = imagePtr;
   
   return imagePtr;

@@ -12,9 +12,9 @@ INCLUDE_DIRS = -Isrc -Ithrdparty -Igame -I/usr/include/lua5.3 -Itests
 
 # Defines C-macros defines
 DEFINES = -DDEBUG -DENABLE_EDITOR_GAME #-DTEST_COMPILE_PATH
-
+	
 # Compiler flags
-CFLAGS = -g -Wall -O0 -pg -fPIC -std=c++1z ${DEFINES} $(INCLUDE_DIRS)
+CFLAGS = -g -Wall -O3 -pg -fPIC -std=c++1z ${DEFINES} $(INCLUDE_DIRS)
 
 # Linker flags, -Wl,-R tells where to find .so files after compilation
 LDFLAGS =-lXxf86vm -lxkbcommon-x11 -L/usr/lib/X11 -Lthrdparty/moviemaker/ -Wl,-R/usr/local/lib

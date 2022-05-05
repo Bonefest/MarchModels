@@ -166,16 +166,12 @@ bool8 materialDeserialize(AssetPtr material, json& jsonData)
   for(uint32 itype = 0; itype < MATERIAL_TEXTURE_TYPE_COUNT; itype++)
   {
     MaterialTextureType type = (MaterialTextureType)itype;
-    const char* typeStr = materialTextureTypeLabel(type);
+    const std::string typeStr = std::string(materialTextureTypeLabel(type));
 
-    if(jsonData[typeStr].is_object())
+    if(jsonData.contains(typeStr) && jsonData[typeStr].is_object())
     {
-      std::string textureName = "";
-      if(jsonData[typeStr]["name"].is_string())
-      {
-        textureName = jsonData[typeStr].value("name", "");
-      }
-      
+      std::string textureName = jsonData[typeStr][std::string("name")];
+
       ImagePtr texture = imageManagerLoadImage(textureName.c_str());
       if(texture == ImagePtr(nullptr))
       {
@@ -183,17 +179,13 @@ bool8 materialDeserialize(AssetPtr material, json& jsonData)
                     assetGetName(material).c_str(), textureName.c_str());
       }
 
+
       materialData->textures[itype].texture = texture;
       materialData->textures[itype].textureRegion = jsonToVec<uint32, 4>(jsonData[typeStr]["texture_region"]);
-
-      materialData->textures[itype].blendingFactor = 2.0f;
-      if(jsonData[typeStr]["blending_factor"].is_number())
-      {
-        materialData->textures[itype].blendingFactor = jsonData[typeStr]["blending_factor"];
-      }
-
+      materialData->textures[itype].blendingFactor = jsonData[typeStr]["blending_factor"];
       materialData->textures[itype].enabled = jsonData[typeStr]["enabled"];
     }
+
 
   }
 
