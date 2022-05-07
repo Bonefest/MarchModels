@@ -36,6 +36,7 @@ AssetPtr createAssetFromJson(nlohmann::json& jsonData)
     }
 
     AssetPtr assetPtr = AssetPtr(asset);
+
     if(assetDeserialize(assetPtr, jsonData) == FALSE)
     {
       LOG_ERROR("Cannot create asset from a json because given json has wrong data!");

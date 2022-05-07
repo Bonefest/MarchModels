@@ -40,6 +40,7 @@ static void materialDestroy(Asset* material);
 static bool8 materialSerialize(AssetPtr material, json& jsonData);
 static bool8 materialDeserialize(AssetPtr material, json& jsonData);
 static uint32 materialGetSize(Asset* asset) { /** TODO */ }
+static void materialOnNameChanged(Asset* asset, const std::string& prevName, const std::string& newName) { }
 
 const char* materialTextureTypeLabel(MaterialTextureType texType)
 {
@@ -73,6 +74,7 @@ bool8 createMaterial(const std::string& name, Asset** material)
   interface.serialize = materialSerialize;
   interface.deserialize = materialDeserialize;
   interface.getSize = materialGetSize;
+  interface.onNameChanged = materialOnNameChanged;
   interface.type = ASSET_TYPE_MATERIAL;
 
   assert(allocateAsset(interface, name, material));
@@ -152,7 +154,7 @@ bool8 materialDeserialize(AssetPtr material, json& jsonData)
   *materialData = Material{};
 
   materialData->projectionMode = (MaterialTextureProjectionMode)jsonData.value("projection_mode", (uint32)MATERIAL_TEXTURE_PROJECTION_MODE_TRIPLANAR);
-  
+                                                    
   materialData->ior = jsonData.value("ior", 1.0f);
   materialData->ao = jsonData.value("ao", 0.0f);
   materialData->metallic = jsonData.value("metallic", 0.0f);
@@ -170,15 +172,16 @@ bool8 materialDeserialize(AssetPtr material, json& jsonData)
 
     if(jsonData.contains(typeStr) && jsonData[typeStr].is_object())
     {
+      
       std::string textureName = jsonData[typeStr][std::string("name")];
 
       ImagePtr texture = imageManagerLoadImage(textureName.c_str());
+
       if(texture == ImagePtr(nullptr))
       {
         LOG_WARNING("Cannot find %s material's texture with name '%s'",
                     assetGetName(material).c_str(), textureName.c_str());
       }
-
 
       materialData->textures[itype].texture = texture;
       materialData->textures[itype].textureRegion = jsonToVec<uint32, 4>(jsonData[typeStr]["texture_region"]);

@@ -60,12 +60,30 @@ public:
 
     retain();
   }
+
+  SharedPtr(SharedPtr&& sharedPtr)
+  {
+    m_refCounter = sharedPtr.m_refCounter;
+    m_ptr = sharedPtr.m_ptr;
+
+    retain();    
+  }
   
   ~SharedPtr()
   {
     release();
   }
 
+  SharedPtr& operator=(SharedPtr&& sharedPtr)
+  {
+    release();
+    m_refCounter = sharedPtr.m_refCounter;
+    m_ptr = sharedPtr.m_ptr;
+    retain();
+
+    return *this;
+  }
+  
   SharedPtr& operator=(const SharedPtr& sharedPtr)
   {
     if(this == &sharedPtr)
