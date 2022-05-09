@@ -413,9 +413,11 @@ static bool8 geometryRebuildDrawProgram(Asset* geometry)
   shaderBuildAddVersion(build, 430, "core");
   shaderBuildAddCode(build, "layout(early_fragment_tests) in;");
   shaderBuildAddCode(build, "%s");
-  
-  assert(shaderBuildIncludeFile(build, "shaders/common.glsl") == TRUE);  
+
+  shaderBuildAddMacro(build, "PROGRAM_DRAW", "1");  
+  assert(shaderBuildIncludeFile(build, "shaders/common.glsl") == TRUE);
   assert(shaderBuildIncludeFile(build, "shaders/geometry_common.glsl") == TRUE);
+  assert(shaderBuildIncludeFile(build, "shaders/complex.glsl") == TRUE);    
 
   shaderBuildAddCode(build, "uniform uint32 geometryID;");
   shaderBuildAddCode(build, "uniform uint32 indexInBranch;");
@@ -510,8 +512,10 @@ static bool8 geometryRebuildAABBCalculationProgram(Asset* geometry)
   shaderBuildAddCodefln(build, "layout(local_size_x = %u, local_size_y = %u) in;",
                         localWorkgroupSize,
                         localWorkgroupSize);
-  
-  assert(shaderBuildIncludeFile(build, "shaders/common.glsl") == TRUE);  
+
+  shaderBuildAddMacro(build, "PROGRAM_AABB", "1");
+  assert(shaderBuildIncludeFile(build, "shaders/common.glsl") == TRUE);
+  assert(shaderBuildIncludeFile(build, "shaders/complex.glsl") == TRUE);    
 
   shaderBuildAddCodefln(build, "layout(location = 0) uniform uint32 geometryID;");
   

@@ -12,6 +12,8 @@
   #define float4 vec4
   #define quat vec4
 
+  #define complex vec2
+
   #define double2 dvec2
   #define double3 dvec3
   #define double4 dvec4
