@@ -112,6 +112,9 @@
     return worldPos.xyz / worldPos.w;
   }
 
+  float32 goldNoise(float2 xy, float32 seed){
+    return fract(tan(distance(xy*1.61803398874989484820459, xy)*seed)*xy.x);
+  }
 
 
 #endif
